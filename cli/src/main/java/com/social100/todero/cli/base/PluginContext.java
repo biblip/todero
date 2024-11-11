@@ -44,12 +44,9 @@ public class PluginContext {
     }
 
     public String getHelpMessage() {
-        StringBuilder helpMessage = new StringBuilder();
-
-        helpMessage.append(String.format("%-15s   - %s\n", registeredPlugin.name().toUpperCase(), registeredPlugin.description().toUpperCase()));
-        helpMessage.append(registeredPlugin.getHelpMessage());
-
-        return helpMessage.toString().trim(); // Trim to remove the last newline character
+        String helpMessage = "";
+        helpMessage = String.format("%-15s   - %s\n", registeredPlugin.name().toUpperCase(), registeredPlugin.description().toUpperCase());
+        return helpMessage.concat(registeredPlugin.getHelpMessage());
     }
 
     // Cleanup method to properly close the plugin class loader when no longer needed

@@ -41,16 +41,13 @@ public class PluginManager {
 
         pluginContextList.forEach(manager -> helpMessage.append(manager.getHelpMessage()));
 
-        return helpMessage.toString().trim();
+        return helpMessage.toString();
     }
 
     public String execute(String plugin, String command, String[] commandArgs) {
-        for (PluginContext manager : pluginContextList) {
-            if (manager.hasName(plugin)) {
-                if (command == null) {
-                    return manager.getHelpMessage();
-                }
-                if (manager.hasCommand(command)) {
+        if (command != null) {
+            for (PluginContext manager : pluginContextList) {
+                if (manager.hasName(plugin) && manager.hasCommand(command)) {
                     return manager.execute(command, commandArgs);
                 }
             }

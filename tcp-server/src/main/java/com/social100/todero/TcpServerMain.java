@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.social100.todero.common.config.AppConfig;
-import com.social100.todero.common.config.PluginConfig;
 import com.social100.todero.tcpserver.TcpServer;
 
 import java.io.File;

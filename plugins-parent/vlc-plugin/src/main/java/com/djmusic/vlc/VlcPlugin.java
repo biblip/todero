@@ -86,6 +86,6 @@ public class VlcPlugin implements PluginInterface {
         for (String commandName : commandMap.keySet()) {
             helpMessage.append(String.format("-  %-15s : %s\n", commandMap.get(commandName).name(), commandMap.get(commandName).description()));
         }
-        return helpMessage.toString().trim();
+        return helpMessage.toString();
     }
 }

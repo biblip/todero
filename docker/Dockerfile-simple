@@ -1,0 +1,27 @@
+# Use an OpenJDK base image
+FROM openjdk:17-jdk-slim
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the JAR file to the image
+COPY ../tcp-server.jar /app/tcp-server.jar
+
+# Copy the configuration file
+COPY ../docker/config.yaml.seed /app/config.yaml
+
+# Replace "TCP-SERVER-PORT" with "8071" in config.yaml
+RUN sed -i 's/TCP-SERVER-PORT/8071/' /app/config.yaml
+
+# Copy the plugins directory to the root of the application
+COPY ../plugins/simple-plugin.jar /app/plugins/
+COPY ../plugins/aia-protocol-plugin.jar /app/plugins/
+
+# Create a directory inside the container for application data
+RUN mkdir -p /app/data
+
+# Expose the necessary port (optional)
+EXPOSE 8070
+
+# Run the JAR file with configuration when the container starts
+CMD ["java", "-jar", "/app/tcp-server.jar", "--config=/app/config.yaml"]

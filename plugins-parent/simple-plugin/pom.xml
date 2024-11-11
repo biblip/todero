@@ -8,46 +8,17 @@
         <groupId>com.social100.todero</groupId>
         <artifactId>todero</artifactId>
         <version>1.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>tcp-server</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>simple-plugin</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.social100.todero</groupId>
-            <artifactId>cli</artifactId>
+            <artifactId>common</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.28</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.15.2</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.15.2</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.15.2</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -68,13 +39,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <minimizeJar>true</minimizeJar>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.social100.todero.TcpServerMain</mainClass>
-                                </transformer>
-                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
@@ -93,7 +58,7 @@
                         <configuration>
                             <target>
                                 <!-- Copy the shaded JAR to the project root -->
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../tcp-server.jar" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../plugins/simple-plugin.jar" />
                             </target>
                         </configuration>
                     </execution>
@@ -106,9 +71,9 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>${project.basedir}/..</directory>
+                            <directory>${project.basedir}/../../plugins</directory>
                             <includes>
-                                <include>tcp-server.jar</include>
+                                <include>simple-plugin.jar</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>

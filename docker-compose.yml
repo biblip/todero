@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  tcp_server:
+    build:
+      context: .                    # Set the context to the parent directory to access all files
+      dockerfile: docker/Dockerfile-simple  # Path to the custom Dockerfile
+    ports:
+      - "8071:8071"                 # Expose port 8071
+    volumes:
+      - ./data:/app/data            # Mount local data directory to container’s /app/data
+      #- ./plugins:/app/plugins      # Mount plugins directory to container’s /app/plugins
+    environment:
+      - CONFIG_PATH=/app/config.yaml  # Optional: set environment variable if needed
+    command: ["java", "-jar", "/app/tcp-server.jar", "--config=/app/config.yaml"]
