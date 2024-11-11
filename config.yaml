@@ -1,0 +1,77 @@
+version: 1.0
+nuevo: value
+app:
+  version: 1.0
+  tcpserver:
+    port: 8070
+    thread_pool_size: 10
+  plugins:
+    dir: plugins
+    list:
+        vlc:
+          name: the plugin name
+          libdir: /path/to/the/library
+          licence: bla,bla
+          customField1: "custom value 1"
+          customField2: 42
+        otherplugin:
+          certificate:
+          customField3: "custom value 3"
+  users:
+    user1:
+      name: theuser1name
+    user2:
+      name: theuser2name
+    user3:
+      name: theuser3name
+    user4:
+      name: theuser4name
+  groups:
+    group1:
+      permissions:
+        - one
+        - two
+      users:
+        - user1
+        - user2
+        - user3
+    group2:
+      permissions:
+        - one
+        - two
+      users:
+        - user1
+        - user4
+    group3:
+      users:
+        - user1
+        - user3
+  workspaces:
+    crt: /dir/of/the/crt
+    interval-check: 24h
+    list:
+      workspace-one:
+        path: /thepath
+        name: the workspace one
+        owner:
+          user: user1
+        desk: assigned
+        plugins:
+          - vlc
+          - otherplugion
+      workspace-two:
+        path: /thepathtwo
+        name: the workspace two
+        owner:
+          group: group1
+        desk: assigned
+        plugins:
+          - vlc
+          - otherplugin
+      workspace-three:
+        path: /thepaththree
+        name: the workspace two
+        desk: assigned
+        plugins:
+          - vlc
+          - otherplugion

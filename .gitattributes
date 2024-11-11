@@ -1,0 +1,5 @@
+* filter=cleanutf8
+
+# execute this lines to add the filter to git.
+# git config filter.cleanutf8.clean "iconv -f UTF-8 -t UTF-8"
+# git config filter.cleanutf8.smudge cat

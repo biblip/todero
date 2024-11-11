@@ -1,0 +1,56 @@
+# IntelliJ specific files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Java specific files (if you're working with Java)
+*.class
+
+# Maven specific files (if using Maven)
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Gradle specific files (if using Gradle)
+.gradle/
+build/
+
+# Package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# OS system files
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Environment files
+.env
+.env.local
+
+# Node modules if you are using Node.js in your project
+node_modules/
+
+# Distribution / build output
+dist/
+out/
+
+# Other common directories to ignore
+bin/
+obj/
+backup/
+
+plugins/
