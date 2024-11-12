@@ -1,15 +1,33 @@
 version: '3.8'
 
 services:
-  tcp_server:
+  tcp_server_simple:
     build:
       context: .                    # Set the context to the parent directory to access all files
       dockerfile: docker/Dockerfile-simple  # Path to the custom Dockerfile
+      args:
+        CONFIG_TCP_SERVER_PORT: "${CONFIG_TCP_SERVER_PORT_SIMPLE}"
+        CONFIG_PLUGIN_LIST: "${CONFIG_PLUGIN_LIST_SIMPLE}"
     ports:
-      - "8071:8071"                 # Expose port 8071
+      - "${CONFIG_TCP_SERVER_PORT_SIMPLE}:${CONFIG_TCP_SERVER_PORT_SIMPLE}"  # Optionally expose the port if needed
     volumes:
       - ./data:/app/data            # Mount local data directory to container’s /app/data
-      #- ./plugins:/app/plugins      # Mount plugins directory to container’s /app/plugins
     environment:
-      - CONFIG_PATH=/app/config.yaml  # Optional: set environment variable if needed
+      - CONFIG_TCP_SERVER_PORT=${CONFIG_TCP_SERVER_PORT_SIMPLE}
+      - CONFIG_PLUGIN_LIST=${CONFIG_PLUGIN_LIST_SIMPLE}
+    command: ["java", "-jar", "/app/tcp-server.jar", "--config=/app/config.yaml"]
+  tcp_server_two:
+    build:
+      context: .                    # Set the context to the parent directory to access all files
+      dockerfile: docker/Dockerfile-simple  # Path to the custom Dockerfile
+      args:
+        CONFIG_TCP_SERVER_PORT: "${CONFIG_TCP_SERVER_PORT_TWO}"
+        CONFIG_PLUGIN_LIST: "${CONFIG_PLUGIN_LIST_TWO}"
+    ports:
+      - "${CONFIG_TCP_SERVER_PORT_TWO}:${CONFIG_TCP_SERVER_PORT_TWO}"  # Optionally expose the port if needed
+    volumes:
+      - ./data:/app/data            # Mount local data directory to container’s /app/data
+    environment:
+      - CONFIG_TCP_SERVER_PORT=${CONFIG_TCP_SERVER_PORT_TWO}
+      - CONFIG_PLUGIN_LIST=${CONFIG_PLUGIN_LIST_TWO}
     command: ["java", "-jar", "/app/tcp-server.jar", "--config=/app/config.yaml"]
