@@ -101,11 +101,19 @@ public class PluginContext {
     }
 
     public Object execute(String pluginName, String command, String[] commandArgs) {
-        Optional<Plugin> selectedPlugin = plugins.values().stream().filter(p -> pluginName.equals(p.getPluginInstance().name()) && p.getPluginInstance().hasCommand(command)).findFirst();
+        Optional<Plugin> selectedPlugin = plugins
+                .values()
+                .stream()
+                .filter(p -> isPluginAndHasCommand(pluginName, command, p))
+                .findFirst();
         if (selectedPlugin.isEmpty()) {
             return "Command Not Found";
         }
         return selectedPlugin.get().getPluginInstance().execute(command, commandArgs);
+    }
+
+    private static boolean isPluginAndHasCommand(String pluginName, String command, Plugin p) {
+        return pluginName.equals(p.getPluginInstance().name()) && p.getPluginInstance().hasCommand(command);
     }
 
     public String[] getAllCommandNames() {

@@ -21,8 +21,6 @@ public class DjyPluginComponent {
     final static String CHANNELS_GROUP = "Channels";
 
     private final ChannelManager channelManager;
-    private final Map<String, CommandMethod> commandMap = new HashMap<>();
-
 
     private static final String[] mediaOptions = {
             ":audio-filter=normvol",

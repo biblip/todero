@@ -3,7 +3,7 @@ package com.social100.todero.aia;
 import com.social100.todero.annotation.AIAController;
 import com.social100.todero.annotation.Action;
 
-@AIAController(name = "",
+@AIAController(name = "aia",
         type = "",
         description = "AIA Protocol Plugin")
 public class AIAProtocolPluginComponent {

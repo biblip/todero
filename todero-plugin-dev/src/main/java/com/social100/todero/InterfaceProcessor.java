@@ -40,6 +40,9 @@ public class InterfaceProcessor extends AbstractProcessor {
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (classElement.getKind() == ElementKind.CLASS) {
                 TypeElement classTypeElement = (TypeElement) classElement;
+
+                validateUniqueCommands(classTypeElement);
+
                 List<Map<String, String>> methodDetailsList = new ArrayList<>();
 
                 for (Element enclosedElement : classTypeElement.getEnclosedElements()) {
@@ -47,9 +50,13 @@ public class InterfaceProcessor extends AbstractProcessor {
                             enclosedElement.getAnnotation(Action.class) != null) {
                         Action methodAnnotation = enclosedElement.getAnnotation(Action.class);
 
+                        // Determine if the method is static
+                        boolean isStatic = enclosedElement.getModifiers().contains(Modifier.STATIC);
+
                         // Extract attributes from MethodAnnotation
                         Map<String, String> methodDetails = new HashMap<>();
                         methodDetails.put("method", enclosedElement.getSimpleName().toString());
+                        methodDetails.put("static", isStatic?"TRUE":"FALSE");
                         methodDetails.put("group", methodAnnotation.group());
                         methodDetails.put("command", methodAnnotation.command());
                         methodDetails.put("description", methodAnnotation.description());
@@ -186,17 +193,33 @@ public class InterfaceProcessor extends AbstractProcessor {
                 MethodDetails details = entry.getValue();
 
                 if (details.isStatic) {
-                    classContent.append("        STATIC_REGISTRY.put(\"").append(methodName).append("\", ")
-                            .append("args -> ").append(details.className).append(".").append(details.methodName).append("(args));\n");
+                    // Populate the STATIC_REGISTRY for static methods
+                    classContent.append("        ")
+                            .append(staticRegistryName)
+                            .append(".put(\"")
+                            .append(methodName)
+                            .append("\", ")
+                            .append("args -> ")
+                            .append(details.className)
+                            .append(".")
+                            .append(details.methodName)
+                            .append("(args));\n");
                 } else {
                     // Populate the INSTANCE_REGISTRY for instance methods
-                    classContent.append("        " + instanceRegistryName + ".put(\"").append(methodName).append("\", ")
-                            .append("(instance, args) -> ((").append(details.className).append(") instance).")
-                            .append(details.methodName).append("(args));\n");
+                    classContent.append("        ")
+                            .append(instanceRegistryName)
+                            .append(".put(\"")
+                            .append(methodName)
+                            .append("\", ")
+                            .append("(instance, args) -> ((")
+                            .append(details.className)
+                            .append(") instance).")
+                            .append(details.methodName)
+                            .append("(args));\n");
                 }
             }
             classContent.append("        STATIC_REGISTRY.put(\"" + nameToMethodDetail.getKey() + "\", " + staticRegistryName + ");\n");
-            classContent.append("        INSTANCE_REGISTRY.put(\"" + nameToMethodDetail.getKey() + "\", " + instanceRegistryName + ");\n");
+            classContent.append("        INSTANCE_REGISTRY.put(\"" + nameToMethodDetail.getKey() + "\", " + instanceRegistryName + ");\n\n");
         }
 
         classContent.append("    }\n\n" +
@@ -215,7 +238,18 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "        } else {\n" +
                 "            throw new IllegalArgumentException(\"No instance method found for command: \" + command);\n" +
                 "        }\n" +
-                "    }\n" +
+                "    }\n\n" +
+                "    public static Object execute(String plugin, String command, Object instance, String[] args) {\n" +
+                "        BiFunction<Object, String[], Object> instanceFunction = INSTANCE_REGISTRY.get(plugin).get(command);\n" +
+                "        if (instanceFunction != null) {\n" +
+                "            return instanceFunction.apply(instance, args);\n" +
+                "        }\n" +
+                "        Function<String[], Object> staticFunction = STATIC_REGISTRY.get(plugin).get(command);\n" +
+                "        if (staticFunction != null) {\n" +
+                "            return staticFunction.apply(args);\n" +
+                "        }\n" +
+                "        throw new IllegalArgumentException(\"No method found for command: \" + command);\n" +
+                "    }" +
                 "}\n");
         try {
             // Write the generated file
@@ -260,7 +294,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "\n" +
                 "    @Override\n" +
                 "    public Object execute(String command, String[] commandArgs) {\n" +
-                "        return MethodRegistry.executeInstance(\"" + pluginClassQualifiedName + "\", command, " + classVariableName + ", commandArgs);\n" +
+                "        return MethodRegistry.execute(\"" + pluginClassQualifiedName + "\", command, " + classVariableName + ", commandArgs);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
@@ -278,13 +312,13 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "        return AnnotationRegistry.REGISTRY.get(\"" + pluginClassQualifiedName + "\")\n" +
                 "                .stream()\n" +
                 "                .flatMap(map -> map.keySet().stream().filter(\"command\"::equals).map(map::get))\n" +
-                "                .toArray(String[]::new);" +
+                "                .toArray(String[]::new);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
                 "    public String getHelpMessage() {\n" +
                 "        StringBuilder sb = new StringBuilder();\n" +
-                "        sb.append(\"" + pluginClassQualifiedName + "\\n\");\n" +
+                "        sb.append(\"" + pluginName + "\\n\");\n" +
                 "        AnnotationRegistry.REGISTRY.get(\"" + pluginClassQualifiedName + "\")\n" +
                 "                .stream()\n" +
                 "                .forEach(v -> printCommandHelp(sb, v));\n" +
@@ -338,5 +372,29 @@ public class InterfaceProcessor extends AbstractProcessor {
     private boolean isSelfProcessing() {
         String isSelfProcessing = processingEnv.getOptions().get("isSelfProcessing");
         return Boolean.parseBoolean(isSelfProcessing);
+    }
+
+    private void validateUniqueCommands(TypeElement classElement) {
+        List<String> seenCommands = new ArrayList<>();
+
+        for (Element enclosed : classElement.getEnclosedElements()) {
+            if (enclosed.getKind() == ElementKind.METHOD) {
+                Action annotation = enclosed.getAnnotation(Action.class);
+                if (annotation != null) {
+                    String command = annotation.command();
+
+                    // Check for duplicates
+                    if (seenCommands.contains(command)) {
+                        processingEnv.getMessager().printMessage(
+                                Diagnostic.Kind.ERROR,
+                                "Duplicate @Action 'command' value: \"" + command + "\" found : " + classElement.getQualifiedName() + " " + enclosed.getSimpleName(),
+                                enclosed
+                        );
+                    } else {
+                        seenCommands.add(command);
+                    }
+                }
+            }
+        }
     }
 }
