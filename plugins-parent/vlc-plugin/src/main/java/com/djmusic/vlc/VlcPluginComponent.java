@@ -13,9 +13,9 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-@AIAController(name = "aia",
+@AIAController(name = "vlc",
         type = "",
-        description = "")
+        description = "description")
 public class VlcPluginComponent {
     final static String MAIN_GROUP = "Main";
     final static String CHANNELS_GROUP = "Channels";

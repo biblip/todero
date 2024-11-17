@@ -95,6 +95,20 @@ public class InterfaceProcessor extends AbstractProcessor {
         // Generate the registry class
         generateMethodRegistry("com.social100.todero.generated", nameToMethodDetails);
 
+        for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
+            if (classElement.getKind() == ElementKind.CLASS) {
+                TypeElement classTypeElement = (TypeElement) classElement;
+                AIAController classAnnotation = classElement.getAnnotation(AIAController.class);
+
+                String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
+                String pluginName = classAnnotation.name();
+                String pluginDescription = classAnnotation.description();
+
+                generatePluginInterfaceImplementation("com.social100.todero.generated", pluginClassQualifiedName, pluginName, pluginDescription);
+            }
+        }
+
+
         processCompleted = true;
 
         return true;
@@ -203,6 +217,104 @@ public class InterfaceProcessor extends AbstractProcessor {
         } catch (IOException e) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Error generating MethodRegistry: " + e.getMessage());
         }
+    }
+
+    private void generatePluginInterfaceImplementation(String packageName, String pluginClassQualifiedName, String pluginName, String pluginDescription) {
+
+        String classSimpleName = getSimpleName(pluginClassQualifiedName);
+        String classVariableName = classToClassVariableName(classSimpleName);
+        String generatedClassName = classSimpleName + "Impl";
+
+        StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
+                "\n" +
+                "import com.social100.todero.common.model.plugin.PluginInterface;\n" +
+                "import com.social100.todero.generated.AnnotationRegistry;\n" +
+                "import com.social100.todero.generated.MethodRegistry;\n" +
+                "\n" +
+                "import java.util.Arrays;\n" +
+                "\n" +
+                "public class " + generatedClassName + " implements PluginInterface {\n" +
+                "\n" +
+                "    private static " + pluginClassQualifiedName + " " + classVariableName + ";\n" +
+                "\n" +
+                "    public " + generatedClassName + "() {\n" +
+                "        " + classVariableName + " = new " + pluginClassQualifiedName + "();\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public Boolean hasCommand(String command) {\n" +
+                "        return Arrays.asList(getAllCommandNames()).contains(command);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public Object execute(String command, String[] commandArgs) {\n" +
+                "        return MethodRegistry.executeInstance(command, " + classVariableName + ", commandArgs);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public String name() {\n" +
+                "        return \"" + pluginName + "\";\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public String description() {\n" +
+                "        return \"" + pluginDescription + "\";\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public String[] getAllCommandNames() {\n" +
+                "        return AnnotationRegistry.REGISTRY.entrySet().stream()\n" +
+                "                .flatMap(entry -> entry.getValue().stream()\n" +
+                "                        .flatMap(map -> map.keySet().stream().filter(\"command\"::equals).map(map::get)))\n" +
+                "                .toArray(String[]::new);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public String getHelpMessage() {\n" +
+                "        StringBuilder sb = new StringBuilder();\n" +
+                "        AnnotationRegistry.REGISTRY.forEach((key, value) -> {\n" +
+                "            sb.append(key).append(\"\\n\");\n" +
+                "            value.forEach(v -> sb.append(\"       - \").append(v.get(\"command\")).append(\"\\n           \").append(v.get(\"description\")).append(\"\\n\"));\n" +
+                "        });\n" +
+                "        return sb.toString();\n" +
+                "    }\n" +
+                "}\n");
+        try {
+            // Write the generated file
+            Filer filer = processingEnv.getFiler();
+            JavaFileObject fileObject = filer.createSourceFile(packageName + "." + generatedClassName);
+
+            try (Writer writer = fileObject.openWriter()) {
+                writer.write(classContent.toString());
+            }
+        } catch (IOException e) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Error generating MethodRegistry: " + e.getMessage());
+        }
+    }
+
+    private String classToClassVariableName(String className) {
+        if (className == null || className.isEmpty()) {
+            throw new IllegalArgumentException("Class name cannot be null or empty");
+        }
+        // Convert the first character to lowercase and append the rest of the string
+        return Character.toLowerCase(className.charAt(0)) + className.substring(1);
+    }
+
+    public static String getSimpleName(String qualifiedName) {
+        if (qualifiedName == null || qualifiedName.isEmpty()) {
+            throw new IllegalArgumentException("Qualified name cannot be null or empty");
+        }
+
+        // Find the last '.' in the qualified name
+        int lastDotIndex = qualifiedName.lastIndexOf('.');
+
+        // If no '.' is found, the input is already a simple name
+        if (lastDotIndex == -1) {
+            return qualifiedName;
+        }
+
+        // Extract the substring after the last '.'
+        return qualifiedName.substring(lastDotIndex + 1);
     }
 
     private boolean isSelfProcessing() {
