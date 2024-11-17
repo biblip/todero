@@ -1,25 +1,27 @@
 package com.social100.todero.plugin;
 
-import com.social100.todero.common.PluginInterface;
+import com.social100.todero.common.model.plugin.PluginInterface;
+import com.social100.todero.generated.AnnotationRegistry;
+import com.social100.todero.generated.MethodRegistry;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 public class SimplePlugin implements PluginInterface {
-    Map<String, String> commandMap = new HashMap<>();
+
+    private static SimplePluginComponent simplePluginComponent;
 
     public SimplePlugin() {
-        commandMap.put("ping", "Does the ping");
+        simplePluginComponent = new SimplePluginComponent();
     }
 
     @Override
     public Boolean hasCommand(String command) {
-        return command.equals("ping");
+        return Arrays.asList(getAllCommandNames()).contains(command);
     }
 
     @Override
-    public String execute(String command, String[] commandArgs) {
-        return "Ping Ok" + (commandArgs.length>0 ? " : " + commandArgs[0] : "");
+    public Object execute(String command, String[] commandArgs) {
+        return MethodRegistry.executeInstance(command, simplePluginComponent, commandArgs);
     }
 
     @Override
@@ -34,15 +36,19 @@ public class SimplePlugin implements PluginInterface {
 
     @Override
     public String[] getAllCommandNames() {
-        return commandMap.keySet().toArray(new String[0]);
+        return AnnotationRegistry.REGISTRY.entrySet().stream()
+                .flatMap(entry -> entry.getValue().stream()
+                        .flatMap(map -> map.keySet().stream().filter("command"::equals).map(map::get)))
+                .toArray(String[]::new);
     }
 
     @Override
     public String getHelpMessage() {
-        StringBuilder helpMessage = new StringBuilder();
-        for (String commandName : commandMap.keySet()) {
-            helpMessage.append(String.format("-  %-15s : %s\n", commandName, commandMap.get(commandName)));
-        }
-        return helpMessage.toString();
+        StringBuilder sb = new StringBuilder();
+        AnnotationRegistry.REGISTRY.forEach((key, value) -> {
+            sb.append(key).append("\n");
+            value.forEach(v -> sb.append("       - ").append(v.get("command")).append("\n           ").append(v.get("description")).append("\n"));
+        });
+        return sb.toString();
     }
 }

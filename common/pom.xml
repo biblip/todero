@@ -35,6 +35,12 @@
             <version>2.15.2</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>1.13.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -43,6 +49,11 @@
                 <artifactId>maven-compiler-plugin</artifactId>
              </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
     </build>
 
 

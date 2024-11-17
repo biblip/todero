@@ -1,68 +1,27 @@
 package com.djmusic.vlc;
 
-import com.djmusic.vlc.base.ChannelManager;
-import com.social100.todero.common.Command;
-import com.social100.todero.common.PluginInterface;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
+import com.social100.todero.common.model.plugin.PluginInterface;
+import com.social100.todero.generated.AnnotationRegistry;
+import com.social100.todero.generated.MethodRegistry;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.Arrays;
 
 public class VlcPlugin implements PluginInterface {
-    private final ChannelManager channelManager;
-    private final Map<String, Command> commandMap = new HashMap<>();
+
+    private static VlcPluginComponent vlcPluginComponent;
 
     public VlcPlugin() {
-        System.setProperty("jna.library.path", "C:\\Program Files\\VideoLAN\\VLC");
-        channelManager = new ChannelManager();
-        discoverCommands();
+        vlcPluginComponent = new VlcPluginComponent();
     }
 
     @Override
     public Boolean hasCommand(String command) {
-        return commandMap.containsKey(command);
-    }
-
-    public void discoverCommands() {
-        Reflections reflections = new Reflections(new ConfigurationBuilder()
-                .setUrls(ClasspathHelper.forPackage("com.djmusic.vlc", this.getClass().getClassLoader()))
-                .setScanners(new SubTypesScanner()) // 'false' to exclude Object.class
-                .addClassLoader(this.getClass().getClassLoader())
-        );
-
-        Set<Class<? extends Command>> commandClasses = reflections.getSubTypesOf(Command.class);
-
-        for (Class<? extends Command> cls : commandClasses) {
-            try {
-                Command commandInstance = cls.getDeclaredConstructor().newInstance();
-                String commandName = commandInstance.name();
-
-                // Verify that the command name is a single word (contains no spaces)
-                if (commandName.trim().contains(" ")) {
-                    System.err.println("Invalid command name (should it be one word): " + commandName);
-                    continue; // Skip this command
-                }
-
-                commandMap.put(commandName, commandInstance);
-
-            } catch (Exception e) {
-                System.err.println("Could not instantiate command: " + cls.getName());
-                e.printStackTrace();
-            }
-        }
+        return Arrays.asList(getAllCommandNames()).contains(command);
     }
 
     @Override
-    public String execute(String command, String[] commandArgs) {
-        Command commandScript = commandMap.get(command);
-        if (commandScript != null) {
-            return commandScript.execute(channelManager, commandArgs);
-        }
-        return "Command Not Found";
+    public Object execute(String command, String[] commandArgs) {
+        return MethodRegistry.executeInstance(command, vlcPluginComponent, commandArgs);
     }
 
     @Override
@@ -77,15 +36,19 @@ public class VlcPlugin implements PluginInterface {
 
     @Override
     public String[] getAllCommandNames() {
-        return commandMap.keySet().toArray(new String[0]);
+        return AnnotationRegistry.REGISTRY.entrySet().stream()
+                .flatMap(entry -> entry.getValue().stream()
+                        .flatMap(map -> map.keySet().stream().filter("command"::equals).map(map::get)))
+                .toArray(String[]::new);
     }
 
     @Override
     public String getHelpMessage() {
-        StringBuilder helpMessage = new StringBuilder();
-        for (String commandName : commandMap.keySet()) {
-            helpMessage.append(String.format("-  %-15s : %s\n", commandMap.get(commandName).name(), commandMap.get(commandName).description()));
-        }
-        return helpMessage.toString();
+        StringBuilder sb = new StringBuilder();
+        AnnotationRegistry.REGISTRY.forEach((key, value) -> {
+            sb.append(key).append("\n");
+            value.forEach(v -> sb.append("       - ").append(v.get("command")).append("\n           ").append(v.get("description")).append("\n"));
+        });
+        return sb.toString();
     }
 }

@@ -1,6 +1,10 @@
 package com.social100.todero.cli.base;
 
-import com.social100.todero.common.PluginInterface;
+import com.social100.todero.common.model.plugin.Command;
+import com.social100.todero.common.model.plugin.Plugin;
+import com.social100.todero.common.model.plugin.PluginInterface;
+import com.social100.todero.common.model.plugin.PluginSection;
+import com.social100.todero.generated.MethodRegistry;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
@@ -9,13 +13,13 @@ import org.reflections.util.ConfigurationBuilder;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Set;
+import java.sql.Array;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class PluginContext {
-    private URLClassLoader pluginClassLoader;
-    private PluginInterface registeredPlugin;
+    final private Map<String,Plugin> plugins = new HashMap<>();
     final private PluginExecutor pluginExecutor = new PluginExecutor(3);
 
 
@@ -26,7 +30,7 @@ public class PluginContext {
     private void initializePlugin(File pluginJar) throws Exception {
         // Convert the File to a URL
         URL jarUrl = pluginJar.toURI().toURL();
-        this.pluginClassLoader = new URLClassLoader(new URL[]{jarUrl}, getClass().getClassLoader());
+        URLClassLoader pluginClassLoader = new URLClassLoader(new URL[]{jarUrl}, getClass().getClassLoader());
 
         // Initialize Reflections with the URLClassLoader
         Reflections reflections = new Reflections(new ConfigurationBuilder()
@@ -38,48 +42,76 @@ public class PluginContext {
         Set<Class<? extends PluginInterface>> commandClasses = reflections.getSubTypesOf(PluginInterface.class);
         for (Class<? extends PluginInterface> commandClass : commandClasses) {
             if (!commandClass.isInterface()) {
-                registeredPlugin = commandClass.getDeclaredConstructor().newInstance();
+
+                Plugin plugin = Plugin.builder()
+                        .file(pluginJar)
+                        .classLoader(pluginClassLoader)
+                        .pluginClass(commandClass)
+                        .pluginInstance(commandClass.getDeclaredConstructor().newInstance())
+                        .build();
+                plugins.put(pluginJar.getName(), plugin);
+                Map<String, Command> pluginCommandMap = new HashMap<>();
+
+                PluginSection pluginSection = PluginSection
+                        .builder()
+                        .name(plugin.getPluginInstance().name())
+                        .commands(pluginCommandMap)
+                        .build();
+                /*
+                plugin.getPluginInstance()
+                        .commands()
+                        .forEach(commandMethod -> {
+                            Command command = Command
+                                    .builder()
+                                    .command(commandMethod.name())
+                                    .description(commandMethod.description())
+                                    .commandMethod(commandMethod)
+                                    .build();
+                            pluginCommandMap.put(commandMethod.name(), command);
+                        });
+                 */
             }
         }
     }
 
     public String getHelpMessage() {
-        String helpMessage = "";
-        helpMessage = String.format("%-15s   - %s\n", registeredPlugin.name().toUpperCase(), registeredPlugin.description().toUpperCase());
-        return helpMessage.concat(registeredPlugin.getHelpMessage());
+        StringBuilder sb = new StringBuilder();
+        plugins.values().forEach(plugin -> {
+            sb.append(plugin.getPluginInstance().getHelpMessage());
+        });
+        return sb.toString();
     }
 
     // Cleanup method to properly close the plugin class loader when no longer needed
     public void cleanup() {
+        /*
         try {
-            pluginClassLoader.close();
+            plugin.getClassLoader().close();
             pluginExecutor.shutdown();
         } catch (Exception e) {
             e.printStackTrace();
         }
+         */
     }
 
     public Boolean hasName(String plugin ) {
-        return registeredPlugin.name().equals(plugin);
+        return plugins.values().stream().anyMatch(p -> plugin.equals(p.getPluginInstance().name()));
     }
 
     public Boolean hasCommand(String command) {
-        return registeredPlugin.hasCommand(command);
+        return plugins.values().stream().anyMatch(p -> p.getPluginInstance().hasCommand(command));
     }
 
-    public String execute(String command, String[] commandArgs) {
-        if (registeredPlugin.hasCommand(command)) {
-            Future<String> future = pluginExecutor.executePluginTask(new PluginCommandTask(registeredPlugin, command, commandArgs));
-            try {
-                return future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                return "Error: " + e.getMessage();
-            }
+    public Object execute(String command, String[] commandArgs) {
+        Optional<Plugin> optionalPlugin = plugins.values().stream().filter(p -> p.getPluginInstance().hasCommand(command)).findFirst();
+        if (optionalPlugin.isEmpty()) {
+            return "Command Not Found";
         }
-        return "Command Not Found";
+        return optionalPlugin.get().getPluginInstance().execute(command, commandArgs);
     }
 
     public String[] getAllCommandNames() {
-        return registeredPlugin.getAllCommandNames();
+        //return registeredPlugin.getAllCommandNames();
+        return new String[] { "Hello" };
     }
 }

@@ -16,6 +16,7 @@
         <module>plugins-parent/vlc-plugin</module>
         <module>plugins-parent/simple-plugin</module>
         <module>plugins-parent/aia-protocol-plugin</module>
+        <module>todero-plugin-dev</module>
     </modules>
 
     <properties>

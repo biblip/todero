@@ -1,11 +1,20 @@
 package com.social100.todero.cli.base;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.social100.todero.common.model.plugin.Plugin;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class PluginManager {
+
+    final static private ObjectMapper objectMapper = new ObjectMapper();
+
+    final private Map<String, Plugin> plugins = new HashMap<>();
     final private List<PluginContext> pluginContextList = new ArrayList<>();
     private File pluginsDir;
 
@@ -29,6 +38,7 @@ public class PluginManager {
         for (File file : pluginFiles) {
             try {
                 pluginContextList.add(new PluginContext(file));
+
             } catch (Exception e) {
                 System.err.println("Error processing plugin JAR: " + file.getName());
                 e.printStackTrace();
@@ -44,10 +54,13 @@ public class PluginManager {
         return helpMessage.toString();
     }
 
-    public String execute(String plugin, String command, String[] commandArgs) {
-        if (command != null) {
-            for (PluginContext manager : pluginContextList) {
-                if (manager.hasName(plugin) && manager.hasCommand(command)) {
+    public Object execute(String plugin, String command, String[] commandArgs) {
+        for (PluginContext manager : pluginContextList) {
+            if (manager.hasName(plugin)) {
+                if (command == null) {
+                    return manager.getHelpMessage();
+                }
+                if (manager.hasCommand(command)) {
                     return manager.execute(command, commandArgs);
                 }
             }

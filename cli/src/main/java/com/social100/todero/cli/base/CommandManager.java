@@ -1,5 +1,6 @@
 package com.social100.todero.cli.base;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.social100.todero.common.Constants;
 import com.social100.todero.common.config.AppConfig;
 
@@ -7,7 +8,7 @@ import java.io.File;
 import java.util.Optional;
 
 public class CommandManager {
-
+    final static private ObjectMapper objectMapper = new ObjectMapper();
     PluginManager pluginManager;
 
     public CommandManager(AppConfig appConfig) {
@@ -21,18 +22,17 @@ public class CommandManager {
     }
 
     public String execute(String rootCommand, String command, String[] commandArgs) {
-        switch (rootCommand) {
-            case Constants.CLI_COMMAND_HELP:
-                return getHelpMessage(command, commandArgs).trim();
-            case Constants.CLI_COMMAND_LOAD:
-                return load();
-            case Constants.CLI_COMMAND_UNLOAD:
-                return unload();
-            case Constants.CLI_COMMAND_RELOAD:
-                return reload();
-            default:
-                return pluginManager.execute(rootCommand, command, commandArgs);
+        Object output = switch (rootCommand) {
+            case Constants.CLI_COMMAND_HELP -> getHelpMessage(command, commandArgs).trim();
+            case Constants.CLI_COMMAND_LOAD -> load();
+            case Constants.CLI_COMMAND_UNLOAD -> unload();
+            case Constants.CLI_COMMAND_RELOAD -> reload();
+            default -> pluginManager.execute(rootCommand, command, commandArgs);
+        };
+        if (output instanceof String) {
+            return (String)output;
         }
+        return toJson(output);
     }
 
     public String reload() {
@@ -55,5 +55,13 @@ public class CommandManager {
 
     public String[] getAllCommandNames() {
         return pluginManager.getAllCommandNames();
+    }
+
+    private static String toJson(Object result) {
+        try {
+            return objectMapper.writeValueAsString(result);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize result to JSON", e);
+        }
     }
 }
