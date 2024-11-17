@@ -21,13 +21,13 @@ public class CommandManager {
         return pluginManager.getHelpMessage(command, commandArgs);
     }
 
-    public String execute(String rootCommand, String command, String[] commandArgs) {
-        Object output = switch (rootCommand) {
+    public String execute(String pluginName, String command, String[] commandArgs) {
+        Object output = switch (pluginName) {
             case Constants.CLI_COMMAND_HELP -> getHelpMessage(command, commandArgs).trim();
             case Constants.CLI_COMMAND_LOAD -> load();
             case Constants.CLI_COMMAND_UNLOAD -> unload();
             case Constants.CLI_COMMAND_RELOAD -> reload();
-            default -> pluginManager.execute(rootCommand, command, commandArgs);
+            default -> pluginManager.execute(pluginName, command, commandArgs);
         };
         if (output instanceof String) {
             return (String)output;

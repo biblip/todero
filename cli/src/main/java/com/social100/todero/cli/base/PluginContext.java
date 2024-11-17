@@ -4,7 +4,6 @@ import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Plugin;
 import com.social100.todero.common.model.plugin.PluginInterface;
 import com.social100.todero.common.model.plugin.PluginSection;
-import com.social100.todero.generated.MethodRegistry;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
@@ -13,10 +12,9 @@ import org.reflections.util.ConfigurationBuilder;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.sql.Array;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 public class PluginContext {
     final private Map<String,Plugin> plugins = new HashMap<>();
@@ -49,7 +47,7 @@ public class PluginContext {
                         .pluginClass(commandClass)
                         .pluginInstance(commandClass.getDeclaredConstructor().newInstance())
                         .build();
-                plugins.put(pluginJar.getName(), plugin);
+                plugins.put(plugin.getPluginInstance().name(), plugin);
                 Map<String, Command> pluginCommandMap = new HashMap<>();
 
                 PluginSection pluginSection = PluginSection
@@ -102,12 +100,12 @@ public class PluginContext {
         return plugins.values().stream().anyMatch(p -> p.getPluginInstance().hasCommand(command));
     }
 
-    public Object execute(String command, String[] commandArgs) {
-        Optional<Plugin> optionalPlugin = plugins.values().stream().filter(p -> p.getPluginInstance().hasCommand(command)).findFirst();
-        if (optionalPlugin.isEmpty()) {
+    public Object execute(String pluginName, String command, String[] commandArgs) {
+        Optional<Plugin> selectedPlugin = plugins.values().stream().filter(p -> pluginName.equals(p.getPluginInstance().name()) && p.getPluginInstance().hasCommand(command)).findFirst();
+        if (selectedPlugin.isEmpty()) {
             return "Command Not Found";
         }
-        return optionalPlugin.get().getPluginInstance().execute(command, commandArgs);
+        return selectedPlugin.get().getPluginInstance().execute(command, commandArgs);
     }
 
     public String[] getAllCommandNames() {

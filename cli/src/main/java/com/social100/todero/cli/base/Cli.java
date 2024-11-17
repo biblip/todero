@@ -86,16 +86,16 @@ public class Cli {
         }
 
         if (!arguments.isEmpty()) {
-            String firstParam = arguments.remove(0);
-            String secondParam = null;
+            String pluginName = arguments.remove(0);
+            String command = null;
             String[] commandArgs = {};
             if (!arguments.isEmpty()) {
-                secondParam = arguments.remove(0);
+                command = arguments.remove(0);
             }
             if (!arguments.isEmpty()) {
                 commandArgs = arguments.toArray(new String[0]);
             }
-            String output = commandManager.execute(firstParam, secondParam, commandArgs);
+            String output = commandManager.execute(pluginName, command, commandArgs);
             System.out.println(output);
         }
     }

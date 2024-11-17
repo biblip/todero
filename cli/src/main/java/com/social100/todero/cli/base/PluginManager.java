@@ -54,14 +54,14 @@ public class PluginManager {
         return helpMessage.toString();
     }
 
-    public Object execute(String plugin, String command, String[] commandArgs) {
+    public Object execute(String pluginName, String command, String[] commandArgs) {
         for (PluginContext manager : pluginContextList) {
-            if (manager.hasName(plugin)) {
+            if (manager.hasName(pluginName)) {
                 if (command == null) {
                     return manager.getHelpMessage();
                 }
                 if (manager.hasCommand(command)) {
-                    return manager.execute(command, commandArgs);
+                    return manager.execute(pluginName, command, commandArgs);
                 }
             }
         }

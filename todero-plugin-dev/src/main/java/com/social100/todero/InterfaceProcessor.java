@@ -68,11 +68,13 @@ public class InterfaceProcessor extends AbstractProcessor {
         generateRegistryClass("com.social100.todero.generated", classToMethodsMap);
 
 
-        Map<String, MethodDetails> nameToMethodDetails = new HashMap<>();
+        Map<String, Map<String, MethodDetails>> nameToMethodDetails = new HashMap<>();
 
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (classElement.getKind() == ElementKind.CLASS) {
                 TypeElement classTypeElement = (TypeElement) classElement;
+
+                Map<String, MethodDetails> methodDetails = new HashMap<>();
 
                 for (Element enclosedElement : classTypeElement.getEnclosedElements()) {
                     if (enclosedElement.getKind() == ElementKind.METHOD &&
@@ -83,16 +85,18 @@ public class InterfaceProcessor extends AbstractProcessor {
                         boolean isStatic = enclosedElement.getModifiers().contains(Modifier.STATIC);
 
                         // Add to the map
-                        nameToMethodDetails.put(
+                        methodDetails.put(
                                 methodAnnotation.command(),
                                 new MethodDetails(isStatic, classTypeElement.getQualifiedName().toString(), enclosedElement.getSimpleName().toString())
                         );
                     }
                 }
+
+                nameToMethodDetails.put(classTypeElement.getQualifiedName().toString(), methodDetails);
+                // Generate the registry class
             }
         }
 
-        // Generate the registry class
         generateMethodRegistry("com.social100.todero.generated", nameToMethodDetails);
 
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
@@ -159,7 +163,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         }
     }
 
-    private void generateMethodRegistry(String packageName, Map<String, MethodDetails> nameToMethodDetails) {
+    private void generateMethodRegistry(String packageName, Map<String, Map<String, MethodDetails>> nameToMethodDetails) {
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "import java.util.HashMap;\n" +
                 "import java.util.Map;\n" +
@@ -167,38 +171,45 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "import java.util.function.Function;\n" +
                 "\n" +
                 "public class MethodRegistry {\n\n" +
-                "    public static final Map<String, Function<String[], Object>> STATIC_REGISTRY = new HashMap<>();\n" +
-                "    public static final Map<String, BiFunction<Object, String[], Object>> INSTANCE_REGISTRY = new HashMap<>();\n" +
+                "    public static final Map<String, Map<String, Function<String[], Object>>> STATIC_REGISTRY = new HashMap<>();\n" +
+                "    public static final Map<String, Map<String, BiFunction<Object, String[], Object>>> INSTANCE_REGISTRY = new HashMap<>();\n" +
                 "\n" +
                 "    static {\n");
+        for (Map.Entry<String, Map<String, MethodDetails>> nameToMethodDetail : nameToMethodDetails.entrySet()) {
+            String instanceRegistryName = "instance" + getSimpleName(nameToMethodDetail.getKey()) + "Registry";
+            String staticRegistryName = "static" + getSimpleName(nameToMethodDetail.getKey()) + "Registry";
+            classContent.append("        Map<String, BiFunction<Object, String[], Object>> " +  instanceRegistryName + " = new HashMap<>();\n");
+            classContent.append("        Map<String, Function<String[], Object>> " + staticRegistryName + " = new HashMap<>();\n");
+            // Populate the STATIC_REGISTRY for static methods
+            for (Map.Entry<String, MethodDetails> entry : nameToMethodDetail.getValue().entrySet()) {
+                String methodName = entry.getKey();
+                MethodDetails details = entry.getValue();
 
-        // Populate the STATIC_REGISTRY for static methods
-        for (Map.Entry<String, MethodDetails> entry : nameToMethodDetails.entrySet()) {
-            String methodName = entry.getKey();
-            MethodDetails details = entry.getValue();
-
-            if (details.isStatic) {
-                classContent.append("        STATIC_REGISTRY.put(\"").append(methodName).append("\", ")
-                        .append("args -> ").append(details.className).append(".").append(details.methodName).append("(args));\n");
-            } else {
-                // Populate the INSTANCE_REGISTRY for instance methods
-                classContent.append("        INSTANCE_REGISTRY.put(\"").append(methodName).append("\", ")
-                        .append("(instance, args) -> ((").append(details.className).append(") instance).")
-                        .append(details.methodName).append("(args));\n");
+                if (details.isStatic) {
+                    classContent.append("        STATIC_REGISTRY.put(\"").append(methodName).append("\", ")
+                            .append("args -> ").append(details.className).append(".").append(details.methodName).append("(args));\n");
+                } else {
+                    // Populate the INSTANCE_REGISTRY for instance methods
+                    classContent.append("        " + instanceRegistryName + ".put(\"").append(methodName).append("\", ")
+                            .append("(instance, args) -> ((").append(details.className).append(") instance).")
+                            .append(details.methodName).append("(args));\n");
+                }
             }
+            classContent.append("        STATIC_REGISTRY.put(\"" + nameToMethodDetail.getKey() + "\", " + staticRegistryName + ");\n");
+            classContent.append("        INSTANCE_REGISTRY.put(\"" + nameToMethodDetail.getKey() + "\", " + instanceRegistryName + ");\n");
         }
 
         classContent.append("    }\n\n" +
-                "    public static Object executeStatic(String command, String[] args) {\n" +
-                "        Function<String[], Object> function = STATIC_REGISTRY.get(command);\n" +
+                "    public static Object executeStatic(String plugin, String command, String[] args) {\n" +
+                "        Function<String[], Object> function = STATIC_REGISTRY.get(plugin).get(command);\n" +
                 "        if (function != null) {\n" +
                 "            return function.apply(args);\n" +
                 "        } else {\n" +
                 "            throw new IllegalArgumentException(\"No static method found for command: \" + command);\n" +
                 "        }\n" +
                 "    }\n\n" +
-                "    public static Object executeInstance(String command, Object instance, String[] args) {\n" +
-                "        BiFunction<Object, String[], Object> function = INSTANCE_REGISTRY.get(command);\n" +
+                "    public static Object executeInstance(String plugin, String command, Object instance, String[] args) {\n" +
+                "        BiFunction<Object, String[], Object> function = INSTANCE_REGISTRY.get(plugin).get(command);\n" +
                 "        if (function != null) {\n" +
                 "            return function.apply(instance, args);\n" +
                 "        } else {\n" +
@@ -232,6 +243,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "import com.social100.todero.generated.MethodRegistry;\n" +
                 "\n" +
                 "import java.util.Arrays;\n" +
+                "import java.util.Map;\n" +
                 "\n" +
                 "public class " + generatedClassName + " implements PluginInterface {\n" +
                 "\n" +
@@ -248,7 +260,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "\n" +
                 "    @Override\n" +
                 "    public Object execute(String command, String[] commandArgs) {\n" +
-                "        return MethodRegistry.executeInstance(command, " + classVariableName + ", commandArgs);\n" +
+                "        return MethodRegistry.executeInstance(\"" + pluginClassQualifiedName + "\", command, " + classVariableName + ", commandArgs);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
@@ -263,21 +275,27 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "\n" +
                 "    @Override\n" +
                 "    public String[] getAllCommandNames() {\n" +
-                "        return AnnotationRegistry.REGISTRY.entrySet().stream()\n" +
-                "                .flatMap(entry -> entry.getValue().stream()\n" +
-                "                        .flatMap(map -> map.keySet().stream().filter(\"command\"::equals).map(map::get)))\n" +
-                "                .toArray(String[]::new);\n" +
+                "        return AnnotationRegistry.REGISTRY.get(\"" + pluginClassQualifiedName + "\")\n" +
+                "                .stream()\n" +
+                "                .flatMap(map -> map.keySet().stream().filter(\"command\"::equals).map(map::get))\n" +
+                "                .toArray(String[]::new);" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
                 "    public String getHelpMessage() {\n" +
                 "        StringBuilder sb = new StringBuilder();\n" +
-                "        AnnotationRegistry.REGISTRY.forEach((key, value) -> {\n" +
-                "            sb.append(key).append(\"\\n\");\n" +
-                "            value.forEach(v -> sb.append(\"       - \").append(v.get(\"command\")).append(\"\\n           \").append(v.get(\"description\")).append(\"\\n\"));\n" +
-                "        });\n" +
-                "        return sb.toString();\n" +
+                "        sb.append(\"" + pluginClassQualifiedName + "\\n\");\n" +
+                "        AnnotationRegistry.REGISTRY.get(\"" + pluginClassQualifiedName + "\")\n" +
+                "                .stream()\n" +
+                "                .forEach(v -> printCommandHelp(sb, v));\n" +
+                "        return sb.toString();" +
                 "    }\n" +
+                "\n" +
+                "    private void printCommandHelp(StringBuilder sb, Map<String, String> entry) {\n" +
+                "        sb.append(\"       - \" + entry.get(\"command\") + \n" +
+                "                \":  \" + entry.get(\"description\") + \"\\n\"\n" +
+                "        );\n" +
+                "    }" +
                 "}\n");
         try {
             // Write the generated file
