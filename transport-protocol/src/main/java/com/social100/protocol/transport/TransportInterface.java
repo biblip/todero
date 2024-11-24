@@ -1,0 +1,11 @@
+package com.social100.protocol.transport;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
+
+public interface TransportInterface {
+    void send(InetSocketAddress destination, String message) throws IOException;
+    DatagramChannel getChannel();
+    int getPort();
+}
