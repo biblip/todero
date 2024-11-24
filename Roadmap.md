@@ -20,9 +20,10 @@ mindmap
           Should Have To Be
             As Good As HTTP
             Able to Use Sound, Image, Video Others
-            Fast - Instantly Available - No Handshakes every request.
+            Fast - Instantly Available.
           Advantages
             Will be AI Specific
+            Conversational Protocol
           Disadvantages
             Has to evolve
             Not available.
