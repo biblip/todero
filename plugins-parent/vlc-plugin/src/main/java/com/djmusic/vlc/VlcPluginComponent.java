@@ -1,8 +1,8 @@
 package com.djmusic.vlc;
 
 import com.djmusic.vlc.base.ChannelManager;
-import com.social100.todero.annotation.AIAController;
-import com.social100.todero.annotation.Action;
+import com.social100.processor.AIAController;
+import com.social100.processor.Action;
 import com.social100.todero.common.CommandMethod;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;

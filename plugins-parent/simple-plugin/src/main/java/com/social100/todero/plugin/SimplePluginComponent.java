@@ -1,7 +1,7 @@
 package com.social100.todero.plugin;
 
-import com.social100.todero.annotation.AIAController;
-import com.social100.todero.annotation.Action;
+import com.social100.processor.AIAController;
+import com.social100.processor.Action;
 
 import java.util.Map;
 

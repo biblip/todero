@@ -1,7 +1,7 @@
 package com.social100.todero.aia;
 
-import com.social100.todero.annotation.AIAController;
-import com.social100.todero.annotation.Action;
+import com.social100.processor.AIAController;
+import com.social100.processor.Action;
 
 @AIAController(name = "aia",
         type = "",
@@ -12,7 +12,7 @@ public class AIAProtocolPluginComponent {
     public AIAProtocolPluginComponent() {
     }
 
-    @Action(group = MAIN_GROUP, 
+    @Action(group = MAIN_GROUP,
             command = "test",
             description = "Does the test")
     public String testCommand(String[] commandArgs) {

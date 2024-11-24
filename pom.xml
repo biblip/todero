@@ -17,8 +17,9 @@
         <module>plugins-parent/vlc-plugin</module>
         <module>plugins-parent/simple-plugin</module>
         <module>plugins-parent/aia-protocol-plugin</module>
-        <module>todero-plugin-dev</module>
         <module>transport-protocol</module>
+        <module>annotations</module>
+        <module>processor</module>
     </modules>
 
     <properties>
@@ -32,6 +33,18 @@
 
 
     <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+
         <pluginManagement>
             <plugins>
                 <!-- Maven Compiler Plugin -->
@@ -44,6 +57,7 @@
                         <target>${java.version}</target>
                     </configuration>
                 </plugin>
+
                 <!-- Maven Shade Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -62,6 +76,7 @@
                     <artifactId>maven-clean-plugin</artifactId>
                     <version>${maven.clean.plugin.version}</version>
                 </plugin>
+
             </plugins>
         </pluginManagement>
     </build>
