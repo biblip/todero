@@ -19,21 +19,21 @@ public class ThePlugin implements PluginInterface {
 
     @Override
     public String name() {
-        return "";
+        return null;
     }
 
     @Override
     public String description() {
-        return "";
+        return null;
     }
 
     @Override
     public String[] getAllCommandNames() {
-        return new String[0];
+        return null;
     }
 
     @Override
     public String getHelpMessage() {
-        return "";
+        return null;
     }
 }

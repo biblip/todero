@@ -41,6 +41,11 @@ public class InterfaceProcessor extends AbstractProcessor {
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (classElement.getKind() == ElementKind.CLASS) {
                 TypeElement classTypeElement = (TypeElement) classElement;
+                AIAController classAnnotation = classElement.getAnnotation(AIAController.class);
+
+                String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
+                String pluginName = classAnnotation.name();
+                String pluginDescription = classAnnotation.description();
 
                 validateUniqueCommands(classTypeElement);
 
@@ -68,12 +73,11 @@ public class InterfaceProcessor extends AbstractProcessor {
 
                 if (!methodDetailsList.isEmpty()) {
                     classToMethodsMap.put(classTypeElement.getQualifiedName().toString(), methodDetailsList);
+                    // Generate a summary file
+                    generateRegistryClass("com.social100.todero.generated", pluginClassQualifiedName, pluginName, methodDetailsList);
                 }
             }
         }
-
-        // Generate a summary file
-        generateRegistryClass("com.social100.todero.generated", classToMethodsMap);
 
 
         Map<String, Map<String, MethodDetails>> nameToMethodDetails = new HashMap<>();
@@ -81,6 +85,11 @@ public class InterfaceProcessor extends AbstractProcessor {
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (classElement.getKind() == ElementKind.CLASS) {
                 TypeElement classTypeElement = (TypeElement) classElement;
+                AIAController classAnnotation = classElement.getAnnotation(AIAController.class);
+
+                String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
+                String pluginName = classAnnotation.name();
+                String pluginDescription = classAnnotation.description();
 
                 Map<String, MethodDetails> methodDetails = new HashMap<>();
 
@@ -102,10 +111,10 @@ public class InterfaceProcessor extends AbstractProcessor {
 
                 nameToMethodDetails.put(classTypeElement.getQualifiedName().toString(), methodDetails);
                 // Generate the registry class
+
+                generateMethodRegistry("com.social100.todero.generated", pluginClassQualifiedName, pluginName, methodDetails);
             }
         }
-
-        generateMethodRegistry("com.social100.todero.generated", nameToMethodDetails);
 
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (classElement.getKind() == ElementKind.CLASS) {
@@ -141,21 +150,19 @@ public class InterfaceProcessor extends AbstractProcessor {
         return Set.of("isSelfProcessing");
     }*/
 
-    private void generateRegistryClass(String packageName, Map<String, List<Map<String, String>>> classToMethodsMap) {
+    private void generateRegistryClass(String packageName, String pluginClassQualifiedName, String pluginName, List<Map<String, String>> classToMethodsMap) {
+
+        String classSimpleName = getSimpleName(pluginClassQualifiedName);
+        String classVariableName = classToClassVariableName(classSimpleName);
+        String generatedClassName = classSimpleName + pluginName + "AR";
 
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "import java.util.List;\n" +
                 "import java.util.Map;\n" +
                 "\n" +
-                "public class AnnotationRegistry {\n");
-        classContent.append("    public static final Map<String, List<Map<String, String>>> REGISTRY = Map.of(\n");
-
-        for (Map.Entry<String, List<Map<String, String>>> entry : classToMethodsMap.entrySet()) {
-            String className = entry.getKey();
-            List<Map<String, String>> methods = entry.getValue();
-
-            classContent.append("        \"").append(className).append("\", List.of(\n");
-            for (Map<String, String> methodDetails : methods) {
+                "public class " + generatedClassName + " {\n");
+        classContent.append("    public static final List<Map<String, String>> REGISTRY = List.of(\n");
+            for (Map<String, String> methodDetails : classToMethodsMap) {
                 classContent.append("            Map.of(");
                 methodDetails.forEach((key, value) ->
                         classContent.append("\"").append(key).append("\", \"").append(value).append("\", ")
@@ -166,17 +173,14 @@ public class InterfaceProcessor extends AbstractProcessor {
             }
             // Remove trailing ", " and close List
             classContent.setLength(classContent.length() - 2);
-            classContent.append("\n        ),\n");
-        }
-
-        // Remove trailing ", " and close REGISTRY
-        classContent.setLength(classContent.length() - 2);
-        classContent.append("\n    );\n}");
+            classContent.append("\n    );\n");
+        //}
+        classContent.append("}");
 
         try {
             // Write the generated file
             Filer filer = processingEnv.getFiler();
-            JavaFileObject fileObject = filer.createSourceFile(packageName + ".AnnotationRegistry");
+            JavaFileObject fileObject = filer.createSourceFile(packageName + "." + generatedClassName);
 
             try (Writer writer = fileObject.openWriter()) {
                 writer.write(classContent.toString());
@@ -186,25 +190,30 @@ public class InterfaceProcessor extends AbstractProcessor {
         }
     }
 
-    private void generateMethodRegistry(String packageName, Map<String, Map<String, MethodDetails>> nameToMethodDetails) {
+    private void generateMethodRegistry(String packageName, String pluginClassQualifiedName, String pluginName, Map<String, MethodDetails> nameToMethodDetails) {
+
+        String classSimpleName = getSimpleName(pluginClassQualifiedName);
+        String classVariableName = classToClassVariableName(classSimpleName);
+        String generatedClassName = classSimpleName + pluginName + "MR";
+
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "import java.util.HashMap;\n" +
                 "import java.util.Map;\n" +
                 "import java.util.function.BiFunction;\n" +
                 "import java.util.function.Function;\n" +
                 "\n" +
-                "public class MethodRegistry {\n\n" +
+                "public class " + generatedClassName + " {\n\n" +
                 "    public static final Map<String, Map<String, Function<String[], Object>>> STATIC_REGISTRY = new HashMap<>();\n" +
                 "    public static final Map<String, Map<String, BiFunction<Object, String[], Object>>> INSTANCE_REGISTRY = new HashMap<>();\n" +
                 "\n" +
                 "    static {\n");
-        for (Map.Entry<String, Map<String, MethodDetails>> nameToMethodDetail : nameToMethodDetails.entrySet()) {
-            String instanceRegistryName = "instance" + getSimpleName(nameToMethodDetail.getKey()) + "Registry";
-            String staticRegistryName = "static" + getSimpleName(nameToMethodDetail.getKey()) + "Registry";
+        //for (Map.Entry<String, Map<String, MethodDetails>> nameToMethodDetail : nameToMethodDetails.entrySet()) {
+            String instanceRegistryName = "instance" + getSimpleName(pluginClassQualifiedName) + "Registry";
+            String staticRegistryName = "static" + getSimpleName(pluginClassQualifiedName) + "Registry";
             classContent.append("        Map<String, BiFunction<Object, String[], Object>> " +  instanceRegistryName + " = new HashMap<>();\n");
             classContent.append("        Map<String, Function<String[], Object>> " + staticRegistryName + " = new HashMap<>();\n");
             // Populate the STATIC_REGISTRY for static methods
-            for (Map.Entry<String, MethodDetails> entry : nameToMethodDetail.getValue().entrySet()) {
+            for (Map.Entry<String, MethodDetails> entry : nameToMethodDetails.entrySet()) {
                 String methodName = entry.getKey();
                 MethodDetails details = entry.getValue();
 
@@ -234,9 +243,9 @@ public class InterfaceProcessor extends AbstractProcessor {
                             .append("(args));\n");
                 }
             }
-            classContent.append("        STATIC_REGISTRY.put(\"" + nameToMethodDetail.getKey() + "\", " + staticRegistryName + ");\n");
-            classContent.append("        INSTANCE_REGISTRY.put(\"" + nameToMethodDetail.getKey() + "\", " + instanceRegistryName + ");\n\n");
-        }
+            classContent.append("        STATIC_REGISTRY.put(\"" + pluginClassQualifiedName + "\", " + staticRegistryName + ");\n");
+            classContent.append("        INSTANCE_REGISTRY.put(\"" + pluginClassQualifiedName + "\", " + instanceRegistryName + ");\n\n");
+        //}
 
         classContent.append("    }\n\n" +
                 "    public static Object executeStatic(String plugin, String command, String[] args) {\n" +
@@ -270,7 +279,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         try {
             // Write the generated file
             Filer filer = processingEnv.getFiler();
-            JavaFileObject fileObject = filer.createSourceFile(packageName + ".MethodRegistry");
+            JavaFileObject fileObject = filer.createSourceFile(packageName + "." + generatedClassName);
 
             try (Writer writer = fileObject.openWriter()) {
                 writer.write(classContent.toString());
@@ -286,11 +295,14 @@ public class InterfaceProcessor extends AbstractProcessor {
         String classVariableName = classToClassVariableName(classSimpleName);
         String generatedClassName = classSimpleName + "Impl";
 
+        String generatedAnnotationRegistryClassName = classSimpleName + pluginName + "AR";
+        String generatedMethodRegistryClassName = classSimpleName + pluginName + "MR";
+
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "\n" +
                 "import com.social100.todero.common.model.plugin.PluginInterface;\n" +
-                "import com.social100.todero.generated.AnnotationRegistry;\n" +
-                "import com.social100.todero.generated.MethodRegistry;\n" +
+                "import com.social100.todero.generated." + generatedAnnotationRegistryClassName + ";\n" +
+                "import com.social100.todero.generated." + generatedMethodRegistryClassName + ";\n" +
                 "\n" +
                 "import java.util.Arrays;\n" +
                 "import java.util.Map;\n" +
@@ -310,7 +322,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "\n" +
                 "    @Override\n" +
                 "    public Object execute(String command, String[] commandArgs) {\n" +
-                "        return MethodRegistry.execute(\"" + pluginClassQualifiedName + "\", command, " + classVariableName + ", commandArgs);\n" +
+                "        return " + generatedMethodRegistryClassName + ".execute(\"" + pluginClassQualifiedName + "\", command, " + classVariableName + ", commandArgs);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
@@ -325,7 +337,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "\n" +
                 "    @Override\n" +
                 "    public String[] getAllCommandNames() {\n" +
-                "        return AnnotationRegistry.REGISTRY.get(\"" + pluginClassQualifiedName + "\")\n" +
+                "        return " + generatedAnnotationRegistryClassName + ".REGISTRY\n" +
                 "                .stream()\n" +
                 "                .flatMap(map -> map.keySet().stream().filter(\"command\"::equals).map(map::get))\n" +
                 "                .toArray(String[]::new);\n" +
@@ -335,7 +347,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "    public String getHelpMessage() {\n" +
                 "        StringBuilder sb = new StringBuilder();\n" +
                 "        sb.append(\"" + pluginName + "\\n\");\n" +
-                "        AnnotationRegistry.REGISTRY.get(\"" + pluginClassQualifiedName + "\")\n" +
+                "        " + generatedAnnotationRegistryClassName + ".REGISTRY\n" +
                 "                .stream()\n" +
                 "                .forEach(v -> printCommandHelp(sb, v));\n" +
                 "        return sb.toString();" +

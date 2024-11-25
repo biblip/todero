@@ -12,9 +12,10 @@ import org.reflections.util.ConfigurationBuilder;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class PluginContext {
     final private Map<String,Plugin> plugins = new HashMap<>();
@@ -52,7 +53,7 @@ public class PluginContext {
 
                 PluginSection pluginSection = PluginSection
                         .builder()
-                        .name(plugin.getPluginInstance().name())
+                        .name(Optional.ofNullable(plugin.getPluginInstance().name()).orElse(""))
                         .commands(pluginCommandMap)
                         .build();
                 /*
@@ -75,7 +76,7 @@ public class PluginContext {
     public String getHelpMessage() {
         StringBuilder sb = new StringBuilder();
         plugins.values().forEach(plugin -> {
-            sb.append(plugin.getPluginInstance().getHelpMessage());
+            sb.append(Optional.ofNullable(plugin.getPluginInstance().getHelpMessage()).orElse(""));
         });
         return sb.toString();
     }
@@ -97,7 +98,7 @@ public class PluginContext {
     }
 
     public Boolean hasCommand(String command) {
-        return plugins.values().stream().anyMatch(p -> p.getPluginInstance().hasCommand(command));
+        return plugins.values().stream().anyMatch(p -> Optional.ofNullable(p.getPluginInstance().hasCommand(command)).orElse(false));
     }
 
     public Object execute(String pluginName, String command, String[] commandArgs) {
@@ -113,11 +114,12 @@ public class PluginContext {
     }
 
     private static boolean isPluginAndHasCommand(String pluginName, String command, Plugin p) {
-        return pluginName.equals(p.getPluginInstance().name()) && p.getPluginInstance().hasCommand(command);
+        return pluginName.equals(Optional.ofNullable(p.getPluginInstance().name()).orElse(""))
+                && Optional.ofNullable(p.getPluginInstance().hasCommand(command)).orElse(false);
     }
 
     public String[] getAllCommandNames() {
-        //return registeredPlugin.getAllCommandNames();
-        return new String[] { "Hello" };
+        //return plugins.getAllCommandNames();
+        return new String[] { "Hellow!" };
     }
 }
