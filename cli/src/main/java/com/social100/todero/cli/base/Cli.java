@@ -8,19 +8,26 @@ import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Cli {
-    private final CommandManager commandManager;
+    private final CommandProcessor commandProcessor;
 
     public Cli(AppConfig appConfig) {
-        commandManager = new CommandManager(appConfig);
+        this.commandProcessor = new CliCommandProcessor(appConfig);
+        this.commandProcessor.open();
+    }
+
+    public Cli(AppConfig appConfig, boolean aiaProtocol) {
+        if (aiaProtocol) {
+            commandProcessor = new AiaCommandProcessor(appConfig);
+        } else {
+            commandProcessor = new CliCommandProcessor(appConfig);
+        }
+        this.commandProcessor.open();
     }
 
     public void execute(String[] args) {
@@ -43,7 +50,7 @@ public class Cli {
                 Scanner scanner = new Scanner(System.in);
                 System.out.print(">");
                 while (!(line = scanner.nextLine()).equals(Constants.CLI_COMMAND_EXIT)) {
-                    processLine(pattern, line);
+                    commandProcessor.process(pattern, line);
                     System.out.print(">");
                 }
             } else {
@@ -55,11 +62,11 @@ public class Cli {
 
                 LineReader lineReader = LineReaderBuilder.builder()
                         .terminal(terminal)
-                        .completer(new StringsCompleter(commandManager.getAllCommandNames()))
+                        .completer(new StringsCompleter(commandProcessor.getCommandManager().getAllCommandNames()))
                         .build();
 
                 while (!(line = lineReader.readLine("> ")).equals(Constants.CLI_COMMAND_EXIT)) {
-                    processLine(pattern, line);
+                    commandProcessor.process(pattern, line);
                 }
             }
         } catch (IOException e) {
@@ -73,30 +80,7 @@ public class Cli {
                     e.printStackTrace();
                 }
             }
-            commandManager.terminate();
-        }
-    }
-
-    private void processLine(Pattern pattern, String line) {
-        Matcher matcher = pattern.matcher(line);
-        ArrayList<String> arguments = new ArrayList<>();
-
-        while (matcher.find()) {
-            arguments.add(matcher.group(1).replace("\"", ""));
-        }
-
-        if (!arguments.isEmpty()) {
-            String pluginName = arguments.remove(0);
-            String command = null;
-            String[] commandArgs = {};
-            if (!arguments.isEmpty()) {
-                command = arguments.remove(0);
-            }
-            if (!arguments.isEmpty()) {
-                commandArgs = arguments.toArray(new String[0]);
-            }
-            String output = commandManager.execute(pluginName, command, commandArgs);
-            System.out.println(output);
+            commandProcessor.close();
         }
     }
 }

@@ -158,7 +158,7 @@ public class ProtocolEngine {
                         if (key.isReadable()) {
                             DatagramChannel channel = (DatagramChannel) key.channel();
                             String channelType = (String) key.attachment();
-                            ByteBuffer buffer = ByteBuffer.allocate(1024);
+                            ByteBuffer buffer = ByteBuffer.allocate(8192 * 1024);
                             InetSocketAddress sourceAddress = (InetSocketAddress) channel.receive(buffer);
                             buffer.flip();
                             String receivedData = new String(buffer.array(), 0, buffer.limit());

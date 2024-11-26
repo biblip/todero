@@ -11,7 +11,7 @@ import com.social100.todero.common.config.AppConfig;
 import java.io.File;
 import java.io.IOException;
 
-public class CliMain {
+public class CliAIAMain {
     static private AppConfig appConfig;
 
     public static void main(String[] args) {
@@ -20,7 +20,7 @@ public class CliMain {
             yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             yamlMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
             appConfig = yamlMapper.readValue(new File("config.yaml"), AppConfig.class);
-            Cli cli = new Cli(appConfig);
+            Cli cli = new Cli(appConfig, true);
             cli.execute(args);
         } catch (NullPointerException e) {
             System.out.println(e.getMessage());

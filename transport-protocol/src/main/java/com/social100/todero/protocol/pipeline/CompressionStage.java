@@ -21,7 +21,7 @@ public class CompressionStage implements PipelineStage {
             deflater.setInput(input);
             deflater.finish();
 
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[8192 * 1024];
             int compressedDataLength = deflater.deflate(buffer);
             deflater.end();
 
@@ -37,7 +37,7 @@ public class CompressionStage implements PipelineStage {
             Inflater inflater = new Inflater();
             inflater.setInput(input);
 
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[8192 * 1024];
             int decompressedDataLength = inflater.inflate(buffer);
             inflater.end();
 

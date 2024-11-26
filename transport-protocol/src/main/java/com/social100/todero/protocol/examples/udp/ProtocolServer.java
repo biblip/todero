@@ -1,9 +1,7 @@
 package com.social100.todero.protocol.examples.udp;
 
 import com.social100.todero.protocol.core.ProtocolEngine;
-import com.social100.todero.protocol.core.ProtocolMessage;
 import com.social100.todero.protocol.core.ReceiveMessageCallback;
-import com.social100.todero.protocol.core.Responder;
 import com.social100.todero.protocol.pipeline.ChecksumStage;
 import com.social100.todero.protocol.pipeline.CompressionStage;
 import com.social100.todero.protocol.pipeline.EncryptionStage;
@@ -11,7 +9,6 @@ import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.io.IOException;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ProtocolServer {
@@ -27,17 +24,6 @@ public class ProtocolServer {
                 e.printStackTrace();
             }
         });
-
-        BiConsumer<ProtocolMessage, Responder> receiverCallback = (receivedMessage, responder) -> {
-            // Respond back to the sender
-            try {
-                System.out.println("Server Receive Message : packetId: " + receivedMessage.getPacketId() + " > " + receivedMessage.getPayload());
-                int packetId = responder.sendMessage("Echo............... 1", true);
-                System.out.println("Sending Message to Client packetId: " + packetId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        };
 
         Consumer<Integer> ackSendMessageCallback = (packetId) -> {
             System.out.println("Server Confirmed Message packetId: " + packetId);
