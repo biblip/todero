@@ -1,6 +1,5 @@
 package com.social100.todero.aiaserver;
 
-import com.social100.todero.aiaserver.config.AIAServerConfig;
 import com.social100.todero.cli.base.CommandManager;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.protocol.core.ProtocolEngine;
@@ -15,11 +14,9 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 public class AIAServer {
-    private final AIAServerConfig tcpServerConfig;
     private final CommandManager commandManager;
 
     public AIAServer(AppConfig appConfig) {
-        tcpServerConfig = new AIAServerConfig(appConfig);
         commandManager = new CommandManager(appConfig);
     }
 
@@ -30,7 +27,9 @@ public class AIAServer {
 
             String outputLine = commandManager.execute(line);
             try {
-                responder.sendMessage(outputLine.replace("\n", "\r\n"), true);
+                if (!outputLine.isEmpty()) {
+                    responder.sendMessage(outputLine.replace("\n", "\r\n"), true);
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

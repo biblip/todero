@@ -49,7 +49,9 @@ public class Cli {
                 Scanner scanner = new Scanner(System.in);
                 System.out.print(">");
                 while (!(line = scanner.nextLine()).equals(Constants.CLI_COMMAND_EXIT)) {
-                    commandProcessor.process(line);
+                    if (!line.trim().isEmpty()) {
+                        commandProcessor.process(line);
+                    }
                     System.out.print("\n>");
                 }
             } else {

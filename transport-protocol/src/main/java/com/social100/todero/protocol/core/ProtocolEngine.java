@@ -40,8 +40,7 @@ public class ProtocolEngine {
     ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     private final Pipeline pipeline;
-
-    private final int maxRetries = 5;
+    private List<Thread> threadList = new ArrayList<>();
 
     public ProtocolEngine(TransportInterface dataTraffic, TransportInterface transportTraffic) throws IOException {
         this.dataTraffic = dataTraffic;
@@ -74,7 +73,7 @@ public class ProtocolEngine {
     }
 
     private void startSendMessageRetryThread() {
-        new Thread(() -> {
+        Thread thread = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     List<MessageQueueEntry> expiredEntries = new ArrayList<>();
@@ -102,14 +101,15 @@ public class ProtocolEngine {
                     sendQueue.addAll(expiredEntries);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    System.err.println("Thread interrupted, exiting...");
                 }
             }
-        }, "ProtocolEngine-SenderMessageRetry-Thread").start();
+        }, "ProtocolEngine-SenderMessageRetry-Thread");
+        threadList.add(thread);
+        thread.start();
     }
 
     private void startSenderThread() {
-        new Thread(() -> {
+        Thread thread = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
                     // Take a message from the queue
@@ -131,9 +131,10 @@ public class ProtocolEngine {
                 }
             } catch (InterruptedException | IOException e) {
                 Thread.currentThread().interrupt();
-                System.err.println("Thread interrupted, exiting...");
             }
-        }, "ProtocolEngine-Sender-Thread").start();
+        }, "ProtocolEngine-Sender-Thread");
+        threadList.add(thread);
+        thread.start();
     }
 
     public void startClient(ReceiveMessageCallback messageCallback, Consumer<Integer> ackSendMessageCallback) throws IOException {
@@ -145,7 +146,7 @@ public class ProtocolEngine {
 
     public void startServer(ReceiveMessageCallback messageCallback, Consumer<Integer> ackSendMessageCallback) throws IOException {
         // Start the selector loop in a new thread
-        new Thread(() -> {
+        Thread thread = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
                     selector.select(); // Blocking call, wakes up when an event occurs
@@ -188,7 +189,9 @@ public class ProtocolEngine {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }, "ProtocolEngine-Selector-Thread").start();
+        }, "ProtocolEngine-Selector-Thread");
+        threadList.add(thread);
+        thread.start();
     }
 
     public Integer sendMessage(InetSocketAddress destination, String message, boolean ackRequested) throws Exception {
@@ -246,6 +249,10 @@ public class ProtocolEngine {
 
     public String processReceivedMessage(String message) {
         return pipeline != null ? pipeline.processToReceive(message) : message;
+    }
+
+    public void close() {
+        threadList.forEach(Thread::interrupt);
     }
 
     @Getter

@@ -30,7 +30,7 @@ public class AiaCommandProcessor implements CommandProcessor {
     }
 
     ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage) -> {
-        System.out.println(receivedMessage.getPayload());
+        System.out.print(receivedMessage.getPayload());
     });
 
     Consumer<Integer> ackSendMessageCallback = (packetId) -> {
@@ -72,6 +72,7 @@ public class AiaCommandProcessor implements CommandProcessor {
 
     @Override
     public void close() {
+        this.engine.close();
         this.commandManager.terminate();
     }
 

@@ -33,7 +33,7 @@ class ClientHandler implements Runnable {
                     break;
                 }
                 String outputLine = commandManager.execute(line);
-                writer.println(outputLine.replace("\n", "\r\n"));
+                writer.print(outputLine.replace("\n", "\r\n"));
             }
         } catch (IOException ignore) {
             //System.err.println("Client handler exception: " + ex.getMessage());
