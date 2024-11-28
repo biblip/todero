@@ -11,7 +11,6 @@ import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.net.InetSocketAddress;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 
 public class AiaCommandProcessor implements CommandProcessor {
     private final CommandManager commandManager;
@@ -63,7 +62,7 @@ public class AiaCommandProcessor implements CommandProcessor {
     }
 
     @Override
-    public void process(Pattern pattern, String line) {
+    public void process(String line) {
         try {
             int packetId = engine.sendMessage(serverAddress, line, true);
         } catch (Exception e) {

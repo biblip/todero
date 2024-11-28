@@ -5,7 +5,6 @@ import lombok.Data;
 
 import java.io.File;
 import java.net.URLClassLoader;
-import java.util.Map;
 
 @Data
 @Builder
@@ -17,5 +16,5 @@ public class Plugin {
     URLClassLoader classLoader;
     Class<? extends PluginInterface> pluginClass;
     PluginInterface pluginInstance;
-    Map<String, PluginSection> sections;
+    Component component;
 }

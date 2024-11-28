@@ -300,64 +300,49 @@ public class InterfaceProcessor extends AbstractProcessor {
 
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "\n" +
+                "import com.social100.todero.common.model.plugin.Command;\n" +
+                "import com.social100.todero.common.model.plugin.Component;\n" +
                 "import com.social100.todero.common.model.plugin.PluginInterface;\n" +
                 "import com.social100.todero.generated." + generatedAnnotationRegistryClassName + ";\n" +
                 "import com.social100.todero.generated." + generatedMethodRegistryClassName + ";\n" +
                 "\n" +
-                "import java.util.Arrays;\n" +
-                "import java.util.Map;\n" +
+                "import java.util.stream.Collectors;\n" +
                 "\n" +
                 "public class " + generatedClassName + " implements PluginInterface {\n" +
                 "\n" +
                 "    private static " + pluginClassQualifiedName + " " + classVariableName + ";\n" +
+                "    private final Component component;\n" +
                 "\n" +
                 "    public " + generatedClassName + "() {\n" +
                 "        " + classVariableName + " = new " + pluginClassQualifiedName + "();\n" +
+                "        component = Component\n" +
+                "                .builder()\n" +
+                "                .name(\"" + pluginName + "\")\n" +
+                "                .description(\"" + pluginDescription + "\")\n" +
+                "                .commands(" + generatedAnnotationRegistryClassName + ".REGISTRY.stream()\n" +
+                "                        .map(entry -> new Command(\n" +
+                "                                entry.get(\"static\"),\n" +
+                "                                entry.get(\"method\"),\n" +
+                "                                entry.get(\"description\"),\n" +
+                "                                entry.get(\"command\"),\n" +
+                "                                entry.get(\"group\")\n" +
+                "                        ))\n" +
+                "                        .collect(Collectors.toMap(\n" +
+                "                                Command::getCommand, // Key: Command name\n" +
+                "                                commandInfo -> commandInfo // Value: CommandInfo object\n" +
+                "                        )))\n" +
+                "                .build();" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    public Boolean hasCommand(String command) {\n" +
-                "        return Arrays.asList(getAllCommandNames()).contains(command);\n" +
+                "    public Component getComponent() {\n" +
+                "        return component;\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
                 "    public Object execute(String command, String[] commandArgs) {\n" +
                 "        return " + generatedMethodRegistryClassName + ".execute(\"" + pluginClassQualifiedName + "\", command, " + classVariableName + ", commandArgs);\n" +
                 "    }\n" +
-                "\n" +
-                "    @Override\n" +
-                "    public String name() {\n" +
-                "        return \"" + pluginName + "\";\n" +
-                "    }\n" +
-                "\n" +
-                "    @Override\n" +
-                "    public String description() {\n" +
-                "        return \"" + pluginDescription + "\";\n" +
-                "    }\n" +
-                "\n" +
-                "    @Override\n" +
-                "    public String[] getAllCommandNames() {\n" +
-                "        return " + generatedAnnotationRegistryClassName + ".REGISTRY\n" +
-                "                .stream()\n" +
-                "                .flatMap(map -> map.keySet().stream().filter(\"command\"::equals).map(map::get))\n" +
-                "                .toArray(String[]::new);\n" +
-                "    }\n" +
-                "\n" +
-                "    @Override\n" +
-                "    public String getHelpMessage() {\n" +
-                "        StringBuilder sb = new StringBuilder();\n" +
-                "        sb.append(\"" + pluginName + "\\n\");\n" +
-                "        " + generatedAnnotationRegistryClassName + ".REGISTRY\n" +
-                "                .stream()\n" +
-                "                .forEach(v -> printCommandHelp(sb, v));\n" +
-                "        return sb.toString();" +
-                "    }\n" +
-                "\n" +
-                "    private void printCommandHelp(StringBuilder sb, Map<String, String> entry) {\n" +
-                "        sb.append(\"       - \" + entry.get(\"command\") + \n" +
-                "                \":  \" + entry.get(\"description\") + \"\\n\"\n" +
-                "        );\n" +
-                "    }" +
                 "}\n");
         try {
             // Write the generated file

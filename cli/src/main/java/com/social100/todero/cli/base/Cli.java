@@ -11,7 +11,6 @@ import org.jline.terminal.TerminalBuilder;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 public class Cli {
     private final CommandProcessor commandProcessor;
@@ -43,15 +42,15 @@ public class Cli {
         Terminal terminal = null;
         try {
             String line;
-            Pattern pattern = Pattern.compile("([^\"]\\S*|\".+?\")\\s*");
 
             if (useScanner) {
+                System.out.println("using scanner");
                 // Use Simple Scanner for input
                 Scanner scanner = new Scanner(System.in);
                 System.out.print(">");
                 while (!(line = scanner.nextLine()).equals(Constants.CLI_COMMAND_EXIT)) {
-                    commandProcessor.process(pattern, line);
-                    System.out.print(">");
+                    commandProcessor.process(line);
+                    System.out.print("\n>");
                 }
             } else {
                 terminal = TerminalBuilder.builder()
@@ -62,11 +61,11 @@ public class Cli {
 
                 LineReader lineReader = LineReaderBuilder.builder()
                         .terminal(terminal)
-                        .completer(new StringsCompleter(commandProcessor.getCommandManager().getAllCommandNames()))
+                        .completer(new StringsCompleter(commandProcessor.getCommandManager().generateAutocompleteStrings()))
                         .build();
 
                 while (!(line = lineReader.readLine("> ")).equals(Constants.CLI_COMMAND_EXIT)) {
-                    commandProcessor.process(pattern, line);
+                    commandProcessor.process(line);
                 }
             }
         } catch (IOException e) {

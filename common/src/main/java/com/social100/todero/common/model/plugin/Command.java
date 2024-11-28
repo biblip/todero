@@ -1,13 +1,18 @@
 package com.social100.todero.common.model.plugin;
 
-import com.social100.todero.common.CommandMethod;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Command {
-    String command;
-    String description;
-    CommandMethod commandMethod;
+    private String isStatic;
+    private String method;
+    private String description;
+    private String command;
+    private String group;
 }

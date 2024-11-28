@@ -7,7 +7,8 @@ import java.util.Map;
 
 @Data
 @Builder
-public class PluginSection {
+public class Component {
     String name;
+    String description;
     Map<String, Command> commands;
 }

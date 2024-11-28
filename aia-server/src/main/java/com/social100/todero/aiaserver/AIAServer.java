@@ -12,10 +12,7 @@ import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class AIAServer {
     private final AIAServerConfig tcpServerConfig;
@@ -29,34 +26,13 @@ public class AIAServer {
     public void start() {
 
         ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
-            String line;
-            Pattern pattern = Pattern.compile("([^\"]\\S*|\".+?\")\\s*");
+            String line = receivedMessage.getPayload();
 
-            line = receivedMessage.getPayload();
-
-            Matcher matcher = pattern.matcher(line);
-            ArrayList<String> arguments = new ArrayList<>();
-
-            while (matcher.find()) {
-                arguments.add(matcher.group(1).replace("\"", ""));
-            }
-
-            if (!arguments.isEmpty()) {
-                String firstParam = arguments.remove(0);
-                String secondParam = null;
-                String[] commandArgs = {};
-                if (!arguments.isEmpty()) {
-                    secondParam = arguments.remove(0);
-                }
-                if (!arguments.isEmpty()) {
-                    commandArgs = arguments.toArray(new String[0]);
-                }
-                String outputLine = commandManager.execute(firstParam, secondParam, commandArgs);
-                try {
-                    responder.sendMessage(outputLine.replace("\n", "\r\n"), true);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+            String outputLine = commandManager.execute(line);
+            try {
+                responder.sendMessage(outputLine.replace("\n", "\r\n"), true);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         });
 

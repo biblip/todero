@@ -1,9 +1,9 @@
 package com.social100.todero.cli.base;
 
 import com.social100.todero.common.model.plugin.Command;
+import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
 import com.social100.todero.common.model.plugin.PluginInterface;
-import com.social100.todero.common.model.plugin.PluginSection;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
@@ -18,9 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class PluginContext {
-    final private Map<String,Plugin> plugins = new HashMap<>();
-    final private PluginExecutor pluginExecutor = new PluginExecutor(3);
-
+    final private Map<String, Plugin> plugins = new HashMap<>();
 
     public PluginContext(File pluginJar) throws Exception {
         initializePlugin(pluginJar);
@@ -41,44 +39,36 @@ public class PluginContext {
         Set<Class<? extends PluginInterface>> commandClasses = reflections.getSubTypesOf(PluginInterface.class);
         for (Class<? extends PluginInterface> commandClass : commandClasses) {
             if (!commandClass.isInterface()) {
+                PluginInterface pluginInstance = commandClass.getDeclaredConstructor().newInstance();
+                Optional<Component> component = Optional.ofNullable(pluginInstance.getComponent());
+                String componentName = "";
+                String componentDescription = "";
+                Map<String, Command> componentCommands = new HashMap<>();
+                if (component.isPresent()) {
+                    componentName = Optional.ofNullable(component.get().getName()).orElse("");
+                    componentDescription = Optional.ofNullable(component.get().getDescription()).orElse("");
+                    componentCommands = Optional.ofNullable(pluginInstance.getComponent().getCommands()).orElse(new HashMap<>());
+                }
 
                 Plugin plugin = Plugin.builder()
                         .file(pluginJar)
                         .classLoader(pluginClassLoader)
                         .pluginClass(commandClass)
-                        .pluginInstance(commandClass.getDeclaredConstructor().newInstance())
+                        .pluginInstance(pluginInstance)
+                        .component(Component
+                                .builder()
+                                .name(componentName)
+                                .description(componentDescription)
+                                .commands(componentCommands)
+                                .build())
                         .build();
-                plugins.put(plugin.getPluginInstance().name(), plugin);
-                Map<String, Command> pluginCommandMap = new HashMap<>();
-
-                PluginSection pluginSection = PluginSection
-                        .builder()
-                        .name(Optional.ofNullable(plugin.getPluginInstance().name()).orElse(""))
-                        .commands(pluginCommandMap)
-                        .build();
-                /*
-                plugin.getPluginInstance()
-                        .commands()
-                        .forEach(commandMethod -> {
-                            Command command = Command
-                                    .builder()
-                                    .command(commandMethod.name())
-                                    .description(commandMethod.description())
-                                    .commandMethod(commandMethod)
-                                    .build();
-                            pluginCommandMap.put(commandMethod.name(), command);
-                        });
-                 */
+                plugins.put(componentName, plugin);
             }
         }
     }
 
-    public String getHelpMessage() {
-        StringBuilder sb = new StringBuilder();
-        plugins.values().forEach(plugin -> {
-            sb.append(Optional.ofNullable(plugin.getPluginInstance().getHelpMessage()).orElse(""));
-        });
-        return sb.toString();
+    public Map<String, Plugin> getPlugins() {
+        return plugins;
     }
 
     // Cleanup method to properly close the plugin class loader when no longer needed
@@ -91,14 +81,6 @@ public class PluginContext {
             e.printStackTrace();
         }
          */
-    }
-
-    public Boolean hasName(String plugin ) {
-        return plugins.values().stream().anyMatch(p -> plugin.equals(p.getPluginInstance().name()));
-    }
-
-    public Boolean hasCommand(String command) {
-        return plugins.values().stream().anyMatch(p -> Optional.ofNullable(p.getPluginInstance().hasCommand(command)).orElse(false));
     }
 
     public Object execute(String pluginName, String command, String[] commandArgs) {
@@ -114,12 +96,8 @@ public class PluginContext {
     }
 
     private static boolean isPluginAndHasCommand(String pluginName, String command, Plugin p) {
-        return pluginName.equals(Optional.ofNullable(p.getPluginInstance().name()).orElse(""))
-                && Optional.ofNullable(p.getPluginInstance().hasCommand(command)).orElse(false);
-    }
-
-    public String[] getAllCommandNames() {
-        //return plugins.getAllCommandNames();
-        return new String[] { "Hellow!" };
+        return true;
+        //return pluginName.equals(Optional.ofNullable(p.getPluginInstance().name()).orElse(""))
+        //        && Optional.ofNullable(p.getPluginInstance().hasCommand(command)).orElse(false);
     }
 }
