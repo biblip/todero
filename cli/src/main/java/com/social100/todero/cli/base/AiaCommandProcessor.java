@@ -30,7 +30,7 @@ public class AiaCommandProcessor implements CommandProcessor {
     }
 
     ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage) -> {
-        System.out.print(receivedMessage.getPayload());
+        System.out.print(receivedMessage.getPayload() + "\n>");
     });
 
     Consumer<Integer> ackSendMessageCallback = (packetId) -> {
@@ -64,7 +64,7 @@ public class AiaCommandProcessor implements CommandProcessor {
     @Override
     public void process(String line) {
         try {
-            int packetId = engine.sendMessage(serverAddress, line, true);
+            engine.sendMessage(serverAddress, line, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
