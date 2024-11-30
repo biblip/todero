@@ -162,19 +162,16 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "\n" +
                 "public class " + generatedClassName + " {\n");
         classContent.append("    public static final List<Map<String, String>> REGISTRY = List.of(\n");
-            for (Map<String, String> methodDetails : classToMethodsMap) {
-                classContent.append("            Map.of(");
-                methodDetails.forEach((key, value) ->
-                        classContent.append("\"").append(key).append("\", \"").append(value).append("\", ")
-                );
-                // Remove trailing ", " and close Map
-                classContent.setLength(classContent.length() - 2);
-                classContent.append("),\n");
-            }
-            // Remove trailing ", " and close List
+        for (Map<String, String> methodDetails : classToMethodsMap) {
+            classContent.append("            Map.of(");
+            methodDetails.forEach((key, value) ->
+                    classContent.append("\"").append(key).append("\", \"").append(value).append("\", ")
+            );
             classContent.setLength(classContent.length() - 2);
-            classContent.append("\n    );\n");
-        //}
+            classContent.append("),\n");
+        }
+        classContent.setLength(classContent.length() - 2);
+        classContent.append("\n    );\n");
         classContent.append("}");
 
         try {
@@ -328,10 +325,10 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "                                entry.get(\"group\")\n" +
                 "                        ))\n" +
                 "                        .collect(Collectors.toMap(\n" +
-                "                                Command::getCommand, // Key: Command name\n" +
-                "                                commandInfo -> commandInfo // Value: CommandInfo object\n" +
+                "                                Command::getCommand,\n" +
+                "                                commandInfo -> commandInfo\n" +
                 "                        )))\n" +
-                "                .build();" +
+                "                .build();\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +

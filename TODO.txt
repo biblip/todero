@@ -1,0 +1,14 @@
+- Channel management for responses:
+
+  Add channel management on the responses:
+  1) channel for communications visible to AI ( should be rendered by a console )
+  3) channel for communications to inform not publicly the AI about certain event. ( is not rendered by a console )
+  2) channel for communications non-visible to AI ( which AI is not aware of )  ( is not rendered by a console )
+     server<->server server<->client communications
+
+  builder for Responses that adds those channels.
+
+- AIA Plugin
+  this make use of communication channels to obtain data of server's capabilities.
+
+- Receiving packets and group them together to be read from a stream.
