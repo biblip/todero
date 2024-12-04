@@ -10,6 +10,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.MirroredTypesException;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -125,10 +127,13 @@ public class InterfaceProcessor extends AbstractProcessor {
                 String pluginName = classAnnotation.name();
                 String pluginDescription = classAnnotation.description();
 
-                generatePluginInterfaceImplementation("com.social100.todero.generated", pluginClassQualifiedName, pluginName, pluginDescription);
+                //String constructorParameters = generateNewObjectString(getClassTypeMirrorsForAIADependencies(classTypeElement));
+                AIADependencies annotation = classElement.getAnnotation(AIADependencies.class);
+                boolean commandManagerRequired = annotation != null;
+
+                generatePluginInterfaceImplementation("com.social100.todero.generated", pluginClassQualifiedName, commandManagerRequired, pluginName, pluginDescription);
             }
         }
-
 
         processCompleted = true;
 
@@ -286,7 +291,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         }
     }
 
-    private void generatePluginInterfaceImplementation(String packageName, String pluginClassQualifiedName, String pluginName, String pluginDescription) {
+    private void generatePluginInterfaceImplementation(String packageName, String pluginClassQualifiedName, boolean commandManagerRequired, String pluginName, String pluginDescription) {
 
         String classSimpleName = getSimpleName(pluginClassQualifiedName);
         String classVariableName = classToClassVariableName(classSimpleName);
@@ -297,6 +302,8 @@ public class InterfaceProcessor extends AbstractProcessor {
 
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "\n" +
+                "import " + pluginClassQualifiedName + ";\n" +
+                "import com.social100.todero.cli.base.CommandManager;\n" +
                 "import com.social100.todero.common.model.plugin.Command;\n" +
                 "import com.social100.todero.common.model.plugin.Component;\n" +
                 "import com.social100.todero.common.model.plugin.PluginInterface;\n" +
@@ -310,8 +317,8 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "    private static " + pluginClassQualifiedName + " " + classVariableName + ";\n" +
                 "    private final Component component;\n" +
                 "\n" +
-                "    public " + generatedClassName + "() {\n" +
-                "        " + classVariableName + " = new " + pluginClassQualifiedName + "();\n" +
+                "    public " + generatedClassName + "(" + (commandManagerRequired ? "CommandManager commandManager" : "") + ") {\n" +
+                "        " + classVariableName + " = new " + classSimpleName + "(" + (commandManagerRequired ? "commandManager" : "") + ");\n" +
                 "        component = Component\n" +
                 "                .builder()\n" +
                 "                .name(\"" + pluginName + "\")\n" +
@@ -406,6 +413,37 @@ public class InterfaceProcessor extends AbstractProcessor {
                 }
             }
         }
+    }
+
+    private List<? extends TypeMirror> getClassTypeMirrorsForAIADependencies(TypeElement classElement) {
+        AIADependencies annotation = classElement.getAnnotation(AIADependencies.class);
+        if (annotation == null) {
+            return null;
+        }
+
+        try {
+            // Attempt to access `components()` to trigger MirroredTypesException
+            annotation.components();
+        } catch (MirroredTypesException e) {
+            return e.getTypeMirrors();
+        }
+        return null;
+    }
+
+    private String generateNewObjectString(List<? extends TypeMirror> classTypeMirrors) {
+        if (classTypeMirrors == null || classTypeMirrors.isEmpty()) {
+            return "";
+        }
+        StringBuilder objectCreationString = new StringBuilder();
+        for (TypeMirror typeMirror : classTypeMirrors) {
+            String className = typeMirror.toString();
+            objectCreationString.append("new ").append(className).append("(), ");
+        }
+        // Remove trailing comma and space, if any
+        if (!objectCreationString.isEmpty()) {
+            objectCreationString.setLength(objectCreationString.length() - 2);
+        }
+        return objectCreationString.toString();
     }
 
     public static class MethodDetails {

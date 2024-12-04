@@ -1,6 +1,6 @@
 package com.social100.todero.aiaserver;
 
-import com.social100.todero.cli.base.CommandManager;
+import com.social100.todero.cli.base.CliCommandManager;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.protocol.core.ProtocolEngine;
 import com.social100.todero.protocol.core.ReceiveMessageCallback;
@@ -14,10 +14,10 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 public class AIAServer {
-    private final CommandManager commandManager;
+    private final CliCommandManager commandManager;
 
     public AIAServer(AppConfig appConfig) {
-        commandManager = new CommandManager(appConfig);
+        commandManager = new CliCommandManager(appConfig);
     }
 
     public void start() {

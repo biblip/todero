@@ -1,3 +1,6 @@
+- Internal console for exposed components using CommandProcessor interface with streams as a connection
+  to be able to send and receive asynchronous communications.
+
 - Channel management for responses:
 
   Add channel management on the responses:
@@ -12,3 +15,22 @@
   this make use of communication channels to obtain data of server's capabilities.
 
 - Receiving packets and group them together to be read from a stream.
+
+- Allow multiple exposed components could it be desirable, other solution for that is to have multiple projects to have
+  multiple components. ( if all of that can be done with only one project will be better ).
+   as a parameter of compilation, can be chossen wich component is going to be exposed, then that will be enough.
+   allowing multiple deployments each one for the parameter to expose the component choosen. looping through all of
+   exposed components.  that is more a solution for the build process.
+
+- seguridad ( jwt )
+  aislamiento en llamado de componente.  ( use a bridge service to do that ).
+
+- si no hay un componente externo declarado: entonces es un CLI de todos los componentes internos para ser usado por
+  un agente externo.
+  * expone todos los componentes internos a travez del AIA Protocol.
+- si hay un unico componente externo declarado, entonces a este componente se le asignan todos los componentes no externos como
+  internos suyos y el componente externo, es expuesto a travez de AIA Protocol.
+- si hay multiples componentes externos declarados, entonces a cada uno de los componentes se le asignan todos los
+  componentes no externos como internos y el componente externo, es expuesto a travez de AIA Protocol, pero en la linea
+  de comando recibe como parametro el componente que sera expuesto (uno y solo uno de os declarados como expuesto).
+  --(este build puede ser re-usado para levantar cada uno de los componentes declarados como externos)--

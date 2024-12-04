@@ -13,7 +13,6 @@ import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 
 public class AiaCommandProcessor implements CommandProcessor {
-    private final CommandManager commandManager;
     // Data transport
     UdpTransport dataTraffic;
     // ACK transport
@@ -26,7 +25,6 @@ public class AiaCommandProcessor implements CommandProcessor {
     InetSocketAddress serverAddress;
 
     public AiaCommandProcessor(AppConfig appConfig) {
-        this.commandManager = new CommandManager(appConfig);
     }
 
     ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage) -> {
@@ -73,11 +71,10 @@ public class AiaCommandProcessor implements CommandProcessor {
     @Override
     public void close() {
         this.engine.close();
-        this.commandManager.terminate();
     }
 
     @Override
-    public CommandManager getCommandManager() {
-        return this.commandManager;
+    public CliCommandManager getCommandManager() {
+        return null;
     }
 }

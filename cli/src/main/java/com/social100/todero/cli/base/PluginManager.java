@@ -19,7 +19,7 @@ public class PluginManager {
     final private Map<String, Plugin> plugins = new HashMap<>();
     final private List<PluginContext> pluginContextList = new ArrayList<>();
     private File pluginsDir;
-    private HelpGiverLibrary helpGiverLibrary;
+    private HelpWrapper helpWrapper;
 
     public PluginManager(File dir) {
         this.pluginsDir = dir;
@@ -52,11 +52,11 @@ public class PluginManager {
             plugins.putAll(context.getPlugins());
         }
 
-        this.helpGiverLibrary = new HelpGiverLibrary(plugins);
+        this.helpWrapper = new HelpWrapper(plugins);
     }
 
     public String getHelp(String pluginName, String commandName, OutputType outputType) {
-        return helpGiverLibrary.getHelp(pluginName, commandName, outputType);
+        return helpWrapper.getHelp(pluginName, commandName, outputType);
     }
 
     public Object execute(String pluginName, String command, String[] commandArgs) {

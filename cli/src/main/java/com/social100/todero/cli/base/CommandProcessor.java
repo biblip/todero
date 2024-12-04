@@ -4,5 +4,5 @@ public interface CommandProcessor {
     void open();
     void process(String line);
     void close();
-    CommandManager getCommandManager();
+    CliCommandManager getCommandManager();
 }

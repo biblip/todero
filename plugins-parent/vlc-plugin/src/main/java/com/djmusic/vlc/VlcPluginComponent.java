@@ -2,7 +2,9 @@ package com.djmusic.vlc;
 
 import com.djmusic.vlc.base.ChannelManager;
 import com.social100.processor.AIAController;
+import com.social100.processor.AIADependencies;
 import com.social100.processor.Action;
+import com.social100.todero.cli.base.CommandManager;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.State;
@@ -13,10 +15,11 @@ import java.io.File;
 @AIAController(name = "vlc",
         type = "",
         description = "description")
+@AIADependencies(components = {DjyPluginComponent.class, SimplePluginComponent.class})
 public class VlcPluginComponent {
     final static String MAIN_GROUP = "Main";
     final static String CHANNELS_GROUP = "Channels";
-    
+
     private final ChannelManager channelManager;
 
     private static final String[] mediaOptions = {
@@ -25,7 +28,7 @@ public class VlcPluginComponent {
             ":norm-max-level=1.0"  // Maximum level for normalized audio
     };
 
-    public VlcPluginComponent() {
+    public VlcPluginComponent(CommandManager commandManager) {
         System.setProperty("jna.library.path", "C:\\Program Files\\VideoLAN\\VLC");
         channelManager = new ChannelManager();
     }

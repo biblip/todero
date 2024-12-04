@@ -13,23 +13,25 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CommandManager {
+public class CliCommandManager implements CommandManager {
     final static private ObjectMapper objectMapper = new ObjectMapper();
     PluginManager pluginManager;
     private OutputType outputType = OutputType.JSON; // Default output type
     private final Map<String, String> properties = new HashMap<>(); // Stores properties
 
-    public CommandManager(AppConfig appConfig) {
+    public CliCommandManager(AppConfig appConfig) {
         String pluginDirectory = Optional.ofNullable(appConfig.getApp().getPlugins().getDir())
                 .orElseThrow(() -> new IllegalArgumentException("Wrong value in plugin directory"));
         properties.put("output", outputType.name());
         pluginManager = new PluginManager(new File(pluginDirectory));
     }
 
+    @Override
     public String getHelpMessage(String plugin, String command) {
         return pluginManager.getHelp(plugin, command, outputType);
     }
 
+    @Override
     public String execute(String line) {
         if (line == null || line.isBlank()) {
             return ""; // Early exit if input is null or empty
@@ -144,24 +146,29 @@ public class CommandManager {
         return obj.toString();
     }
 
+    @Override
     public String reload() {
         pluginManager.reload();
         return "Ok";
     }
 
+    @Override
     public String unload() {
         pluginManager.clear();
         return "Ok";
     }
 
+    @Override
     public String load() {
         return "Not implemented yet";
     }
 
+    @Override
     public void terminate() {
         pluginManager.clear();
     }
 
+    @Override
     public String[] generateAutocompleteStrings() {
         return pluginManager.generateAutocompleteStrings().toArray(new String[0]);
     }

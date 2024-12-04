@@ -75,3 +75,15 @@ app:
         plugins:
           - vlc
           - otherplugion
+  component:
+    name: "name of component"
+    class: "class of the component"
+    plugins:
+      dir: plugins
+      list:
+      - vlc
+      - otherplugin
+
+
+
+

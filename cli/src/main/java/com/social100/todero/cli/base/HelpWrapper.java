@@ -10,10 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HelpGiverLibrary {
+public class HelpWrapper {
     private Map<String, Plugin> plugins = new HashMap<>();
 
-    public HelpGiverLibrary(Map<String, Plugin> plugins) {
+    public HelpWrapper(Map<String, Plugin> plugins) {
         this.plugins = plugins;
     }
 

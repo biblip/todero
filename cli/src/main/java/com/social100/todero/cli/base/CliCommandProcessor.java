@@ -4,7 +4,7 @@ import com.social100.todero.common.config.AppConfig;
 
 public class CliCommandProcessor implements CommandProcessor {
     final private AppConfig appConfig;
-    private CommandManager commandManager;
+    private CliCommandManager commandManager;
 
     public CliCommandProcessor(AppConfig appConfig) {
         this.appConfig = appConfig;
@@ -13,7 +13,7 @@ public class CliCommandProcessor implements CommandProcessor {
     @Override
     public void open() {
         if (this.commandManager == null) {
-            this.commandManager = new CommandManager(this.appConfig);
+            this.commandManager = new CliCommandManager(this.appConfig);
         } else {
             throw new RuntimeException("CommandManager already created");
         }
@@ -33,7 +33,7 @@ public class CliCommandProcessor implements CommandProcessor {
     }
 
     @Override
-    public CommandManager getCommandManager() {
+    public CliCommandManager getCommandManager() {
         return this.commandManager;
     }
 }

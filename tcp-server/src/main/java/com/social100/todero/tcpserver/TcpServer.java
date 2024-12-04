@@ -1,6 +1,6 @@
 package com.social100.todero.tcpserver;
 
-import com.social100.todero.cli.base.CommandManager;
+import com.social100.todero.cli.base.CliCommandManager;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.tcpserver.config.TcpServerConfig;
 
@@ -12,12 +12,12 @@ import java.util.concurrent.Executors;
 
 public class TcpServer {
     private final TcpServerConfig tcpServerConfig;
-    private final CommandManager commandManager;
+    private final CliCommandManager commandManager;
     private final ExecutorService threadPool;
 
     public TcpServer(AppConfig appConfig) {
         tcpServerConfig = new TcpServerConfig(appConfig);
-        commandManager = new CommandManager(appConfig);
+        commandManager = new CliCommandManager(appConfig);
         threadPool = Executors.newFixedThreadPool(tcpServerConfig.THREAD_POOL_SIZE);
     }
 

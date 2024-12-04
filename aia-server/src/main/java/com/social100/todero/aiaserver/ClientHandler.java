@@ -1,6 +1,6 @@
 package com.social100.todero.aiaserver;
 
-import com.social100.todero.cli.base.CommandManager;
+import com.social100.todero.cli.base.CliCommandManager;
 import org.jline.utils.InputStreamReader;
 
 import java.io.BufferedReader;
@@ -13,9 +13,9 @@ import java.net.Socket;
 class ClientHandler implements Runnable {
 
     private final Socket socket;
-    private final CommandManager commandManager;
+    private final CliCommandManager commandManager;
 
-    public ClientHandler(Socket socket, CommandManager commandManager) {
+    public ClientHandler(Socket socket, CliCommandManager commandManager) {
         this.socket = socket;
         this.commandManager = commandManager;
     }
