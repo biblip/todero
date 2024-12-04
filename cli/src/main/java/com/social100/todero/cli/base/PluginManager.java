@@ -1,6 +1,5 @@
 package com.social100.todero.cli.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
@@ -13,12 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 public class PluginManager {
-
-    final static private ObjectMapper objectMapper = new ObjectMapper();
-
     final private Map<String, Plugin> plugins = new HashMap<>();
     final private List<PluginContext> pluginContextList = new ArrayList<>();
-    private File pluginsDir;
+    private final File pluginsDir;
     private HelpWrapper helpWrapper;
 
     public PluginManager(File dir) {
