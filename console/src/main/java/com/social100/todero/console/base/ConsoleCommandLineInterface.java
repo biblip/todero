@@ -1,4 +1,4 @@
-package com.social100.todero.cli.base;
+package com.social100.todero.console.base;
 
 import com.social100.todero.common.Constants;
 import com.social100.todero.common.config.AppConfig;
@@ -12,21 +12,22 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
-public class ConsoleCommandLineInterface extends CommandLineInterface {
+public class ConsoleCommandLineInterface implements CommandLineInterface {
+    protected final AppConfig appConfig;
     private final CommandProcessor commandProcessor;
 
     public ConsoleCommandLineInterface(AppConfig appConfig) {
-        super(appConfig);
+        this.appConfig = appConfig;
         this.commandProcessor = new CliCommandProcessor(this.appConfig);
         this.commandProcessor.open();
     }
 
     public ConsoleCommandLineInterface(AppConfig appConfig, boolean aiaProtocol) {
-        super(appConfig);
+        this.appConfig = appConfig;
         if (aiaProtocol) {
-            commandProcessor = new AiaCommandProcessor(appConfig);
+            commandProcessor = new AiaCommandProcessor(this.appConfig);
         } else {
-            commandProcessor = new CliCommandProcessor(appConfig);
+            commandProcessor = new CliCommandProcessor(this.appConfig);
         }
         this.commandProcessor.open();
     }

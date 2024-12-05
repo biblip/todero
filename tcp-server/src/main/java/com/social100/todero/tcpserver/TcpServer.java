@@ -1,6 +1,6 @@
 package com.social100.todero.tcpserver;
 
-import com.social100.todero.cli.base.CliCommandManager;
+import com.social100.todero.console.base.CliCommandManager;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.tcpserver.config.TcpServerConfig;
 

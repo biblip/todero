@@ -1,4 +1,4 @@
-package com.social100.todero.cli.base;
+package com.social100.todero.console.base;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;

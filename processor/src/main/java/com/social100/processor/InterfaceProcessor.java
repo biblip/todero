@@ -303,7 +303,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "\n" +
                 "import " + pluginClassQualifiedName + ";\n" +
-                "import com.social100.todero.cli.base.CommandManager;\n" +
+                "import com.social100.todero.console.base.CommandManager;\n" +
                 "import com.social100.todero.common.model.plugin.Command;\n" +
                 "import com.social100.todero.common.model.plugin.Component;\n" +
                 "import com.social100.todero.common.model.plugin.PluginInterface;\n" +

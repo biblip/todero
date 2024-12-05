@@ -1,4 +1,4 @@
-package com.social100.todero.cli.base;
+package com.social100.todero.console.base;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;

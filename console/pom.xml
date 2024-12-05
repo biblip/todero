@@ -11,7 +11,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>cli</artifactId>
+    <artifactId>console</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -138,7 +138,7 @@
                         <configuration>
                             <target>
                                 <!-- Copy the shaded JAR to the project root -->
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../cli.jar" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../console.jar" />
                             </target>
                         </configuration>
                     </execution>
@@ -153,7 +153,7 @@
                         <fileset>
                             <directory>${project.basedir}/..</directory>
                             <includes>
-                                <include>cli.jar</include>
+                                <include>console.jar</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>

@@ -11,7 +11,7 @@
 
     <modules>
         <module>common</module>
-        <module>cli</module>
+        <module>console</module>
         <module>tcp-server</module>
         <module>aia-server</module>
         <module>plugins-parent/vlc-plugin</module>

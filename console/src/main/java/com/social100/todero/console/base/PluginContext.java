@@ -1,4 +1,4 @@
-package com.social100.todero.cli.base;
+package com.social100.todero.console.base;
 
 import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;

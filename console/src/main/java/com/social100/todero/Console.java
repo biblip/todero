@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.social100.todero.cli.base.ConsoleCommandLineInterface;
+import com.social100.todero.console.base.ConsoleCommandLineInterface;
 import com.social100.todero.common.config.AppConfig;
 
 import java.io.File;

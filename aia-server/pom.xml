@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.social100.todero</groupId>
-            <artifactId>cli</artifactId>
+            <artifactId>console</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
