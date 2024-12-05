@@ -13,6 +13,11 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
     public ConsoleCommandLineInterface(AppConfig appConfig, boolean aiaProtocol) {
         this.commandProcessor = CommandProcessorFactory.createProcessor(appConfig, aiaProtocol);
         this.commandProcessor.open();
+        this.commandProcessor.getBridge().readAsync(this::outputDataHandler);
+    }
+
+    private void outputDataHandler(byte[] data) {
+        System.out.println(new String(data));
     }
 
     @Override
@@ -46,9 +51,13 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
     }
 
     private void processInputWithTerminal() throws IOException {
-        TerminalInputHandler inputHandler = new TerminalInputHandler(commandProcessor.getCommandManager());
+        String[] autocompleteStrings = null;
+        if (commandProcessor.getCommandManager() != null) {
+            autocompleteStrings = commandProcessor.getCommandManager().generateAutocompleteStrings();
+        }
+        TerminalInputHandler inputHandler = new TerminalInputHandler(autocompleteStrings);
         try {
-            inputHandler.processInput(commandProcessor);
+            inputHandler.processInput(commandProcessor::process);
         } finally {
             inputHandler.close();
         }

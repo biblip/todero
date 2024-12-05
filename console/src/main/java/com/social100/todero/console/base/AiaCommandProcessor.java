@@ -8,11 +8,15 @@ import com.social100.todero.protocol.pipeline.CompressionStage;
 import com.social100.todero.protocol.pipeline.EncryptionStage;
 import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
+import com.social100.todero.stream.PipelineStreamBridge;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 
 public class AiaCommandProcessor implements CommandProcessor {
+    private final AppConfig appConfig;
+    private final PipelineStreamBridge bridge;
     // Data transport
     UdpTransport dataTraffic;
     // ACK transport
@@ -25,6 +29,16 @@ public class AiaCommandProcessor implements CommandProcessor {
     InetSocketAddress serverAddress;
 
     public AiaCommandProcessor(AppConfig appConfig) {
+        this.appConfig = appConfig;
+
+        // Build the bridge with an internal onReceive handler
+        try {
+            this.bridge = new PipelineStreamBridge.Builder()
+                    .onReceive(this::handleIncomingData)
+                    .build();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to initialize PipelineStreamBridge", e);
+        }
     }
 
     ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage) -> {
@@ -70,10 +84,22 @@ public class AiaCommandProcessor implements CommandProcessor {
     @Override
     public void close() {
         this.engine.close();
+        this.bridge.close();
     }
 
     @Override
     public CliCommandManager getCommandManager() {
         return null;
+    }
+
+    @Override
+    public PipelineStreamBridge.PipelineStreamBridgeShadow getBridge() {
+        return this.bridge.getBridge();
+    }
+
+    @Override
+    public void handleIncomingData(byte[] data) {
+        String line = new String(data);
+        process(line); // Process the received data as if it were passed to `process(String line)`
     }
 }

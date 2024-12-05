@@ -8,12 +8,13 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 public class TerminalInputHandler {
     private final Terminal terminal;
     private final LineReader lineReader;
 
-    public TerminalInputHandler(CommandManager commandManager) throws IOException {
+    public TerminalInputHandler(String[] autocompleteStrings) throws IOException {
         this.terminal = TerminalBuilder.builder()
                 .jna(false)
                 .jansi(true)
@@ -21,17 +22,17 @@ public class TerminalInputHandler {
                 .build();
 
         LineReaderBuilder builder = LineReaderBuilder.builder().terminal(this.terminal);
-        if (commandManager != null) {
-            StringsCompleter completer = new StringsCompleter(commandManager.generateAutocompleteStrings());
+        if (autocompleteStrings != null) {
+            StringsCompleter completer = new StringsCompleter(autocompleteStrings);
             builder.completer(completer);
         }
         this.lineReader = builder.build();
     }
 
-    public void processInput(CommandProcessor commandProcessor) throws IOException {
+    public void processInput(Consumer<String> callback) throws IOException {
         String line;
         while (!(line = lineReader.readLine("> ")).equals(Constants.CLI_COMMAND_EXIT)) {
-            commandProcessor.process(line);
+            callback.accept(line);
         }
     }
 
