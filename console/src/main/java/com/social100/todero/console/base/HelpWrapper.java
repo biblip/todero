@@ -90,6 +90,10 @@ public class HelpWrapper {
             }
             textBuilder.append("\n");
         }
+        // Remove any trailing newlines from the final output
+        while (!textBuilder.isEmpty() && textBuilder.charAt(textBuilder.length() - 1) == '\n') {
+            textBuilder.setLength(textBuilder.length() - 1);
+        }
         return textBuilder.toString();
     }
 

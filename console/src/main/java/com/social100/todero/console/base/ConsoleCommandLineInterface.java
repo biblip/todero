@@ -17,7 +17,7 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
     }
 
     private void outputDataHandler(byte[] data) {
-        System.out.println(new String(data));
+        System.out.print(new String(data));
     }
 
     @Override
