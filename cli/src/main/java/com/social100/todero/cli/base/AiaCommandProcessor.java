@@ -49,7 +49,6 @@ public class AiaCommandProcessor implements CommandProcessor {
             pipeline.addStage(new EncryptionStage("1tNXAlS+bFUZWyEpQI2fAUjKtyXHsUTgBVecFad98LY="));
             pipeline.addStage(new ChecksumStage());
 
-
             engine = new ProtocolEngine(dataTraffic, transportTraffic, pipeline);
             engine.startClient(receiveMessageCallback, ackSendMessageCallback);
 

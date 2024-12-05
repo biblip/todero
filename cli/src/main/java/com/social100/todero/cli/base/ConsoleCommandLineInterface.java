@@ -12,15 +12,17 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
-public class Cli {
+public class ConsoleCommandLineInterface extends CommandLineInterface {
     private final CommandProcessor commandProcessor;
 
-    public Cli(AppConfig appConfig) {
-        this.commandProcessor = new CliCommandProcessor(appConfig);
+    public ConsoleCommandLineInterface(AppConfig appConfig) {
+        super(appConfig);
+        this.commandProcessor = new CliCommandProcessor(this.appConfig);
         this.commandProcessor.open();
     }
 
-    public Cli(AppConfig appConfig, boolean aiaProtocol) {
+    public ConsoleCommandLineInterface(AppConfig appConfig, boolean aiaProtocol) {
+        super(appConfig);
         if (aiaProtocol) {
             commandProcessor = new AiaCommandProcessor(appConfig);
         } else {
@@ -29,7 +31,7 @@ public class Cli {
         this.commandProcessor.open();
     }
 
-    public void execute(String[] args) {
+    public void run(String[] args) {
         boolean useScanner = false; // Default to not using JLine
 
         // Check command-line arguments
