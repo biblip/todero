@@ -32,7 +32,7 @@ class ClientHandler implements Runnable {
                 if (line.equalsIgnoreCase("exit")) {
                     break;
                 }
-                String outputLine = commandManager.execute(line);
+                String outputLine = commandManager.process(line);
                 writer.print(outputLine.replace("\n", "\r\n"));
             }
         } catch (IOException ignore) {

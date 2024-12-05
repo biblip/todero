@@ -32,7 +32,7 @@ public class CliCommandManager implements CommandManager {
     }
 
     @Override
-    public String execute(String line) {
+    public String process(String line) {
         if (line == null || line.isBlank()) {
             return ""; // Early exit if input is null or empty
         }

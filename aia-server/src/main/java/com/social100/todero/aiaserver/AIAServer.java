@@ -25,7 +25,7 @@ public class AIAServer {
         ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
             String line = receivedMessage.getPayload();
 
-            String outputLine = commandManager.execute(line);
+            String outputLine = commandManager.process(line);
             try {
                 if (!outputLine.isEmpty()) {
                     responder.sendMessage(outputLine.replace("\n", "\r\n"), true);
