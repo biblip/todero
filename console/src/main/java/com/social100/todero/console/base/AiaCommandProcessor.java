@@ -12,11 +12,12 @@ import com.social100.todero.stream.PipelineStreamBridge;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class AiaCommandProcessor implements CommandProcessor {
     private final AppConfig appConfig;
-    private final PipelineStreamBridge bridge;
+    private PipelineStreamBridge bridge;
     // Data transport
     UdpTransport dataTraffic;
     // ACK transport
@@ -42,11 +43,13 @@ public class AiaCommandProcessor implements CommandProcessor {
     }
 
     ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage) -> {
-        System.out.print(receivedMessage.getPayload() + "\n>");
+        if (Optional.ofNullable(this.bridge).isPresent()) {
+            this.bridge.writeAsync(receivedMessage.getPayload().getBytes());
+        }
     });
 
     Consumer<Integer> ackSendMessageCallback = (packetId) -> {
-        //System.out.println("Server Confirmed Message packetId: " + packetId);
+        // Do nothing
     };
 
     @Override
