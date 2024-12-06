@@ -65,11 +65,21 @@ public class PluginManager {
 
         // Get the associated Component and validate the command
         Component component = plugin.getComponent();
-        if (component == null || component.getCommands() == null) {
+        if (component == null || component.getCommands() == null || component.getCommands().isEmpty()) {
             return "Plugin '" + pluginName + "' has no commands defined.";
         }
 
-        if (!component.getCommands().containsKey(command)) {
+        // Search for the command in the nested structure
+        Command foundCommand = null;
+        for (Map.Entry<String, Map<String, Command>> groupEntry : component.getCommands().entrySet()) {
+            Map<String, Command> groupCommands = groupEntry.getValue();
+            if (groupCommands.containsKey(command)) {
+                foundCommand = groupCommands.get(command);
+                break;
+            }
+        }
+
+        if (foundCommand == null) {
             return "Command '" + command + "' does not exist in plugin '" + pluginName + "'.";
         }
 
@@ -80,7 +90,7 @@ public class PluginManager {
             return "Plugin '" + pluginName + "' has no associated Instance.";
         }
 
-        // Call the execute method on the PluginContext
+        // Call the execute method on the PluginInstance
         try {
             return pluginInstance.execute(command, commandArgs);
         } catch (Exception e) {
@@ -114,22 +124,28 @@ public class PluginManager {
             // Iterate over the commands in the plugin's component
             Component component = plugin.getComponent();
             if (component != null && component.getCommands() != null) {
-                for (Map.Entry<String, Command> commandEntry : component.getCommands().entrySet()) {
-                    String commandName = commandEntry.getKey();
-                    Command command = commandEntry.getValue();
+                // Iterate over groups
+                for (Map.Entry<String, Map<String, Command>> groupEntry : component.getCommands().entrySet()) {
+                    String groupName = groupEntry.getKey();
+                    Map<String, Command> groupCommands = groupEntry.getValue();
 
-                    // Add plugin -> command suggestion
-                    completions.add(pluginName + " " + commandName);
+                    // Iterate over commands within the group
+                    for (Map.Entry<String, Command> commandEntry : groupCommands.entrySet()) {
+                        String commandName = commandEntry.getKey();
+                        Command command = commandEntry.getValue();
 
-                    // Add detailed command suggestion (if needed)
-                    if (command.getDescription() != null) {
-                        completions.add(pluginName + " " + commandName + " - " + command.getDescription());
+                        // Add plugin -> command suggestion
+                        completions.add(pluginName + " " + commandName);
+
+                        // Add detailed command suggestion (if needed)
+                        if (command.getDescription() != null) {
+                            completions.add(pluginName + " " + commandName + " - " + command.getDescription());
+                        }
                     }
                 }
             }
         }
 
-        // Return the list of completions
         return completions;
     }
 }

@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Command {
-    private String isStatic;
-    private String method;
-    private String description;
-    private String command;
     private String group;
+    private String command;
+    private String description;
+    private String method;
+    private String isStatic;
 }

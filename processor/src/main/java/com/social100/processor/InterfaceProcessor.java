@@ -325,16 +325,20 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "                .description(\"" + pluginDescription + "\")\n" +
                 "                .commands(" + generatedAnnotationRegistryClassName + ".REGISTRY.stream()\n" +
                 "                        .map(entry -> new Command(\n" +
-                "                                entry.get(\"static\"),\n" +
-                "                                entry.get(\"method\"),\n" +
-                "                                entry.get(\"description\"),\n" +
+                "                                entry.get(\"group\"),\n" +
                 "                                entry.get(\"command\"),\n" +
-                "                                entry.get(\"group\")\n" +
+                "                                entry.get(\"description\"),\n" +
+                "                                entry.get(\"method\"),\n" +
+                "                                entry.get(\"static\")" +
                 "                        ))\n" +
-                "                        .collect(Collectors.toMap(\n" +
-                "                                Command::getCommand,\n" +
-                "                                commandInfo -> commandInfo\n" +
-                "                        )))\n" +
+                "                        .collect(Collectors.groupingBy(\n" +
+                "                                Command::getGroup, // Group by the \"group\" field\n" +
+                "                                Collectors.toMap(\n" +
+                "                                        Command::getCommand, // Key is the \"command\" field\n" +
+                "                                        command -> command // Value is the Command object\n" +
+                "                                )\n" +
+                "                        ))\n" +
+                "                )\n" +
                 "                .build();\n" +
                 "    }\n" +
                 "\n" +

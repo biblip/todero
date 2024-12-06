@@ -43,11 +43,11 @@ public class PluginContext {
                 Optional<Component> component = Optional.ofNullable(pluginInstance.getComponent());
                 String componentName = "";
                 String componentDescription = "";
-                Map<String, Command> componentCommands = new HashMap<>();
+                Map<String, Map<String, Command>> componentCommands = new HashMap<>();
                 if (component.isPresent()) {
                     componentName = Optional.ofNullable(component.get().getName()).orElse("");
                     componentDescription = Optional.ofNullable(component.get().getDescription()).orElse("");
-                    componentCommands = Optional.ofNullable(pluginInstance.getComponent().getCommands()).orElse(new HashMap<>());
+                    componentCommands = Optional.ofNullable(component.get().getCommands()).orElse(new HashMap<>());
                 }
 
                 Plugin plugin = Plugin.builder()

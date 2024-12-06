@@ -10,5 +10,5 @@ import java.util.Map;
 public class Component {
     String name;
     String description;
-    Map<String, Command> commands;
+    Map<String, Map<String, Command>> commands;
 }
