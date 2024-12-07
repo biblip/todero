@@ -19,7 +19,7 @@ import java.util.Set;
 @SupportedAnnotationTypes("com.social100.processor.AIADependencies")
 @SupportedSourceVersion(SourceVersion.RELEASE_17) // Replace with your Java version
 public class AIADependenciesProcessor extends AbstractProcessor {
-    String COMMAND_MANAGER_INTERFACE = "com.social100.todero.cli.base.CommandManager";
+    String COMMAND_MANAGER_INTERFACE = "com.social100.todero.console.base.CommandManager";
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {

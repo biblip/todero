@@ -9,6 +9,15 @@ ARG CONFIG_PLUGIN_LIST
 ENV CONFIG_TCP_SERVER_PORT=${CONFIG_TCP_SERVER_PORT}
 ENV CONFIG_PLUGIN_LIST=${CONFIG_PLUGIN_LIST}
 
+# Install nftables and networking tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nftables iproute2 net-tools && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy nftables rules file and apply it
+COPY assets/nftables.rules /etc/nftables.rules
+# RUN nft -f /etc/nftables.rules
+
 # Set the working directory
 WORKDIR /app
 

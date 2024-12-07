@@ -22,9 +22,8 @@ public class ThePlugin implements PluginInterface {
         /*Component.builder()
                 .name(componentName)
                 .description(componentDescription)
-                .commands()
-         */
-        this.apiCommandLineInterface.writeAsync("help\n".getBytes());
+                .commands()*/
+        //this.apiCommandLineInterface.writeAsync("help\n".getBytes());
         // Build the component with the available/supported commands according to the help returned and local policies.
         return null;
     }

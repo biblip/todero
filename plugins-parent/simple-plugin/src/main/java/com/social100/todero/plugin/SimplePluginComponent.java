@@ -3,6 +3,7 @@ package com.social100.todero.plugin;
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
 
+import java.util.Arrays;
 import java.util.Map;
 
 @AIAController(name = "simple",
@@ -27,7 +28,7 @@ public class SimplePluginComponent {
     public Map<String, Object> instanceMethod(String[] args) {
         return Map.of(
                 "message", "Hello from instanceMethod",
-                "args", args,
+                "args", Arrays.toString(args),
                 "metadata", Map.of("key1", "value1", "key2", "value2")
         );
     }
