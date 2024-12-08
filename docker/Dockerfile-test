@@ -16,7 +16,7 @@ WORKDIR /app
 COPY assets/tcp-server.jar /app/tcp-server.jar
 
 # Copy the configuration file
-COPY assets/config.yaml.seed /app/config.yaml
+COPY ../config.yaml.seed /app/config.yaml
 
 # Replace "TCP-SERVER-PORT" with CONFIG_TCP_SERVER_PORT value in config.yaml
 RUN sed -i "s/TCP-SERVER-PORT/${CONFIG_TCP_SERVER_PORT}/g" /app/config.yaml

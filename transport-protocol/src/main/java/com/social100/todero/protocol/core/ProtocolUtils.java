@@ -20,9 +20,9 @@ public class ProtocolUtils {
                 preparedMessage = prepare.apply(message.getPayload());
             }
             if (message.isAckRequested()) {
-                return message.getPacketId() + "|DT|AR|" + preparedMessage + "|" + message.getTransportPort();
+                return message.getPacketId() + "|DT|AR|" + preparedMessage;
             } else {
-                return message.getPacketId() + "|DT|--|" + preparedMessage + "|" + message.getTransportPort();
+                return message.getPacketId() + "|DT|--|" + preparedMessage;
             }
         }
     }
@@ -33,7 +33,7 @@ public class ProtocolUtils {
      */
     public static ProtocolMessage deserialize(String data, Function<String, String> process) {
         // Expecting 5 parts 3 parts for ack: packetId, TRansport/DaTa, AckRequest/--, payload, transportPort
-        String[] parts = data.split("\\|", 5);
+        String[] parts = data.split("\\|", 4);
         if (parts.length < 3) return null;
 
         try {
@@ -50,11 +50,7 @@ public class ProtocolUtils {
                 if (process != null) {
                     processedMessage = process.apply(parts[3]);
                 }
-                ProtocolMessage message = new ProtocolMessage(packetId, processedMessage, ackRequested);
-                if (parts.length == 5) {
-                    message.setTransportPort(Integer.parseInt(parts[4]));
-                }
-                return message;
+                return new ProtocolMessage(packetId, processedMessage, ackRequested);
             }
         } catch (NumberFormatException e) {
             e.printStackTrace();

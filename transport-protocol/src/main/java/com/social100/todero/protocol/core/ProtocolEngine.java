@@ -29,7 +29,6 @@ public class ProtocolEngine {
     private static final long QUEUE_WAIT_TIMEOUT = 1000;
 
     private final TransportInterface dataTraffic;
-    private final TransportInterface transportTraffic;
     private final Selector selector;
     private final AtomicInteger packetIdGenerator = new AtomicInteger(1);
     private final ConcurrentHashMap<Integer, Object> ackWaitLocks = new ConcurrentHashMap<>();
@@ -42,30 +41,26 @@ public class ProtocolEngine {
     private final Pipeline pipeline;
     private List<Thread> threadList = new ArrayList<>();
 
-    public ProtocolEngine(TransportInterface dataTraffic, TransportInterface transportTraffic) throws IOException {
+    public ProtocolEngine(TransportInterface dataTraffic) throws IOException {
         this.dataTraffic = dataTraffic;
-        this.transportTraffic = transportTraffic;
         this.selector = Selector.open();
         this.pipeline = null;
 
         // Register channels with the selector
         dataTraffic.getChannel().register(selector, SelectionKey.OP_READ, CHANNEL_DATA);
-        transportTraffic.getChannel().register(selector, SelectionKey.OP_READ, CHANNEL_TRANSPORT);
 
         // Start the sender thread
         startSenderThread();
         startSendMessageRetryThread();
     }
 
-    public ProtocolEngine(TransportInterface dataTraffic, TransportInterface transportTraffic, Pipeline pipeline) throws IOException {
+    public ProtocolEngine(TransportInterface dataTraffic, Pipeline pipeline) throws IOException {
         this.dataTraffic = dataTraffic;
-        this.transportTraffic = transportTraffic;
         this.selector = Selector.open();
         this.pipeline = pipeline;
 
         // Register channels with the selector
         dataTraffic.getChannel().register(selector, SelectionKey.OP_READ, CHANNEL_DATA);
-        transportTraffic.getChannel().register(selector, SelectionKey.OP_READ, CHANNEL_TRANSPORT);
 
         // Start the sender thread
         startSenderThread();
@@ -169,13 +164,13 @@ public class ProtocolEngine {
                                     ProtocolMessage protocolMessage = ProtocolUtils.deserialize(receivedData, this::processReceivedMessage);
 
                                     if (protocolMessage != null) {
-                                        if (channelType.equals(CHANNEL_DATA)) {
+                                        if (!protocolMessage.isAck()) {
                                             if (protocolMessage.isAckRequested()) {
                                                 // Send ACK back to the sender
                                                 sendAck(sourceAddress, protocolMessage);
                                             }
                                             handleDataMessage(protocolMessage, sourceAddress, messageCallback);
-                                        } else if (channelType.equals(CHANNEL_TRANSPORT)) {
+                                        } else {
                                             handleTransportMessage(protocolMessage, ackSendMessageCallback);
                                         }
                                     }
@@ -197,7 +192,7 @@ public class ProtocolEngine {
     public Integer sendMessage(InetSocketAddress destination, String message, boolean ackRequested) throws Exception {
         int packetId = packetIdGenerator.getAndIncrement();
         ProtocolMessage protocolMessage = new ProtocolMessage(packetId, message, ackRequested);
-        protocolMessage.setTransportPort(transportTraffic.getPort());
+        //protocolMessage.setTransportPort(dataTraffic.getPort());
         String serializedMessage = ProtocolUtils.serialize(protocolMessage, this::prepareMessageForSending);
 
         // Add the message to the send queue
@@ -226,8 +221,8 @@ public class ProtocolEngine {
         int packetId = protocolMessage.getPacketId();
         ProtocolMessage ackMessage = ProtocolMessage.createAck(packetId);
         String serializedAck = ProtocolUtils.serialize(ackMessage);
-        InetSocketAddress ackDestination = new InetSocketAddress(sourceAddress.getAddress(), protocolMessage.getTransportPort());
-        transportTraffic.send(ackDestination, serializedAck);
+        //InetSocketAddress ackDestination = new InetSocketAddress(sourceAddress.getAddress(), protocolMessage.getTransportPort());
+        dataTraffic.send(sourceAddress, serializedAck);
     }
 
     private void handleTransportMessage(ProtocolMessage protocolMessage, Consumer<Integer> ackSendMessageCallback) {

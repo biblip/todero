@@ -8,7 +8,6 @@ public class ProtocolMessage {
     private final String payload;
     private final boolean ackRequested;
     private final boolean isAck;
-    private int transportPort; // Port for acknowledgment traffic
 
     /**
      * Constructor for regular data messages with acknowledgment requested by default.
@@ -53,16 +52,5 @@ public class ProtocolMessage {
      */
     public static ProtocolMessage createAck(int packetId, String payload) {
         return new ProtocolMessage(packetId, payload, false, true);
-    }
-
-    /**
-     * Validates the transport port (optional utility).
-     *
-     * @throws IllegalArgumentException if the transport port is invalid.
-     */
-    public void validateTransportPort() {
-        if (transportPort < 1 || transportPort > 65535) {
-            throw new IllegalArgumentException("Transport port must be between 1 and 65535.");
-        }
     }
 }

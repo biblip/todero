@@ -55,6 +55,20 @@ public class PluginManager {
         return helpWrapper.getHelp(pluginName, commandName, outputType);
     }
 
+    /**
+     *
+     *
+     * @return
+     */
+    public Component getComponent() {
+        return plugins.keySet()
+                .stream()
+                .filter(key -> key != null && !key.isEmpty())
+                .map(plugins::get)
+                .findFirst()
+                .get().getComponent();
+    }
+
     public Object execute(String pluginName, String command, String[] commandArgs) {
         // Find the specified plugin
         Plugin plugin = plugins.get(pluginName);

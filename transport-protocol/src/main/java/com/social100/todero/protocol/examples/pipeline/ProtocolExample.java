@@ -23,7 +23,7 @@ public class ProtocolExample {
             // ACK transport binds to a specific port to receive ACKs
             UdpTransport ackTransport = new UdpTransport(9000);
 
-            ProtocolEngine engine = new ProtocolEngine(dataTransport, ackTransport, pipeline);
+            ProtocolEngine engine = new ProtocolEngine(dataTransport, pipeline);
             // engine.start(); // No need to start the engine's selector loop
 
             String originalMessage = "Hello, Secure World!";

@@ -1,8 +1,10 @@
 package com.social100.todero.console.base;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.social100.todero.common.Constants;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.model.plugin.Component;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +34,10 @@ public class CliCommandManager implements CommandManager {
         return pluginManager.getHelp(plugin, command, outputType);
     }
 
+    public Component getComponent() {
+        return pluginManager.getComponent();
+    }
+
     @Override
     public String process(String line) {
         if (line == null || line.isBlank()) {
@@ -50,44 +57,51 @@ public class CliCommandManager implements CommandManager {
             return ""; // No arguments found, nothing to execute
         }
 
-        String command = arguments.remove(0);
-        if ("set".equalsIgnoreCase(command)) {
-            return handleSetCommand(arguments);
-        }
+        String pluginOrCommandName = arguments.remove(0);
+        String subCommand = null;
+        String[] commandArgs = null;
 
-        String pluginOrCommandName = command;
-        String subCommand = arguments.isEmpty() ? null : arguments.remove(0);
-        String[] commandArgs = arguments.toArray(new String[0]);
-
+        System.out.println("----> " + line);
         // Reserved command logic
         switch (pluginOrCommandName) {
+            case Constants.CLI_COMMAND_COMPONENT:
+                return toJsonComponent(getComponent());
             case Constants.CLI_COMMAND_HELP:
                 // Pass both the plugin name and sub-command (or null if missing)
-                String pluginName = subCommand;
+                subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 String commandName = arguments.isEmpty() ? null : arguments.remove(0);
-                return formatOutput(getHelpMessage(pluginName, commandName));
+                return formatOutput(getHelpMessage(subCommand, commandName));
             case Constants.CLI_COMMAND_LOAD:
                 return formatOutput(load());
             case Constants.CLI_COMMAND_UNLOAD:
                 return formatOutput(unload());
             case Constants.CLI_COMMAND_RELOAD:
                 return formatOutput(reload());
+            case Constants.CLI_COMMAND_SET:
+                if (arguments.size() < 2) {
+                    return "Error: 'set' command requires a property and a value.";
+                }
+                String property = arguments.get(0).toLowerCase();
+                String value = arguments.get(1);
+                return handleSetCommand(property, value);
             default:
                 // If it's not a reserved command, treat it as a plugin name
+                subCommand = arguments.isEmpty() ? null : arguments.remove(0);
+                commandArgs = arguments.toArray(new String[0]);
                 Object output = pluginManager.execute(pluginOrCommandName, subCommand, commandArgs);
                 return formatOutput(output);
         }
     }
 
+    @Override
+    public String process(String line, Consumer<String> consumer) {
+        String mm = process(line);
+        consumer.accept(mm);
+        return mm;
+    }
+
     // Handle the `set` command to update properties dynamically
-    private String handleSetCommand(ArrayList<String> arguments) {
-        if (arguments.size() < 2) {
-            return "Error: 'set' command requires a property and a value.";
-        }
-
-        String property = arguments.get(0).toLowerCase();
-        String value = arguments.get(1);
-
+    private String handleSetCommand(final String property, final String value) {
         // Update the property in the map
         properties.put(property, value);
 
@@ -136,6 +150,19 @@ public class CliCommandManager implements CommandManager {
     // Placeholder methods for serialization
     private String toJson(Object obj) {
         return obj.toString();
+    }
+
+    private String toJsonComponent(Component obj) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = null;
+        try {
+            System.out.println("serianlizing Component: " + obj.toString());
+            jsonString = objectMapper.writeValueAsString(obj);
+            System.out.println("jsonString: " + jsonString);
+        } catch (JsonProcessingException ignore) {
+
+        }
+        return jsonString;
     }
 
     private String toYaml(Object obj) {

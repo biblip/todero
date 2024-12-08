@@ -25,23 +25,18 @@ public class ProtocolServer {
             }
         });
 
-        Consumer<Integer> ackSendMessageCallback = (packetId) -> {
-            System.out.println("Server Confirmed Message packetId: " + packetId);
-        };
+        Consumer<Integer> ackSendMessageCallback = (packetId) -> System.out.println("Server Confirmed Message packetId: " + packetId);
 
         try {
             // Data transport listens on port 9876
             UdpTransport dataTraffic = new UdpTransport(9876);
-
-            // ACK transport uses any available port (0)
-            UdpTransport transportTraffic = new UdpTransport(0);
 
             Pipeline pipeline = new Pipeline();
             pipeline.addStage(new CompressionStage());
             pipeline.addStage(new EncryptionStage("1tNXAlS+bFUZWyEpQI2fAUjKtyXHsUTgBVecFad98LY="));
             pipeline.addStage(new ChecksumStage());
 
-            ProtocolEngine engine = new ProtocolEngine(dataTraffic, transportTraffic, pipeline);
+            ProtocolEngine engine = new ProtocolEngine(dataTraffic, pipeline);
 
             engine.startServer(receiveMessageCallback, ackSendMessageCallback);
 

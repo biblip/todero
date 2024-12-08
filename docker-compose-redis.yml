@@ -1,0 +1,13 @@
+version: "3.9"  # Specify the Compose file version
+services:
+  redis:
+    image: redis:latest  # Use the official Redis image
+    container_name: redis-server
+    ports:
+      - "6379:6379"  # Map the container port to the host
+    volumes:
+      - redis_data:/data  # Persist data using a named volume
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]  # Custom Redis options
+
+volumes:
+  redis_data:  # Declare a named volume

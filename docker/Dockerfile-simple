@@ -13,16 +13,16 @@ ENV CONFIG_PLUGIN_LIST=${CONFIG_PLUGIN_LIST}
 WORKDIR /app
 
 # Copy the JAR file to the image
-COPY assets/aia-server.jar /app/aia-server.jar
+COPY ../aia-server.jar /app/aia-server.jar
 
 # Copy the configuration file
-COPY assets/config.yaml.seed /app/config.yaml
+COPY ../config.yaml.seed /app/config.yaml
 
 # Replace "TCP-SERVER-PORT" with CONFIG_TCP_SERVER_PORT value in config.yaml
 RUN sed -i "s/TCP-SERVER-PORT/${CONFIG_TCP_SERVER_PORT}/g" /app/config.yaml
 
 # Copy the plugins directory to the root of the application
-COPY assets/plugins /app/tmp-plugins/
+COPY ../plugins /app/tmp-plugins/
 
 # Create Plugins Directory
 RUN mkdir -p /app/plugins

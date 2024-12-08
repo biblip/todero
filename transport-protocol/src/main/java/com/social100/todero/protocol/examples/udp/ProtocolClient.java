@@ -35,7 +35,7 @@ public class ProtocolClient {
             pipeline.addStage(new ChecksumStage());
 
 
-            ProtocolEngine engine = new ProtocolEngine(dataTraffic, transportTraffic, pipeline);
+            ProtocolEngine engine = new ProtocolEngine(dataTraffic, pipeline);
             engine.startClient(receiveMessageCallback, ackSendMessageCallback);
 
             InetSocketAddress serverAddress = new InetSocketAddress("localhost", 9876);

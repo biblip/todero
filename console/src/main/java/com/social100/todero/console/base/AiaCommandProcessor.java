@@ -20,8 +20,6 @@ public class AiaCommandProcessor implements CommandProcessor {
     private PipelineStreamBridge bridge;
     // Data transport
     UdpTransport dataTraffic;
-    // ACK transport
-    UdpTransport transportTraffic;
     // Pipeline
     Pipeline pipeline = new Pipeline();
     // Protocol Engine
@@ -58,15 +56,12 @@ public class AiaCommandProcessor implements CommandProcessor {
             // Data transport uses any available port (0)
             dataTraffic = new UdpTransport(0);
 
-            // ACK transport uses any available port for transport (0)
-            transportTraffic = new UdpTransport(0);
-
             pipeline = new Pipeline();
             pipeline.addStage(new CompressionStage());
             pipeline.addStage(new EncryptionStage("1tNXAlS+bFUZWyEpQI2fAUjKtyXHsUTgBVecFad98LY="));
             pipeline.addStage(new ChecksumStage());
 
-            engine = new ProtocolEngine(dataTraffic, transportTraffic, pipeline);
+            engine = new ProtocolEngine(dataTraffic, pipeline);
             engine.startClient(receiveMessageCallback, ackSendMessageCallback);
 
             serverAddress = new InetSocketAddress("localhost", 9876);

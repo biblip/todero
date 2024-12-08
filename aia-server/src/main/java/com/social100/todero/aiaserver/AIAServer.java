@@ -1,7 +1,7 @@
 package com.social100.todero.aiaserver;
 
-import com.social100.todero.console.base.CliCommandManager;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.console.base.CliCommandManager;
 import com.social100.todero.protocol.core.ProtocolEngine;
 import com.social100.todero.protocol.core.ReceiveMessageCallback;
 import com.social100.todero.protocol.pipeline.ChecksumStage;
@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 
 public class AIAServer {
     private final CliCommandManager commandManager;
+    private ProtocolEngine engine;
 
     public AIAServer(AppConfig appConfig) {
         commandManager = new CliCommandManager(appConfig);
@@ -24,15 +25,15 @@ public class AIAServer {
 
         ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
             String line = receivedMessage.getPayload();
-
-            String outputLine = commandManager.process(line);
-            try {
-                if (!outputLine.isEmpty()) {
-                    responder.sendMessage(outputLine.replace("\n", "\r\n"), true);
+            commandManager.process(line, response -> {
+                if (!response.isEmpty()) {
+                    try {
+                        responder.sendMessage(response.replace("\n", "\r\n"), true);
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            });
         });
 
         Consumer<Integer> ackSendMessageCallback = (packetId) -> {
@@ -43,15 +44,12 @@ public class AIAServer {
             // Data transport listens on port 9876
             UdpTransport dataTraffic = new UdpTransport(9876);
 
-            // ACK transport uses any available port (0)
-            UdpTransport transportTraffic = new UdpTransport(0);
-
             Pipeline pipeline = new Pipeline();
             pipeline.addStage(new CompressionStage());
             pipeline.addStage(new EncryptionStage("1tNXAlS+bFUZWyEpQI2fAUjKtyXHsUTgBVecFad98LY="));
             pipeline.addStage(new ChecksumStage());
 
-            ProtocolEngine engine = new ProtocolEngine(dataTraffic, transportTraffic, pipeline);
+            engine = new ProtocolEngine(dataTraffic, pipeline);
 
             engine.startServer(receiveMessageCallback, ackSendMessageCallback);
 
