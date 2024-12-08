@@ -35,7 +35,7 @@ public class CliCommandProcessor implements CommandProcessor {
     @Override
     public void process(String line) {
         String output = commandManager.process(line);
-        if (!output.isEmpty()) {
+        if (output !=null && !output.isEmpty()) {
             // Send the output through the bridge
             bridge.writeAsync(output.getBytes());
         }
