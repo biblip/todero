@@ -4,6 +4,7 @@ import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
 import com.social100.todero.common.model.plugin.PluginInterface;
+import com.social100.todero.common.observer.Observer;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
@@ -20,11 +21,11 @@ import java.util.Set;
 public class PluginContext {
     final private Map<String, Plugin> plugins = new HashMap<>();
 
-    public PluginContext(File pluginJar) throws Exception {
-        initializePlugin(pluginJar);
+    public PluginContext(File pluginJar, Observer observer) throws Exception {
+        initializePlugin(pluginJar, (message) -> observer.update("PluginContext:" + message));
     }
 
-    private void initializePlugin(File pluginJar) throws Exception {
+    private void initializePlugin(File pluginJar, Observer observer) throws Exception {
         // Convert the File to a URL
         URL jarUrl = pluginJar.toURI().toURL();
         URLClassLoader pluginClassLoader = new URLClassLoader(new URL[]{jarUrl}, getClass().getClassLoader());
@@ -39,7 +40,13 @@ public class PluginContext {
         Set<Class<? extends PluginInterface>> commandClasses = reflections.getSubTypesOf(PluginInterface.class);
         for (Class<? extends PluginInterface> commandClass : commandClasses) {
             if (!commandClass.isInterface()) {
-                PluginInterface pluginInstance = commandClass.getDeclaredConstructor().newInstance();
+                Observer myObserver = new Observer() {
+                    @Override
+                    public void update(String message) {
+                        observer.update(commandClass.getName() + ":" + message);
+                    }
+                };
+                PluginInterface pluginInstance = commandClass.getDeclaredConstructor(Observer.class).newInstance(myObserver);
                 Optional<Component> component = Optional.ofNullable(pluginInstance.getComponent());
                 String componentName = "";
                 String componentDescription = "";
@@ -92,7 +99,7 @@ public class PluginContext {
         if (selectedPlugin.isEmpty()) {
             return "Command Not Found";
         }
-        return selectedPlugin.get().getPluginInstance().execute(command, commandArgs);
+        return selectedPlugin.get().getPluginInstance().execute(pluginName, command, commandArgs);
     }
 
     private static boolean isPluginAndHasCommand(String pluginName, String command, Plugin p) {

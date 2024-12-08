@@ -3,6 +3,7 @@ package com.djmusic.vlc;
 import com.djmusic.vlc.base.ChannelManager;
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
+import com.social100.todero.common.observer.PublisherManager;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.State;
@@ -25,7 +26,7 @@ public class DjyPluginComponent {
             ":norm-max-level=1.0"  // Maximum level for normalized audio
     };
 
-    public DjyPluginComponent() {
+    public DjyPluginComponent(PublisherManager publisherManager) {
         System.setProperty("jna.library.path", "C:\\Program Files\\VideoLAN\\VLC");
         channelManager = new ChannelManager();
     }

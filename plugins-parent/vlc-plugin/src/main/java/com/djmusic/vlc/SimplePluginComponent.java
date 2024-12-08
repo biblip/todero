@@ -2,6 +2,7 @@ package com.djmusic.vlc;
 
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
+import com.social100.todero.common.observer.PublisherManager;
 
 @AIAController(name = "fsimple",
         type = "",
@@ -10,7 +11,7 @@ public class SimplePluginComponent {
     final static String MAIN_GROUP = "Main";
     final static String CHANNELS_GROUP = "Channels";
 
-    public SimplePluginComponent() {
+    public SimplePluginComponent(PublisherManager publisherManager) {
     }
 
     @Action(group = MAIN_GROUP, 

@@ -250,7 +250,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         //}
 
         classContent.append("    }\n\n" +
-                "    public static Object executeStatic(String plugin, String command, String[] args) {\n" +
+                "    public static Object executeStatic(String plugin, String pluginName, String command, String[] args) {\n" +
                 "        Function<String[], Object> function = STATIC_REGISTRY.get(plugin).get(command);\n" +
                 "        if (function != null) {\n" +
                 "            return function.apply(args);\n" +
@@ -258,7 +258,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "            throw new IllegalArgumentException(\"No static method found for command: \" + command);\n" +
                 "        }\n" +
                 "    }\n\n" +
-                "    public static Object executeInstance(String plugin, String command, Object instance, String[] args) {\n" +
+                "    public static Object executeInstance(String plugin, String pluginName, String command, Object instance, String[] args) {\n" +
                 "        BiFunction<Object, String[], Object> function = INSTANCE_REGISTRY.get(plugin).get(command);\n" +
                 "        if (function != null) {\n" +
                 "            return function.apply(instance, args);\n" +
@@ -266,7 +266,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "            throw new IllegalArgumentException(\"No instance method found for command: \" + command);\n" +
                 "        }\n" +
                 "    }\n\n" +
-                "    public static Object execute(String plugin, String command, Object instance, String[] args) {\n" +
+                "    public static Object execute(String plugin, String pluginName, String command, Object instance, String[] args) {\n" +
                 "        BiFunction<Object, String[], Object> instanceFunction = INSTANCE_REGISTRY.get(plugin).get(command);\n" +
                 "        if (instanceFunction != null) {\n" +
                 "            return instanceFunction.apply(instance, args);\n" +
@@ -303,22 +303,25 @@ public class InterfaceProcessor extends AbstractProcessor {
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "\n" +
                 "import " + pluginClassQualifiedName + ";\n" +
+                "import com.social100.todero.common.observer.PublisherManager;\n" +
                 "import com.social100.todero.console.base.CommandManager;\n" +
                 "import com.social100.todero.common.model.plugin.Command;\n" +
                 "import com.social100.todero.common.model.plugin.Component;\n" +
                 "import com.social100.todero.common.model.plugin.PluginInterface;\n" +
+                "import com.social100.todero.common.observer.Observer;\n" +
                 "import com.social100.todero.generated." + generatedAnnotationRegistryClassName + ";\n" +
                 "import com.social100.todero.generated." + generatedMethodRegistryClassName + ";\n" +
                 "\n" +
                 "import java.util.stream.Collectors;\n" +
                 "\n" +
-                "public class " + generatedClassName + " implements PluginInterface {\n" +
+                "public class " + generatedClassName + " extends PublisherManager implements PluginInterface {\n" +
                 "\n" +
                 "    private static " + pluginClassQualifiedName + " " + classVariableName + ";\n" +
                 "    private final Component component;\n" +
                 "\n" +
-                "    public " + generatedClassName + "(" + (commandManagerRequired ? "CommandManager commandManager" : "") + ") {\n" +
-                "        " + classVariableName + " = new " + classSimpleName + "(" + (commandManagerRequired ? "commandManager" : "") + ");\n" +
+                "    public " + generatedClassName + "(Observer observer" + (commandManagerRequired ? ", CommandManager commandManager" : "") + ") {\n" +
+                "        this.addObserver(observer);\n" +
+                "        " + classVariableName + " = new " + classSimpleName + "(this" + (commandManagerRequired ? ", commandManager" : "") + ");\n" +
                 "        component = Component\n" +
                 "                .builder()\n" +
                 "                .name(\"" + pluginName + "\")\n" +
@@ -348,8 +351,8 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    public Object execute(String command, String[] commandArgs) {\n" +
-                "        return " + generatedMethodRegistryClassName + ".execute(\"" + pluginClassQualifiedName + "\", command, " + classVariableName + ", commandArgs);\n" +
+                "    public Object execute(String pluginName, String command, String[] commandArgs) {\n" +
+                "        return " + generatedMethodRegistryClassName + ".execute(\"" + pluginClassQualifiedName + "\", pluginName, command, " + classVariableName + ", commandArgs);\n" +
                 "    }\n" +
                 "}\n");
         try {

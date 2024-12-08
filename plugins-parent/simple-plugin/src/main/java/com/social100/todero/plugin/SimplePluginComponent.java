@@ -2,6 +2,7 @@ package com.social100.todero.plugin;
 
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
+import com.social100.todero.common.observer.PublisherManager;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.Map;
 public class SimplePluginComponent {
     final static String MAIN_GROUP = "Main";
 
-    public SimplePluginComponent() {
+    public SimplePluginComponent(PublisherManager publisherManager) {
     }
 
     @Action(group = MAIN_GROUP, 

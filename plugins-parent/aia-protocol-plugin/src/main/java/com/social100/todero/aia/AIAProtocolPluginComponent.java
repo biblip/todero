@@ -2,14 +2,17 @@ package com.social100.todero.aia;
 
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
+import com.social100.todero.common.observer.PublisherManager;
 
 @AIAController(name = "aia",
         type = "",
         description = "AIA Protocol Plugin")
 public class AIAProtocolPluginComponent {
+    final PublisherManager publisherManager;
     final static String MAIN_GROUP = "Main";
 
-    public AIAProtocolPluginComponent() {
+    public AIAProtocolPluginComponent(PublisherManager publisherManager) {
+        this.publisherManager = publisherManager;
     }
 
     @Action(group = MAIN_GROUP,

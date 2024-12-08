@@ -62,6 +62,7 @@ public class CliCommandManager implements CommandManager {
         String[] commandArgs = null;
 
         System.out.println("----> " + line);
+        System.out.println("puginOrCommandName:" + pluginOrCommandName);
         // Reserved command logic
         switch (pluginOrCommandName) {
             case Constants.CLI_COMMAND_COMPONENT:
@@ -88,6 +89,9 @@ public class CliCommandManager implements CommandManager {
                 // If it's not a reserved command, treat it as a plugin name
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 commandArgs = arguments.toArray(new String[0]);
+                System.out.println("pluginOrCommandName:" + pluginOrCommandName);
+                System.out.println("subCommand:" + subCommand);
+                System.out.println("Arguments:" + Arrays.toString(commandArgs));
                 Object output = pluginManager.execute(pluginOrCommandName, subCommand, commandArgs);
                 return formatOutput(output);
         }

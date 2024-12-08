@@ -36,7 +36,9 @@ public class PluginManager {
 
         for (File file : pluginFiles) {
             try {
-                pluginContextList.add(new PluginContext(file));
+                pluginContextList.add(new PluginContext(file, (message) -> {
+                    System.out.println("Observer in PluginManager: " + message);
+                }));
 
             } catch (Exception e) {
                 System.err.println("Error processing plugin JAR: " + file.getName());
@@ -106,7 +108,7 @@ public class PluginManager {
 
         // Call the execute method on the PluginInstance
         try {
-            return pluginInstance.execute(command, commandArgs);
+            return pluginInstance.execute(pluginName, command, commandArgs);
         } catch (Exception e) {
             return "Failed to execute command '" + command + "' on plugin '" + pluginName + "': " + e.getMessage();
         }
