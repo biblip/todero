@@ -1,5 +1,6 @@
 package com.social100.todero.console.base;
 
+import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
@@ -16,9 +17,11 @@ public class PluginManager {
     final private List<PluginContext> pluginContextList = new ArrayList<>();
     private final File pluginsDir;
     private HelpWrapper helpWrapper;
+    final private EventChannel.EventListener eventListener;
 
-    public PluginManager(File dir) {
+    public PluginManager(File dir, EventChannel.EventListener eventListener) {
         this.pluginsDir = dir;
+        this.eventListener = eventListener;
         initialize();
 
     }
@@ -36,9 +39,14 @@ public class PluginManager {
 
         for (File file : pluginFiles) {
             try {
-                pluginContextList.add(new PluginContext(file, (message) -> {
-                    System.out.println("Observer in PluginManager: " + message);
-                }));
+                EventChannel.EventListener localEventListener = new EventChannel.EventListener() {
+                    @Override
+                    public void onEvent(String eventName, String message) {
+                        System.out.println("Observer in PluginManager: " + eventName + " -> " + message);
+                        eventListener.onEvent(eventName, message);
+                    }
+                };
+                pluginContextList.add(new PluginContext(file, localEventListener));
 
             } catch (Exception e) {
                 System.err.println("Error processing plugin JAR: " + file.getName());

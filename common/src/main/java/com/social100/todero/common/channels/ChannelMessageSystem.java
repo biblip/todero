@@ -8,15 +8,15 @@ public class ChannelMessageSystem {
 
     // Enum for channel types
     public enum ChannelType {
-        CONTROL,
-        PUBLIC
+        APPLICATION,
+        CONTROL
     }
 
     // Enum for message types
     public enum MessageType {
-        RESPONSE,  // e.g., "restart"
-        EVENT,    // e.g., "door_opened"
-        MESSAGE   // e.g., arbitrary public messages
+        REQUEST,
+        RESPONSE,
+        EVENT
     }
 
     // Class representing a single channel message
@@ -104,9 +104,9 @@ public class ChannelMessageSystem {
         MessageStorage storage = new MessageStorage();
 
         // Create individual messages
-        ChannelMessage controlMessage = new ChannelMessage(ChannelType.CONTROL, MessageType.RESPONSE, "restart");
-        ChannelMessage publicEvent = new ChannelMessage(ChannelType.PUBLIC, MessageType.EVENT, "door_opened");
-        ChannelMessage publicMessage = new ChannelMessage(ChannelType.PUBLIC, MessageType.MESSAGE, "Hello, World!");
+        ChannelMessage controlMessage = new ChannelMessage(ChannelType.CONTROL, MessageType.EVENT, "restart");
+        ChannelMessage publicEvent = new ChannelMessage(ChannelType.APPLICATION, MessageType.EVENT, "door_opened");
+        ChannelMessage publicMessage = new ChannelMessage(ChannelType.APPLICATION, MessageType.REQUEST, "Hello, World!");
 
         // Store messages
         storage.storeMessage(controlMessage);

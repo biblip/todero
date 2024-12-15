@@ -3,7 +3,8 @@ package com.djmusic.vlc;
 import com.djmusic.vlc.base.ChannelManager;
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
-import com.social100.todero.common.observer.PublisherManager;
+import com.social100.processor.EventDefinition;
+import com.social100.processor.Events;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.State;
@@ -15,7 +16,11 @@ import java.io.File;
         type = "",
         description = "description")
 //@AIADependencies(components = {DjyPluginComponent.class, SimplePluginComponent.class})
-public class VlcPluginComponent {
+@Events({
+        @EventDefinition( name = "volume_change", description = "A change in the volume" ),
+        @EventDefinition( name = "channel_end", description = "a channel stop playing" ),
+        @EventDefinition( name = "channel_start", description = "a channel start playing" )})
+public class VlcPluginComponent extends VlcPluginComponentTools {
     final static String MAIN_GROUP = "Main";
     final static String CHANNELS_GROUP = "Channels";
 
@@ -27,7 +32,7 @@ public class VlcPluginComponent {
             ":norm-max-level=1.0"  // Maximum level for normalized audio
     };
 
-    public VlcPluginComponent(PublisherManager publisherManager) {
+    public VlcPluginComponent() {
         System.setProperty("jna.library.path", "C:\\Program Files\\VideoLAN\\VLC");
         channelManager = new ChannelManager();
     }
@@ -35,32 +40,37 @@ public class VlcPluginComponent {
     @Action(group = MAIN_GROUP, 
             command = "move",
             description = "Moves the playback to the specified time. Usage: move <HH:MM:SS|MM:SS|SS>")
-    public String moveCommand(String[] args) {
+    public Boolean moveCommand(String[] args) {
         if (args.length == 0) {
-            return "Error: Please specify the time to move to. Usage: move <time>";
+            this.respond("Error: Please specify the time to move to. Usage: move <time>");
+            return true;
         }
 
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         try {
             long moveToTime = parseTime(args[0]);  // Parse the time string
             audioPlayer.mediaPlayer().controls().setTime(moveToTime);
-            return "Playback moved to " + args[0] + ".";
+            this.respond("Playback moved to " + args[0] + ".");
+            return true;
         } catch (IllegalArgumentException e) {
-            return e.getMessage();
+            this.respond(e.getMessage());
+            return true;
         } catch (Exception e) {
-            return "Failed to move playback due to an unexpected error.";
+            this.respond("Failed to move playback due to an unexpected error.");
+            return true;
         }
     }
 
     @Action(group = MAIN_GROUP, 
             command = "mute",
             description = "Toggles the mute state of the playback if valid media is loaded.")
-    public String muteCommand(String[] args) {
+    public Boolean muteCommand(String[] args) {
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
 
         // Ensure media is present and valid
         if (!audioPlayer.mediaPlayer().media().isValid()) {
-            return "No valid media loaded. Mute operation is not available.";
+            this.respond("No valid media loaded. Mute operation is not available.");
+            return true;
         }
 
         // Check the current mute state to predict the toggle outcome
@@ -70,34 +80,39 @@ public class VlcPluginComponent {
         audioPlayer.mediaPlayer().audio().mute();
 
         // Feedback based on the expected outcome, not the immediate check
-        return wasMute ? "Playback has been unmuted." : "Playback has been muted.";
+        this.respond(wasMute ? "Playback has been unmuted." : "Playback has been muted.");
+
+        return true;
     }
 
     @Action(group = MAIN_GROUP, 
             command = "pause",
             description = "Pauses the playback if it is currently playing.")
-    public String pauseCommand(String[] args) {
+    public Boolean pauseCommand(String[] args) {
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         State state = audioPlayer.mediaPlayer().status().state();
 
         // If the player is currently playing, it will be paused
         if (state == State.PLAYING) {
             audioPlayer.mediaPlayer().controls().pause();
-            return "Playback paused.";
+            this.respond("Playback paused.");
+            return true;
         }
         // If the player is already paused, it might be intended to resume playback
         else if (state == State.PAUSED) {
             audioPlayer.mediaPlayer().controls().play();
-            return "Playback resumed.";
+            this.respond("Playback resumed.");
+            return true;
         } else {
-            return "Playback is not active. Current state: " + state;
+            this.respond("Playback is not active. Current state: " + state);
+            return true;
         }
     }
 
     @Action(group = MAIN_GROUP, 
             command = "play",
             description = "Plays the specified media file. If no file is specified, resumes the current one.")
-    public String playCommand(String[] args) {
+    public Boolean playCommand(String[] args) {
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         MediaPlayer mediaPlayer = audioPlayer.mediaPlayer();
 
@@ -108,30 +123,38 @@ public class VlcPluginComponent {
             File file = new File(mediaPathToPlay);
 
             if (!file.exists()) {
-                return "File not found: " + mediaPathToPlay;
+                this.respond("File not found: " + mediaPathToPlay);
+                return true;
             }
 
             if (!mediaPathToPlay.equals(currentMediaPath)) {
                 mediaPlayer.media().play(mediaPathToPlay, mediaOptions);
-                return "Playing new media: \"" + mediaPathToPlay + "\"";
+                this.volume_change("ViaEvent: Playing new media: \"" + mediaPathToPlay + "\"");
+                this.respond("ViaNormal: Playing new media: \"" + mediaPathToPlay + "\"");
+                return true;
             } else {
                 mediaPlayer.controls().play();
-                return "Resuming current media.";
+                this.volume_change("ViaEvent: Resuming current media.");
+                this.respond("ViaNormal: Resuming current media.");
+                return true;
             }
         } else if (mediaPlayer.media().isValid()) {
             mediaPlayer.controls().play();
-            return "Resuming playback of current media.";
+            this.respond("Resuming playback of current media.");
+            return true;
         } else {
-            return "No media file specified and no current media to play.";
+            this.respond("No media file specified and no current media to play.");
+            return true;
         }
     }
 
     @Action(group = MAIN_GROUP, 
             command = "skip",
             description = "Skips the playback forward or backward by the specified number of seconds. Usage: skip <+/-seconds>")
-    public String skipCommand(String[] args) {
+    public Boolean skipCommand(String[] args) {
         if (args.length == 0) {
-            return "Error: Please specify the number of seconds to skip. Usage: skip <+/-seconds>";
+            this.respond("Error: Please specify the number of seconds to skip. Usage: skip <+/-seconds>");
+            return true;
         }
 
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
@@ -147,16 +170,18 @@ public class VlcPluginComponent {
             newTime = Math.min(newTime, mediaLength);  // Prevent going beyond the end
 
             audioPlayer.mediaPlayer().controls().setTime(newTime);
-            return String.format("Skipped to %d seconds (%s).", newTime / 1000, formatTime(newTime));
+            this.respond(String.format("Skipped to %d seconds (%s).", newTime / 1000, formatTime(newTime)));
+            return true;
         } catch (NumberFormatException e) {
-            return "Error: Invalid skip time format. Please specify the number of seconds as a numeric value.";
+            this.respond("Error: Invalid skip time format. Please specify the number of seconds as a numeric value.");
+            return true;
         }
     }
 
     @Action(group = MAIN_GROUP, 
             command = "status",
             description = "Displays the current status of VLC. Use 'status all' for all media info available.")
-    public String statusCommand(String[] args) {
+    public Boolean statusCommand(String[] args) {
         StringBuilder statusBuilder = new StringBuilder();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
 
@@ -196,28 +221,31 @@ public class VlcPluginComponent {
             statusBuilder.append("No valid media loaded.");
         }
 
-        return statusBuilder.toString();
+        this.respond(statusBuilder.toString());
+        return true;
     }
 
     @Action(group = MAIN_GROUP, 
             command = "stop",
             description = "Stops the playback if it is currently active.")
-    public String stopCommand(String[] args) {
+    public Boolean stopCommand(String[] args) {
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         State currentState = audioPlayer.mediaPlayer().status().state();
 
         if (currentState != State.STOPPED) {
             audioPlayer.mediaPlayer().controls().stop();
-            return "Playback stopped.";
+            this.respond("Playback stopped.");
+            return true;
         } else {
-            return "Playback is already stopped.";
+            this.respond("Playback is already stopped.");
+            return true;
         }
     }
 
     @Action(group = MAIN_GROUP, 
             command = "volume",
             description = "Sets the volume to a specified level between 0 and 150. Usage: volume <level>")
-    public String volumeCommand(String[] args) {
+    public Boolean volumeCommand(String[] args) {
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
 
         if (args.length > 0) {
@@ -225,38 +253,44 @@ public class VlcPluginComponent {
                 int volume = Integer.parseInt(args[0]);
                 if (volume >= 0 && volume <= 150) {
                     audioPlayer.mediaPlayer().audio().setVolume(volume);
-                    return "Volume set to " + volume + ".";
+                    this.respond("Volume set to " + volume + ".");
+                    return true;
                 } else {
-                    return "Invalid volume level. Volume must be between 0 and 150.";
+                    this.respond("Invalid volume level. Volume must be between 0 and 150.");
+                    return true;
                 }
             } catch (NumberFormatException e) {
-                return "Invalid volume level. Please provide a number between 0 and 150.";
+                this.respond("Invalid volume level. Please provide a number between 0 and 150.");
+                return true;
             }
         } else {
-            return "No volume level provided. Please specify a volume level between 0 and 150.";
+            this.respond("No volume level provided. Please specify a volume level between 0 and 150.");
+            return true;
         }
     }
 
     @Action(group = MAIN_GROUP, 
             command = "volume-down",
             description = "Decreases the volume by 5 units.")
-    public String volumeDownCommand(String[] args) {
+    public Boolean volumeDownCommand(String[] args) {
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         int volume = audioPlayer.mediaPlayer().audio().volume();
         int newVolume = Math.max(0, volume - 5);  // Ensure volume does not go below 0
         audioPlayer.mediaPlayer().audio().setVolume(newVolume);
 
         if (newVolume == volume) {
-            return "Volume is already at the minimum level.";
+            this.respond("Volume is already at the minimum level.");
+            return true;
         } else {
-            return "Volume decreased to " + newVolume + ".";
+            this.respond("Volume decreased to " + newVolume + ".");
+            return true;
         }
     }
 
     @Action(group = MAIN_GROUP, 
             command = "volume-up",
             description = "Increases the volume by 5 units.")
-    public String volumeUpCommand(String[] args) {
+    public Boolean volumeUpCommand(String[] args) {
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         int volume = audioPlayer.mediaPlayer().audio().volume();
         int newVolume = Math.min(150, volume + 5);  // Ensure volume does not exceed the max limit of 150
@@ -264,53 +298,62 @@ public class VlcPluginComponent {
         audioPlayer.mediaPlayer().audio().setVolume(newVolume);
 
         if (newVolume == volume) {
-            return "Volume is already at the maximum level.";
+            this.respond("Volume is already at the maximum level.");
+            return true;
         } else {
-            return "Volume increased to " + newVolume + ".";
+            this.respond("Volume increased to " + newVolume + ".");
+            return true;
         }
     }
 
     @Action(group = CHANNELS_GROUP,
             command = "add-channel",
             description = "Adds a new channel. Usage: add-channel <channelName>")
-    public String addChannelCommand(String[] args) {
+    public Boolean addChannelCommand(String[] args) {
         if (args.length > 0) {
             String channelName = args[0];
-            return channelManager.addChannel(channelName);
+            this.respond(channelManager.addChannel(channelName));
+            return true;
         } else {
-            return "Error: Please provide a channel name. Usage: add-channel <channelName>";
+            this.respond("Error: Please provide a channel name. Usage: add-channel <channelName>");
+            return true;
         }
     }
 
     @Action(group = CHANNELS_GROUP,
             command = "list-channels",
             description = "Lists all available channels.")
-    public String listChannelCommand(String[] args) {
-        return channelManager.listChannels();
+    public Boolean listChannelCommand(String[] args) {
+        this.respond(channelManager.listChannels());
+        return true;
     }
 
     @Action(group = CHANNELS_GROUP,
             command = "remove-channel",
             description = "Removes an existing channel. Usage: remove-channel <channelName>")
-    public String removeChannelCommand(String[] args) {
+    public Boolean removeChannelCommand(String[] args) {
         if (args.length > 0) {
             String channelName = args[0];
             // Use the removeChannel method and return its message
-            return channelManager.removeChannel(channelName);
+            this.respond(channelManager.removeChannel(channelName));
+            return true;
         } else {
-            return "Error: Please provide a channel name. Usage: remove-channel <channelName>";
+            this.respond("Error: Please provide a channel name. Usage: remove-channel <channelName>");
+            return true;
         }
     }
 
     @Action(group = CHANNELS_GROUP,
             command = "select-channel",
             description = "Selects an existing channel. Usage: select-channel <channelName>")
-    public String selectChannelCommand(String[] args) {
+    public Boolean selectChannelCommand(String[] args) {
         if (args.length > 0) {
             String channelName = args[0];
-            return channelManager.selectChannel(channelName);
+            this.respond(channelManager.selectChannel(channelName));
+            return true;
         } else {
-            return "Error: Please provide a channel name. Usage: select-channel <channelName>";
+            this.respond("Error: Please provide a channel name. Usage: select-channel <channelName>");
+            return true;
         }
     }
 

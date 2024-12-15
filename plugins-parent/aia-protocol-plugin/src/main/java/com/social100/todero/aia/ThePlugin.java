@@ -1,18 +1,15 @@
 package com.social100.todero.aia;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.social100.todero.common.channels.DynamicEventChannel;
 import com.social100.todero.common.model.plugin.Component;
-import com.social100.todero.common.model.plugin.PluginInterface;
-import com.social100.todero.common.observer.Observer;
-import com.social100.todero.common.observer.PublisherManager;
 import com.social100.todero.console.base.ApiCommandLineInterface;
 
-public class ThePlugin extends PublisherManager implements PluginInterface {
+public class ThePlugin extends DynamicEventChannel { // implements PluginInterface {
     final ApiCommandLineInterface apiCommandLineInterface;
     Component component;
 
-    public ThePlugin(Observer observer) {
-        this.addObserver(observer);
+    public ThePlugin(EventListener eventListener) {
         this.apiCommandLineInterface = new ApiCommandLineInterface(null, true);
         this.apiCommandLineInterface.setOutputDataHandler(this::outputDataHandler);
         this.apiCommandLineInterface.writeAsync("component\n".getBytes());
@@ -24,14 +21,22 @@ public class ThePlugin extends PublisherManager implements PluginInterface {
             ObjectMapper objectMapper = new ObjectMapper();
             component = objectMapper.readValue(json, Component.class);
 
-            this.publish(String.valueOf(component));
+            //this.publish(String.valueOf(component));
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            this.publish(json);
+            //this.publish(json);
         }
     }
-
+/*
     @Override
+    public void subscribeEvents() {
+        // this events are going to be placed on a class same as AR.REGISTRY.events.
+        // and are going to be taken from Component Class, with annotation
+        // @Event ( name of event, description of the event )
+        this.registerEvent("event", "");
+    }
+*/
+//    @Override
     public Component getComponent() {
         /*Component.builder()
                 .name(componentName)
@@ -41,7 +46,7 @@ public class ThePlugin extends PublisherManager implements PluginInterface {
         // Build the component with the available/supported commands according to the help returned and local policies.
     }
 
-    @Override
+  //  @Override
     public Object execute(String pluginName, String command, String[] commandArgs) {
         // Validate input parameters
         if (pluginName == null || pluginName.isEmpty()) {

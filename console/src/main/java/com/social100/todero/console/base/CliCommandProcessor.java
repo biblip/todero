@@ -26,19 +26,18 @@ public class CliCommandProcessor implements CommandProcessor {
     @Override
     public void open() {
         if (this.commandManager == null) {
-            this.commandManager = new CliCommandManager(this.appConfig);
+            this.commandManager = new CliCommandManager(this.appConfig, (eventName, message) -> {
+                System.out.println(eventName + " --> " + message);
+                bridge.writeAsync(message.getBytes());
+            });
         } else {
             throw new RuntimeException("CommandManager already created");
         }
     }
 
     @Override
-    public void process(String line) {
-        String output = commandManager.process(line);
-        if (output !=null && !output.isEmpty()) {
-            // Send the output through the bridge
-            bridge.writeAsync(output.getBytes());
-        }
+    public boolean process(String line) {
+        return commandManager.process(line);
     }
 
     @Override

@@ -1,19 +1,14 @@
 package com.social100.todero.plugin;
 
-import com.social100.processor.AIAController;
-import com.social100.processor.Action;
-import com.social100.todero.common.observer.PublisherManager;
-
-import java.util.Arrays;
-import java.util.Map;
-
+/*
 @AIAController(name = "simple",
         type = "",
         description = "Simple Plugin")
+ */
 public class SimplePluginComponent {
-    final static String MAIN_GROUP = "Main";
+/*    final static String MAIN_GROUP = "Main";
 
-    public SimplePluginComponent(PublisherManager publisherManager) {
+    public SimplePluginComponent() {
     }
 
     @Action(group = MAIN_GROUP, 
@@ -33,4 +28,5 @@ public class SimplePluginComponent {
                 "metadata", Map.of("key1", "value1", "key2", "value2")
         );
     }
+ */
 }

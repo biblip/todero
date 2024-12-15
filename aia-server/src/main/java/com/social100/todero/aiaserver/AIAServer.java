@@ -18,7 +18,9 @@ public class AIAServer {
     private ProtocolEngine engine;
 
     public AIAServer(AppConfig appConfig) {
-        commandManager = new CliCommandManager(appConfig);
+        commandManager = new CliCommandManager(appConfig, (eventName, message) -> {
+            System.out.println("CliCommandManager RESPONSE: >" + eventName + " --> " + message);
+        });
     }
 
     public void start() {

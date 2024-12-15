@@ -3,6 +3,7 @@ package com.social100.todero.console.base;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.social100.todero.common.Constants;
+import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.model.plugin.Component;
 
@@ -18,15 +19,17 @@ import java.util.regex.Pattern;
 
 public class CliCommandManager implements CommandManager {
     final static private ObjectMapper objectMapper = new ObjectMapper();
+    private final EventChannel.EventListener eventListener;
     PluginManager pluginManager;
     private OutputType outputType = OutputType.JSON; // Default output type
     private final Map<String, String> properties = new HashMap<>(); // Stores properties
 
-    public CliCommandManager(AppConfig appConfig) {
+    public CliCommandManager(AppConfig appConfig, EventChannel.EventListener eventListener) {
         String pluginDirectory = Optional.ofNullable(appConfig.getApp().getPlugins().getDir())
                 .orElseThrow(() -> new IllegalArgumentException("Wrong value in plugin directory"));
         properties.put("output", outputType.name());
-        pluginManager = new PluginManager(new File(pluginDirectory));
+        pluginManager = new PluginManager(new File(pluginDirectory), eventListener);
+        this.eventListener = eventListener;
     }
 
     @Override
@@ -39,9 +42,9 @@ public class CliCommandManager implements CommandManager {
     }
 
     @Override
-    public String process(String line) {
+    public boolean process(String line) {
         if (line == null || line.isBlank()) {
-            return ""; // Early exit if input is null or empty
+            return true; // Early exit if input is null or empty
         }
 
         // Regex pattern to extract arguments (handles quoted strings correctly)
@@ -54,54 +57,56 @@ public class CliCommandManager implements CommandManager {
         }
 
         if (arguments.isEmpty()) {
-            return ""; // No arguments found, nothing to execute
+            return true; // No arguments found, nothing to execute
         }
 
         String pluginOrCommandName = arguments.remove(0);
         String subCommand = null;
         String[] commandArgs = null;
 
-        System.out.println("----> " + line);
-        System.out.println("puginOrCommandName:" + pluginOrCommandName);
         // Reserved command logic
         switch (pluginOrCommandName) {
             case Constants.CLI_COMMAND_COMPONENT:
-                return toJsonComponent(getComponent());
+                this.eventListener.onEvent("command", toJsonComponent(getComponent()));
+                return true;
             case Constants.CLI_COMMAND_HELP:
                 // Pass both the plugin name and sub-command (or null if missing)
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 String commandName = arguments.isEmpty() ? null : arguments.remove(0);
-                return formatOutput(getHelpMessage(subCommand, commandName));
+                this.eventListener.onEvent("command", formatOutput(getHelpMessage(subCommand, commandName)));
+                return true;
             case Constants.CLI_COMMAND_LOAD:
-                return formatOutput(load());
+                this.eventListener.onEvent("command", formatOutput(load()));
+                return true;
             case Constants.CLI_COMMAND_UNLOAD:
-                return formatOutput(unload());
+                this.eventListener.onEvent("command", formatOutput(unload()));
+                return true;
             case Constants.CLI_COMMAND_RELOAD:
-                return formatOutput(reload());
+                this.eventListener.onEvent("command", formatOutput(reload()));
+                return true;
             case Constants.CLI_COMMAND_SET:
                 if (arguments.size() < 2) {
-                    return "Error: 'set' command requires a property and a value.";
+                    this.eventListener.onEvent("error", "Error: 'set' command requires a property and a value.");
+                    return false;
                 }
                 String property = arguments.get(0).toLowerCase();
                 String value = arguments.get(1);
-                return handleSetCommand(property, value);
+                this.eventListener.onEvent("command", handleSetCommand(property, value));
+                return true;
             default:
                 // If it's not a reserved command, treat it as a plugin name
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 commandArgs = arguments.toArray(new String[0]);
-                System.out.println("pluginOrCommandName:" + pluginOrCommandName);
-                System.out.println("subCommand:" + subCommand);
-                System.out.println("Arguments:" + Arrays.toString(commandArgs));
-                Object output = pluginManager.execute(pluginOrCommandName, subCommand, commandArgs);
-                return formatOutput(output);
+                pluginManager.execute(pluginOrCommandName, subCommand, commandArgs);
+                //this.eventListener.onEvent("command",formatOutput(output));
+                return true;
         }
     }
 
     @Override
-    public String process(String line, Consumer<String> consumer) {
-        String mm = process(line);
-        consumer.accept(mm);
-        return mm;
+    public boolean process(String line, Consumer<String> consumer) {
+        process(line);
+        return true;
     }
 
     // Handle the `set` command to update properties dynamically

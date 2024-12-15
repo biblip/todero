@@ -1,10 +1,11 @@
 package com.social100.todero.console.base;
 
+import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
 import com.social100.todero.common.model.plugin.PluginInterface;
-import com.social100.todero.common.observer.Observer;
+import lombok.Getter;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
@@ -18,14 +19,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@Getter
 public class PluginContext {
     final private Map<String, Plugin> plugins = new HashMap<>();
 
-    public PluginContext(File pluginJar, Observer observer) throws Exception {
-        initializePlugin(pluginJar, (message) -> observer.update("PluginContext:" + message));
+    public PluginContext(File pluginJar, EventChannel.EventListener eventListener) throws Exception {
+        EventChannel.EventListener localEventListener = new EventChannel.EventListener() {
+            @Override
+            public void onEvent(String eventName, String message) {
+                eventListener.onEvent(eventName,"PluginContext:" + message);
+            }
+        };
+        initializePlugin(pluginJar, localEventListener);
     }
 
-    private void initializePlugin(File pluginJar, Observer observer) throws Exception {
+    private void initializePlugin(File pluginJar, EventChannel.EventListener eventListener) throws Exception {
         // Convert the File to a URL
         URL jarUrl = pluginJar.toURI().toURL();
         URLClassLoader pluginClassLoader = new URLClassLoader(new URL[]{jarUrl}, getClass().getClassLoader());
@@ -40,13 +48,13 @@ public class PluginContext {
         Set<Class<? extends PluginInterface>> commandClasses = reflections.getSubTypesOf(PluginInterface.class);
         for (Class<? extends PluginInterface> commandClass : commandClasses) {
             if (!commandClass.isInterface()) {
-                Observer myObserver = new Observer() {
+                EventChannel.EventListener localEventListener = new EventChannel.EventListener() {
                     @Override
-                    public void update(String message) {
-                        observer.update(commandClass.getName() + ":" + message);
+                    public void onEvent(String eventName, String message) {
+                        eventListener.onEvent(eventName, message);
                     }
                 };
-                PluginInterface pluginInstance = commandClass.getDeclaredConstructor(Observer.class).newInstance(myObserver);
+                PluginInterface pluginInstance = commandClass.getDeclaredConstructor(EventChannel.EventListener.class).newInstance(localEventListener);
                 Optional<Component> component = Optional.ofNullable(pluginInstance.getComponent());
                 String componentName = "";
                 String componentDescription = "";
@@ -72,10 +80,6 @@ public class PluginContext {
                 plugins.put(componentName, plugin);
             }
         }
-    }
-
-    public Map<String, Plugin> getPlugins() {
-        return plugins;
     }
 
     // Cleanup method to properly close the plugin class loader when no longer needed

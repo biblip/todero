@@ -42,6 +42,7 @@ public class AiaCommandProcessor implements CommandProcessor {
 
     ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage) -> {
         if (Optional.ofNullable(this.bridge).isPresent()) {
+            System.out.println("Llego algo en receiveMessageCallback: " + receivedMessage.getPayload());
             this.bridge.writeAsync(receivedMessage.getPayload().getBytes());
         }
     });
@@ -71,12 +72,14 @@ public class AiaCommandProcessor implements CommandProcessor {
     }
 
     @Override
-    public void process(String line) {
+    public boolean process(String line) {
         try {
             engine.sendMessage(serverAddress, line, true);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            //throw new RuntimeException(e);
+            return false;
         }
+        return true;
     }
 
     @Override

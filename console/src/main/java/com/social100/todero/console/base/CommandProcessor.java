@@ -4,7 +4,7 @@ import com.social100.todero.stream.PipelineStreamBridge;
 
 public interface CommandProcessor {
     void open();
-    void process(String line);
+    boolean process(String line);
     void close();
     CliCommandManager getCommandManager();
     PipelineStreamBridge.PipelineStreamBridgeShadow getBridge();
