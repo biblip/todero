@@ -1,10 +1,10 @@
 package com.social100.todero.common.message;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.social100.todero.common.message.channel.ChannelMessage;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.IPayload;
-import com.social100.todero.common.profile.Profile;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,7 +19,9 @@ import java.util.Map;
 public class MessageContainer {
     public static final String VERSION = "V1";
     private final String version;
-    private final Profile profile;
+
+    @JsonIgnore
+    private final String responderId;
 
     @Builder.Default
     private final Map<ChannelType, IPayload> messages = new HashMap<>();
@@ -27,7 +29,7 @@ public class MessageContainer {
     // Add this constructor
     public MessageContainer() {
         this.version = VERSION; // Default version
-        this.profile = null;
+        this.responderId = null;
         this.messages = new HashMap<>();
     }
 
@@ -44,6 +46,16 @@ public class MessageContainer {
         private final Map<ChannelType, IPayload> messages = new HashMap<>();
 
         /**
+         * Custom builder method to add all messages from a map.
+         */
+        public MessageContainerBuilder addAllMessages(Map<ChannelType, IPayload> messagesToAdd) {
+            if (messagesToAdd != null) {
+                this.messages.putAll(messagesToAdd);
+            }
+            return this;
+        }
+
+        /**
          * Custom builder method to add a channel message.
          * This enforces that the channel and its payload are consistent.
          */
@@ -57,8 +69,8 @@ public class MessageContainer {
          */
         public MessageContainer build() {
             return new MessageContainer(
-                    version != null ? version : "V1", // Default version if not provided
-                    profile,
+                    version != null ? version : VERSION, // Default version if not provided
+                    responderId,
                     messages
             );
         }

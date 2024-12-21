@@ -1,5 +1,6 @@
 package com.social100.todero.common.channels;
 
+import com.social100.todero.common.message.MessageContainer;
 import lombok.Getter;
 
 import java.util.Map;
@@ -67,7 +68,7 @@ public interface EventChannel {
      *
      * @param message    the message to send as response to listeners.
      */
-    void respond(String message);
+    /*void respond(String message);*/
 
     /**
      * Retrieves all registered events and their descriptions, excluding reserved events.
@@ -80,6 +81,6 @@ public interface EventChannel {
      * Interface for event listeners.
      */
     interface EventListener {
-        void onEvent(String eventName, String message);
+        void onEvent(String eventName, MessageContainer message);
     }
 }

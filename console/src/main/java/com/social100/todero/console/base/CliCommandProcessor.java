@@ -2,6 +2,7 @@ package com.social100.todero.console.base;
 
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.common.message.channel.ChannelMessage;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
@@ -32,7 +33,7 @@ public class CliCommandProcessor implements CommandProcessor {
         if (this.commandManager == null) {
             this.commandManager = new CliCommandManager(this.appConfig, (eventName, message) -> {
                 System.out.println(eventName + " --> " + message);
-                bridge.writeAsync(message.getBytes());
+                bridge.writeAsync(MessageContainerUtils.serialize(message).getBytes());
             });
         } else {
             throw new RuntimeException("CommandManager already created");

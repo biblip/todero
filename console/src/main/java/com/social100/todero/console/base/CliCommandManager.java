@@ -7,6 +7,7 @@ import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.channel.ChannelMessageFactory;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import com.social100.todero.common.model.plugin.Component;
@@ -75,38 +76,73 @@ public class CliCommandManager implements CommandManager {
         // Reserved command logic
         switch (pluginOrCommandName) {
             case Constants.CLI_COMMAND_COMPONENT:
-                this.eventListener.onEvent("command", toJsonComponent(getComponent()));
+                this.eventListener.onEvent("command", MessageContainer.builder()
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(toJsonComponent(getComponent()))
+                                        .build()))
+                        .build());
                 return true;
             case Constants.CLI_COMMAND_HELP:
                 // Pass both the plugin name and sub-command (or null if missing)
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 String commandName = arguments.isEmpty() ? null : arguments.remove(0);
-                this.eventListener.onEvent("command", formatOutput(getHelpMessage(subCommand, commandName)));
+                this.eventListener.onEvent("command", MessageContainer.builder()
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(formatOutput(getHelpMessage(subCommand, commandName)))
+                                        .build()))
+                        .build());
                 return true;
             case Constants.CLI_COMMAND_LOAD:
-                this.eventListener.onEvent("command", formatOutput(load()));
+                this.eventListener.onEvent("command", MessageContainer.builder()
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(formatOutput(load()))
+                                        .build()))
+                        .build());
                 return true;
             case Constants.CLI_COMMAND_UNLOAD:
-                this.eventListener.onEvent("command", formatOutput(unload()));
+                this.eventListener.onEvent("command", MessageContainer.builder()
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(formatOutput(unload()))
+                                        .build()))
+                        .build());
                 return true;
             case Constants.CLI_COMMAND_RELOAD:
-                this.eventListener.onEvent("command", formatOutput(reload()));
+                this.eventListener.onEvent("command", MessageContainer.builder()
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(formatOutput(reload()))
+                                        .build()))
+                        .build());
                 return true;
             case Constants.CLI_COMMAND_SET:
                 if (arguments.size() < 2) {
-                    this.eventListener.onEvent("error", "Error: 'set' command requires a property and a value.");
+                    this.eventListener.onEvent("error", MessageContainer.builder()
+                            .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                    PublicDataPayload.builder()
+                                            .message("Error: 'set' command requires a property and a value.")
+                                            .build()))
+                            .build());
                     return false;
                 }
                 String property = arguments.get(0).toLowerCase();
                 String value = arguments.get(1);
-                this.eventListener.onEvent("command", handleSetCommand(property, value));
+                this.eventListener.onEvent("command", MessageContainer.builder()
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(handleSetCommand(property, value))
+                                        .build()))
+                        .build());
                 return true;
             default:
                 // If it's not a reserved command, treat it as a plugin name
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 commandArgs = arguments.toArray(new String[0]);
                 pluginManager.execute(pluginOrCommandName, subCommand, CommandContext.builder()
-                        .sourceId("unValorInexistente_CliCommandManager-L109")
+                        .sourceId(messageContainer.getResponderId())
                         .args(commandArgs)
                         .build());
                 //this.eventListener.onEvent("command",formatOutput(output));

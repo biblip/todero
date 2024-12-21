@@ -40,14 +40,7 @@ public class PluginManager {
 
         for (File file : pluginFiles) {
             try {
-                EventChannel.EventListener localEventListener = new EventChannel.EventListener() {
-                    @Override
-                    public void onEvent(String eventName, String message) {
-                        System.out.println("Observer in PluginManager: " + eventName + " -> " + message);
-                        eventListener.onEvent(eventName, message);
-                    }
-                };
-                pluginContextList.add(new PluginContext(file, localEventListener));
+                pluginContextList.add(new PluginContext(file, eventListener));
 
             } catch (Exception e) {
                 System.err.println("Error processing plugin JAR: " + file.getName());

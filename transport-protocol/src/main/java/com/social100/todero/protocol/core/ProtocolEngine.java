@@ -260,6 +260,10 @@ public class ProtocolEngine {
         threadList.forEach(Thread::interrupt);
     }
 
+    public ResponderRegistry.Responder getResponder(String responderId) {
+        return responderRegistry.getResponder(responderId);
+    }
+
     @Getter
     private static class MessageQueueEntry {
         private final int packetId;

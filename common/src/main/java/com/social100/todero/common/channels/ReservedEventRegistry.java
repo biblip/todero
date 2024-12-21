@@ -1,5 +1,7 @@
 package com.social100.todero.common.channels;
 
+import com.social100.todero.common.message.MessageContainer;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -23,7 +25,7 @@ public class ReservedEventRegistry {
     }
 
     // Trigger a reserved event
-    public static void trigger(EventChannel.ReservedEvent reservedEvent, String message) {
+    public static void trigger(EventChannel.ReservedEvent reservedEvent, MessageContainer message) {
         for (EventChannel.EventListener listener : reservedListeners.get(reservedEvent)) {
             listener.onEvent(reservedEvent.getEventName(), message);
         }

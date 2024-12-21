@@ -25,13 +25,7 @@ public class PluginContext {
     final private Map<String, Plugin> plugins = new HashMap<>();
 
     public PluginContext(File pluginJar, EventChannel.EventListener eventListener) throws Exception {
-        EventChannel.EventListener localEventListener = new EventChannel.EventListener() {
-            @Override
-            public void onEvent(String eventName, String message) {
-                eventListener.onEvent(eventName,"PluginContext:" + message);
-            }
-        };
-        initializePlugin(pluginJar, localEventListener);
+        initializePlugin(pluginJar, eventListener);
     }
 
     private void initializePlugin(File pluginJar, EventChannel.EventListener eventListener) throws Exception {
@@ -49,13 +43,7 @@ public class PluginContext {
         Set<Class<? extends PluginInterface>> commandClasses = reflections.getSubTypesOf(PluginInterface.class);
         for (Class<? extends PluginInterface> commandClass : commandClasses) {
             if (!commandClass.isInterface()) {
-                EventChannel.EventListener localEventListener = new EventChannel.EventListener() {
-                    @Override
-                    public void onEvent(String eventName, String message) {
-                        eventListener.onEvent(eventName, message);
-                    }
-                };
-                PluginInterface pluginInstance = commandClass.getDeclaredConstructor(EventChannel.EventListener.class).newInstance(localEventListener);
+                PluginInterface pluginInstance = commandClass.getDeclaredConstructor(EventChannel.EventListener.class).newInstance(eventListener);
                 Optional<Component> component = Optional.ofNullable(pluginInstance.getComponent());
                 String componentName = "";
                 String componentDescription = "";

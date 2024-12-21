@@ -68,7 +68,7 @@ public class MessageContainerUtils {
      */
     private static MessageContainer createEmptyMessageContainer() {
         return MessageContainer.builder()
-                .profile(null)
+                .responderId(null)
                 .messages(Map.of()) // Use an empty map
                 .build();
     }

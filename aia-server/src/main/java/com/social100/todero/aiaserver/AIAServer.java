@@ -26,7 +26,13 @@ public class AIAServer {
 
     public AIAServer(AppConfig appConfig) {
         commandManager = new CliCommandManager(appConfig, (eventName, message) -> {
-            System.out.println("CliCommandManager RESPONSE: >" + eventName + " --> " + message);
+            ResponderRegistry.Responder responder = engine.getResponder(message.getResponderId());
+            try {
+                responder.sendMessage(MessageContainerUtils.serialize(message).getBytes(StandardCharsets.UTF_8), true);
+                System.out.println("CliCommandManager RESPONSE: >" + eventName + " --> " + MessageContainerUtils.serialize(message));
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
         });
     }
 
@@ -36,7 +42,11 @@ public class AIAServer {
             byte[] message = receivedMessage.getPayload();
             String line = new String(message);
             System.out.println(line);
-            MessageContainer messageContainer = MessageContainerUtils.deserialize(line);
+            MessageContainer receivedMessageContainer = MessageContainerUtils.deserialize(line);
+            MessageContainer messageContainer = MessageContainer.builder()
+                    .responderId(receivedMessage.getResponderId())
+                    .addAllMessages(receivedMessageContainer.getMessages())
+                    .build();
             // TODO: el siguiente response puede cambiar a una respuesta en linea, ya que solo retorna Booleano.
 
             // TODO: el messageContainer debe contener el receivedMessage.getResponderId()

@@ -1,7 +1,6 @@
 package com.social100.todero.common.channels;
 
 import com.social100.todero.common.message.MessageContainer;
-import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.common.message.channel.ChannelMessageFactory;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
@@ -77,18 +76,28 @@ public class DynamicEventChannel implements EventChannel {
                     .filter(e -> e.getEventName().equals(eventName))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Invalid reserved event name: " + eventName));
-            ReservedEventRegistry.trigger(reservedEvent, message);
+            ReservedEventRegistry.trigger(reservedEvent, MessageContainer.builder()
+                    .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                            PublicDataPayload.builder()
+                                    .message(message)
+                                    .build()))
+                    .build());
         } else if (dynamicEvents.containsKey(eventName)) {
             EventDetails details = dynamicEvents.get(eventName);
             for (EventListener listener : details.getListeners()) {
-                listener.onEvent(eventName, message);
+                listener.onEvent(eventName, MessageContainer.builder()
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(message)
+                                        .build()))
+                        .build());
             }
         } else {
             throw new IllegalArgumentException("Event '" + eventName + "' is not registered.");
         }
     }
 
-    @Override
+    /*@Override
     public void respond(String message) {
         EventChannel.ReservedEvent reservedEvent = EventChannel.ReservedEvent.RESPONSE;
         MessageContainer messageContainer = MessageContainer.builder()
@@ -98,7 +107,7 @@ public class DynamicEventChannel implements EventChannel {
                         .build()))
                 .build();
         ReservedEventRegistry.trigger(reservedEvent, MessageContainerUtils.serialize(messageContainer));
-    }
+    }*/
 
     @Override
     public Map<String, String> getAvailableEvents() {

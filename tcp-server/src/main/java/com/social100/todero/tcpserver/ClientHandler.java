@@ -3,6 +3,7 @@ package com.social100.todero.tcpserver;
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.common.message.channel.ChannelMessage;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
@@ -36,8 +37,8 @@ class ClientHandler implements Runnable {
 
             EventChannel.EventListener eventListener = new EventChannel.EventListener() {
                 @Override
-                public void onEvent(String eventName, String message) {
-                    writer.print(message.replace("\n", "\r\n"));
+                public void onEvent(String eventName, MessageContainer message) {
+                    writer.print(MessageContainerUtils.serialize(message));
                     writer.flush();
                 }
             };
