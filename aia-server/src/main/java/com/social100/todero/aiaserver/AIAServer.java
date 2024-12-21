@@ -29,7 +29,6 @@ public class AIAServer {
             ResponderRegistry.Responder responder = engine.getResponder(message.getResponderId());
             try {
                 responder.sendMessage(MessageContainerUtils.serialize(message).getBytes(StandardCharsets.UTF_8), true);
-                System.out.println("CliCommandManager RESPONSE: >" + eventName + " --> " + MessageContainerUtils.serialize(message));
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
