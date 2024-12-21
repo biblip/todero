@@ -1,6 +1,11 @@
 package com.social100.todero.console.base;
 
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.MessageContainerUtils;
+import com.social100.todero.common.message.channel.ChannelMessage;
+import com.social100.todero.common.message.channel.ChannelType;
+import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import com.social100.todero.protocol.core.ProtocolEngine;
 import com.social100.todero.protocol.core.ReceiveMessageCallback;
 import com.social100.todero.protocol.pipeline.ChecksumStage;
@@ -12,6 +17,7 @@ import com.social100.todero.stream.PipelineStreamBridge;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -40,10 +46,11 @@ public class AiaCommandProcessor implements CommandProcessor {
         }
     }
 
-    ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage) -> {
+    ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback(frameMessage -> {
+        System.out.println("receiveMessageCallback");
         if (Optional.ofNullable(this.bridge).isPresent()) {
-            System.out.println("Llego algo en receiveMessageCallback: " + receivedMessage.getPayload());
-            this.bridge.writeAsync(receivedMessage.getPayload().getBytes());
+            System.out.println("Llego algo en receiveMessageCallback: " + frameMessage.getPayload());
+            this.bridge.writeAsync(frameMessage.getPayload());
         }
     });
 
@@ -72,14 +79,19 @@ public class AiaCommandProcessor implements CommandProcessor {
     }
 
     @Override
-    public boolean process(String line) {
-        try {
-            engine.sendMessage(serverAddress, line, true);
-        } catch (Exception e) {
-            //throw new RuntimeException(e);
-            return false;
-        }
-        return true;
+    public boolean process(MessageContainer messageContainer) {
+        return Optional.ofNullable(MessageContainerUtils.serialize(messageContainer))
+                .map(serializedMessage -> {
+                    try {
+                        engine.sendMessage(serverAddress,
+                                serializedMessage.getBytes(StandardCharsets.UTF_8),
+                                true);
+                        return true;  // success
+                    } catch (Exception e) {
+                        return false; // failure
+                    }
+                })
+                .orElse(false);
     }
 
     @Override
@@ -100,7 +112,18 @@ public class AiaCommandProcessor implements CommandProcessor {
 
     @Override
     public void handleIncomingData(byte[] data) {
+        // TODO: this data contains already a MessageContainer?
         String line = new String(data);
-        process(line); // Process the received data as if it were passed to `process(String line)`
+        System.out.println("TODO: this data contains already a MessageContainer?");
+        System.out.println(line);
+        MessageContainer messageContainer = MessageContainer.builder()
+                .addChannelMessage(ChannelMessage.builder()
+                        .channel(ChannelType.PUBLIC_DATA)
+                        .payload(PublicDataPayload.builder()
+                                .message(line)
+                                .build())
+                        .build())
+                .build();
+        process(messageContainer); // Process the received data as if it were passed to `process(String line)`
     }
 }

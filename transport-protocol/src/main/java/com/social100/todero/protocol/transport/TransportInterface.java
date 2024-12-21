@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.DatagramChannel;
 
 public interface TransportInterface {
-    void send(InetSocketAddress destination, String message) throws IOException;
+    void send(InetSocketAddress destination, byte[] message) throws IOException;
     DatagramChannel getChannel();
     int getPort();
 }

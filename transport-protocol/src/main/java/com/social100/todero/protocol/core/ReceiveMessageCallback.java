@@ -4,20 +4,20 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ReceiveMessageCallback {
-    final private Consumer<ProtocolMessage> consumer;
-    final private BiConsumer<ProtocolMessage, Responder> bi_consumer;
+    final private Consumer<ProtocolFrameManager.FrameMessage> consumer;
+    final private BiConsumer<ProtocolFrameManager.FrameMessage, ResponderRegistry.Responder> bi_consumer;
 
-    public ReceiveMessageCallback(Consumer<ProtocolMessage> consumer) {
+    public ReceiveMessageCallback(Consumer<ProtocolFrameManager.FrameMessage> consumer) {
         this.consumer = consumer;
         this.bi_consumer = null;
     }
 
-    public ReceiveMessageCallback(BiConsumer<ProtocolMessage, Responder> consumer) {
+    public ReceiveMessageCallback(BiConsumer<ProtocolFrameManager.FrameMessage, ResponderRegistry.Responder> consumer) {
         this.consumer = null;
         this.bi_consumer = consumer;
     }
 
-    public void consume(ProtocolMessage message) {
+    public void consume(ProtocolFrameManager.FrameMessage message) {
         if (consumer != null) {
             consumer.accept(message);
         } else {
@@ -25,7 +25,7 @@ public class ReceiveMessageCallback {
         }
     }
 
-    public void consume(ProtocolMessage message, Responder responder) {
+    public void consume(ProtocolFrameManager.FrameMessage message, ResponderRegistry.Responder responder) {
         if (bi_consumer != null) {
             bi_consumer.accept(message, responder);
         } else {

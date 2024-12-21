@@ -6,13 +6,13 @@ public interface PipelineStage {
      * @param message the original message
      * @return the processed message
      */
-    String processToSend(String message);
+    byte[] processToSend(byte[] message);
 
     /**
      * Processes a message after receiving.
      * @param message the received (raw) message
      * @return the processed message
      */
-    String processToReceive(String message);
+    byte[] processToReceive(byte[] message);
 }
 

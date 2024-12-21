@@ -5,6 +5,7 @@ import com.social100.processor.AIAController;
 import com.social100.processor.Action;
 import com.social100.processor.EventDefinition;
 import com.social100.processor.Events;
+import com.social100.todero.common.command.CommandContext;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.State;
@@ -40,7 +41,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "move",
             description = "Moves the playback to the specified time. Usage: move <HH:MM:SS|MM:SS|SS>")
-    public Boolean moveCommand(String[] args) {
+    public Boolean moveCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         if (args.length == 0) {
             this.respond("Error: Please specify the time to move to. Usage: move <time>");
             return true;
@@ -64,7 +66,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "mute",
             description = "Toggles the mute state of the playback if valid media is loaded.")
-    public Boolean muteCommand(String[] args) {
+    public Boolean muteCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
 
         // Ensure media is present and valid
@@ -81,14 +84,16 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
 
         // Feedback based on the expected outcome, not the immediate check
         this.respond(wasMute ? "Playback has been unmuted." : "Playback has been muted.");
-
         return true;
     }
 
     @Action(group = MAIN_GROUP, 
             command = "pause",
             description = "Pauses the playback if it is currently playing.")
-    public Boolean pauseCommand(String[] args) {
+
+    public Boolean pauseCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
+
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         State state = audioPlayer.mediaPlayer().status().state();
 
@@ -112,7 +117,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "play",
             description = "Plays the specified media file. If no file is specified, resumes the current one.")
-    public Boolean playCommand(String[] args) {
+    public Boolean playCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         MediaPlayer mediaPlayer = audioPlayer.mediaPlayer();
 
@@ -151,7 +157,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "skip",
             description = "Skips the playback forward or backward by the specified number of seconds. Usage: skip <+/-seconds>")
-    public Boolean skipCommand(String[] args) {
+    public Boolean skipCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         if (args.length == 0) {
             this.respond("Error: Please specify the number of seconds to skip. Usage: skip <+/-seconds>");
             return true;
@@ -181,7 +188,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "status",
             description = "Displays the current status of VLC. Use 'status all' for all media info available.")
-    public Boolean statusCommand(String[] args) {
+    public Boolean statusCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         StringBuilder statusBuilder = new StringBuilder();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
 
@@ -228,7 +236,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "stop",
             description = "Stops the playback if it is currently active.")
-    public Boolean stopCommand(String[] args) {
+    public Boolean stopCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         State currentState = audioPlayer.mediaPlayer().status().state();
 
@@ -245,7 +254,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "volume",
             description = "Sets the volume to a specified level between 0 and 150. Usage: volume <level>")
-    public Boolean volumeCommand(String[] args) {
+    public Boolean volumeCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
 
         if (args.length > 0) {
@@ -272,7 +282,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "volume-down",
             description = "Decreases the volume by 5 units.")
-    public Boolean volumeDownCommand(String[] args) {
+    public Boolean volumeDownCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         int volume = audioPlayer.mediaPlayer().audio().volume();
         int newVolume = Math.max(0, volume - 5);  // Ensure volume does not go below 0
@@ -290,7 +301,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "volume-up",
             description = "Increases the volume by 5 units.")
-    public Boolean volumeUpCommand(String[] args) {
+    public Boolean volumeUpCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         int volume = audioPlayer.mediaPlayer().audio().volume();
         int newVolume = Math.min(150, volume + 5);  // Ensure volume does not exceed the max limit of 150
@@ -309,7 +321,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = CHANNELS_GROUP,
             command = "add-channel",
             description = "Adds a new channel. Usage: add-channel <channelName>")
-    public Boolean addChannelCommand(String[] args) {
+    public Boolean addChannelCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         if (args.length > 0) {
             String channelName = args[0];
             this.respond(channelManager.addChannel(channelName));
@@ -323,7 +336,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = CHANNELS_GROUP,
             command = "list-channels",
             description = "Lists all available channels.")
-    public Boolean listChannelCommand(String[] args) {
+    public Boolean listChannelCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         this.respond(channelManager.listChannels());
         return true;
     }
@@ -331,7 +345,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = CHANNELS_GROUP,
             command = "remove-channel",
             description = "Removes an existing channel. Usage: remove-channel <channelName>")
-    public Boolean removeChannelCommand(String[] args) {
+    public Boolean removeChannelCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         if (args.length > 0) {
             String channelName = args[0];
             // Use the removeChannel method and return its message
@@ -346,7 +361,8 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = CHANNELS_GROUP,
             command = "select-channel",
             description = "Selects an existing channel. Usage: select-channel <channelName>")
-    public Boolean selectChannelCommand(String[] args) {
+    public Boolean selectChannelCommand(CommandContext commandContext) {
+        String[] args = commandContext.getArgs();
         if (args.length > 0) {
             String channelName = args[0];
             this.respond(channelManager.selectChannel(channelName));

@@ -1,9 +1,12 @@
 package com.social100.todero.aiaserver;
 
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.console.base.CliCommandManager;
 import com.social100.todero.protocol.core.ProtocolEngine;
 import com.social100.todero.protocol.core.ReceiveMessageCallback;
+import com.social100.todero.protocol.core.ResponderRegistry;
 import com.social100.todero.protocol.pipeline.ChecksumStage;
 import com.social100.todero.protocol.pipeline.CompressionStage;
 import com.social100.todero.protocol.pipeline.EncryptionStage;
@@ -11,11 +14,15 @@ import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class AIAServer {
     private final CliCommandManager commandManager;
     private ProtocolEngine engine;
+    Map<String, ResponderRegistry.Responder> profileResponderMap = new HashMap<>();
 
     public AIAServer(AppConfig appConfig) {
         commandManager = new CliCommandManager(appConfig, (eventName, message) -> {
@@ -26,11 +33,18 @@ public class AIAServer {
     public void start() {
 
         ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
-            String line = receivedMessage.getPayload();
-            commandManager.process(line, response -> {
+            byte[] message = receivedMessage.getPayload();
+            String line = new String(message);
+            System.out.println(line);
+            MessageContainer messageContainer = MessageContainerUtils.deserialize(line);
+            // TODO: el siguiente response puede cambiar a una respuesta en linea, ya que solo retorna Booleano.
+
+            // TODO: el messageContainer debe contener el receivedMessage.getResponderId()
+
+            commandManager.process(messageContainer, response -> {
                 if (!response.isEmpty()) {
                     try {
-                        responder.sendMessage(response.replace("\n", "\r\n"), true);
+                        responder.sendMessage(response.replace("\n", "\r\n").getBytes(StandardCharsets.UTF_8), true);
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }

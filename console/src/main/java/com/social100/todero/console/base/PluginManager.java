@@ -1,6 +1,7 @@
 package com.social100.todero.console.base;
 
 import com.social100.todero.common.channels.EventChannel;
+import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
@@ -79,7 +80,7 @@ public class PluginManager {
                 .get().getComponent();
     }
 
-    public Object execute(String pluginName, String command, String[] commandArgs) {
+    public Object execute(String pluginName, String command, CommandContext context) {
         // Find the specified plugin
         Plugin plugin = plugins.get(pluginName);
 
@@ -116,7 +117,7 @@ public class PluginManager {
 
         // Call the execute method on the PluginInstance
         try {
-            return pluginInstance.execute(pluginName, command, commandArgs);
+            return pluginInstance.execute(pluginName, command, context);
         } catch (Exception e) {
             return "Failed to execute command '" + command + "' on plugin '" + pluginName + "': " + e.getMessage();
         }

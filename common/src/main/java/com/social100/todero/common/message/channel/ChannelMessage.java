@@ -1,13 +1,20 @@
 package com.social100.todero.common.message.channel;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder(builderClassName = "ChannelMessageBuilder")
+@AllArgsConstructor
 public class ChannelMessage<T extends IPayload> {
     private final ChannelType channel;
     private final T payload;
+
+    public ChannelMessage() {
+        channel = null;
+        payload = null;
+    }
 
     // Custom builder to enforce validation
     public static class ChannelMessageBuilder<T extends IPayload> {

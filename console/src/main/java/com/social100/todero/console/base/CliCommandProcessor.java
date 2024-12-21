@@ -1,6 +1,10 @@
 package com.social100.todero.console.base;
 
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.channel.ChannelMessage;
+import com.social100.todero.common.message.channel.ChannelType;
+import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import com.social100.todero.stream.PipelineStreamBridge;
 
 import java.io.IOException;
@@ -36,8 +40,8 @@ public class CliCommandProcessor implements CommandProcessor {
     }
 
     @Override
-    public boolean process(String line) {
-        return commandManager.process(line);
+    public boolean process(MessageContainer messageContainer) {
+        return commandManager.process(messageContainer);
     }
 
     @Override
@@ -70,7 +74,18 @@ public class CliCommandProcessor implements CommandProcessor {
      */
     @Override
     public void handleIncomingData(byte[] data) {
+        // TODO: this data contains already a MessageContainer?
         String line = new String(data);
-        process(line); // Process the received data as if it were passed to `process(String line)`
+        System.out.println("TODO: this data contains already a MessageContainer?");
+        System.out.println(line);
+        MessageContainer messageContainer = MessageContainer.builder()
+                .addChannelMessage(ChannelMessage.builder()
+                        .channel(ChannelType.PUBLIC_DATA)
+                        .payload(PublicDataPayload.builder()
+                                .message(line)
+                                .build())
+                        .build())
+                .build();
+        process(messageContainer); // Process the received data as if it were passed to `process(String line)`
     }
 }

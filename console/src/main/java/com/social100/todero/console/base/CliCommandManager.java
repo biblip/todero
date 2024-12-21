@@ -4,7 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.social100.todero.common.Constants;
 import com.social100.todero.common.channels.EventChannel;
+import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.channel.ChannelType;
+import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import com.social100.todero.common.model.plugin.Component;
 
 import java.io.File;
@@ -42,7 +46,11 @@ public class CliCommandManager implements CommandManager {
     }
 
     @Override
-    public boolean process(String line) {
+    public boolean process(final MessageContainer messageContainer) {
+        // TODO: procesa public_data, pero envia a ejecucion todo el MessageContainer o un derivado de el.
+        //       por ahora se esta enviando, el contenido del canal public_data parseado.
+        final PublicDataPayload publicDataPayload = (PublicDataPayload)messageContainer.getMessages().get(ChannelType.PUBLIC_DATA);
+        final String line = publicDataPayload.getMessage();
         if (line == null || line.isBlank()) {
             return true; // Early exit if input is null or empty
         }
@@ -97,15 +105,18 @@ public class CliCommandManager implements CommandManager {
                 // If it's not a reserved command, treat it as a plugin name
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 commandArgs = arguments.toArray(new String[0]);
-                pluginManager.execute(pluginOrCommandName, subCommand, commandArgs);
+                pluginManager.execute(pluginOrCommandName, subCommand, CommandContext.builder()
+                        .sourceId("unValorInexistente_CliCommandManager-L109")
+                        .args(commandArgs)
+                        .build());
                 //this.eventListener.onEvent("command",formatOutput(output));
                 return true;
         }
     }
 
     @Override
-    public boolean process(String line, Consumer<String> consumer) {
-        process(line);
+    public boolean process(MessageContainer messageContainer, Consumer<String> consumer) {
+        process(messageContainer);
         return true;
     }
 

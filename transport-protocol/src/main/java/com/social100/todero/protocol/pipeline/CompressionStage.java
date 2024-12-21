@@ -1,50 +1,66 @@
 package com.social100.todero.protocol.pipeline;
 
+import java.io.ByteArrayOutputStream;
+import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 public class CompressionStage implements PipelineStage {
+
     @Override
-    public String processToSend(String message) {
+    public byte[] processToSend(byte[] message) {
+        if (message == null) {
+            message = new byte[0];
+        }
         return compress(message);
     }
 
     @Override
-    public String processToReceive(String message) {
+    public byte[] processToReceive(byte[] message) {
+        if (message == null) {
+            message = new byte[0];
+        }
         return decompress(message);
     }
 
-    private String compress(String data) {
+    private byte[] compress(byte[] data) {
+        Deflater deflater = new Deflater();
+        deflater.setInput(data);
+        deflater.finish();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];  // buffer of 4 KB
+
         try {
-            byte[] input = data.getBytes("UTF-8");
-            Deflater deflater = new Deflater();
-            deflater.setInput(input);
-            deflater.finish();
-
-            byte[] buffer = new byte[8192 * 1024];
-            int compressedDataLength = deflater.deflate(buffer);
+            while (!deflater.finished()) {
+                int bytesCompressed = deflater.deflate(buffer);
+                baos.write(buffer, 0, bytesCompressed);
+            }
+        } finally {
             deflater.end();
-
-            return new String(buffer, 0, compressedDataLength, "ISO-8859-1");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+
+        return baos.toByteArray();
     }
 
-    private String decompress(String data) {
+    private byte[] decompress(byte[] data) {
+        Inflater inflater = new Inflater();
+        inflater.setInput(data);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];  // buffer of 4 KB
+
         try {
-            byte[] input = data.getBytes("ISO-8859-1");
-            Inflater inflater = new Inflater();
-            inflater.setInput(input);
-
-            byte[] buffer = new byte[8192 * 1024];
-            int decompressedDataLength = inflater.inflate(buffer);
+            while (!inflater.finished()) {
+                int bytesDecompressed = inflater.inflate(buffer);
+                baos.write(buffer, 0, bytesDecompressed);
+            }
+        } catch (DataFormatException e) {
+            throw new RuntimeException("Decompression failed", e);
+        } finally {
             inflater.end();
-
-            return new String(buffer, 0, decompressedDataLength, "UTF-8");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+
+        return baos.toByteArray();
     }
 }
-

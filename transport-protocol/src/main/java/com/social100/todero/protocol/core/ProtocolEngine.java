@@ -11,6 +11,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -29,6 +30,7 @@ public class ProtocolEngine {
     private static final long QUEUE_WAIT_TIMEOUT = 1000;
 
     private final TransportInterface dataTraffic;
+    private final ResponderRegistry responderRegistry;
     private final Selector selector;
     private final AtomicInteger packetIdGenerator = new AtomicInteger(1);
     private final ConcurrentHashMap<Integer, Object> ackWaitLocks = new ConcurrentHashMap<>();
@@ -42,6 +44,7 @@ public class ProtocolEngine {
     private List<Thread> threadList = new ArrayList<>();
 
     public ProtocolEngine(TransportInterface dataTraffic) throws IOException {
+        this.responderRegistry = new ResponderRegistry();
         this.dataTraffic = dataTraffic;
         this.selector = Selector.open();
         this.pipeline = null;
@@ -55,6 +58,7 @@ public class ProtocolEngine {
     }
 
     public ProtocolEngine(TransportInterface dataTraffic, Pipeline pipeline) throws IOException {
+        this.responderRegistry = new ResponderRegistry();
         this.dataTraffic = dataTraffic;
         this.selector = Selector.open();
         this.pipeline = pipeline;
@@ -157,21 +161,25 @@ public class ProtocolEngine {
                             ByteBuffer buffer = ByteBuffer.allocate(8192 * 1024);
                             InetSocketAddress sourceAddress = (InetSocketAddress) channel.receive(buffer);
                             buffer.flip();
-                            String receivedData = new String(buffer.array(), 0, buffer.limit());
+                            byte[] receivedData = Arrays.copyOfRange(buffer.array(), 0, buffer.limit());
 
                             executor.submit(() -> {
                                 try {
-                                    ProtocolMessage protocolMessage = ProtocolUtils.deserialize(receivedData, this::processReceivedMessage);
+                                    ResponderRegistry.Responder responder = responderRegistry.useResponder(sourceAddress, this);
 
-                                    if (protocolMessage != null) {
-                                        if (!protocolMessage.isAck()) {
-                                            if (protocolMessage.isAckRequested()) {
+                                    ProtocolFrameManager.FrameMessage frameMessage = ProtocolFrameManager.deserialize(receivedData, responder.getId(), this::processReceivedMessage);
+                                    if (frameMessage != null) {
+                                        if (!frameMessage.isAck()) {
+                                            if (frameMessage.isAckRequested()) {
                                                 // Send ACK back to the sender
-                                                sendAck(sourceAddress, protocolMessage);
+                                                sendAck(sourceAddress, frameMessage);
                                             }
-                                            handleDataMessage(protocolMessage, sourceAddress, messageCallback);
+                                            System.out.println("ReceiveMesssage: ");
+
+                                            handleDataMessage(frameMessage, responder, messageCallback);
                                         } else {
-                                            handleTransportMessage(protocolMessage, ackSendMessageCallback);
+                                            System.out.println("ReceiveAck: ");
+                                            handleTransportMessage(frameMessage, ackSendMessageCallback);
                                         }
                                     }
                                 } catch (Exception e) {
@@ -189,11 +197,14 @@ public class ProtocolEngine {
         thread.start();
     }
 
-    public Integer sendMessage(InetSocketAddress destination, String message, boolean ackRequested) throws Exception {
+    public Integer sendMessage(InetSocketAddress destination, byte[] message, boolean ackRequested) throws Exception {
         int packetId = packetIdGenerator.getAndIncrement();
-        ProtocolMessage protocolMessage = new ProtocolMessage(packetId, message, ackRequested);
-        //protocolMessage.setTransportPort(dataTraffic.getPort());
-        String serializedMessage = ProtocolUtils.serialize(protocolMessage, this::prepareMessageForSending);
+        ProtocolFrameManager.FrameMessage frameMessage = ProtocolFrameManager.FrameMessage.builder()
+                .messageId(packetId)
+                .payload(message)
+                .ackRequested(ackRequested)
+                .build();
+        byte[] serializedMessage = ProtocolFrameManager.serialize(frameMessage, this::prepareMessageForSending);
 
         // Add the message to the send queue
         MessageQueueEntry messageQueueEntry = new MessageQueueEntry(destination, packetId, serializedMessage, ackRequested);
@@ -209,25 +220,24 @@ public class ProtocolEngine {
         sendQueue.put(messageQueueEntry);
     }
 
-    private void handleDataMessage(ProtocolMessage protocolMessage, InetSocketAddress sourceAddress, ReceiveMessageCallback messageCallback) throws IOException {
+    private void handleDataMessage(ProtocolFrameManager.FrameMessage frameMessage, ResponderRegistry.Responder responder, ReceiveMessageCallback messageCallback) throws IOException {
         // Pass the message and responder to the callback
         if (messageCallback != null) {
-            Responder responder = new Responder(sourceAddress, this);
-            messageCallback.consume(protocolMessage, responder);
+            messageCallback.consume(frameMessage, responder);
         }
     }
 
-    private void sendAck(InetSocketAddress sourceAddress, ProtocolMessage protocolMessage) throws IOException {
-        int packetId = protocolMessage.getPacketId();
-        ProtocolMessage ackMessage = ProtocolMessage.createAck(packetId);
-        String serializedAck = ProtocolUtils.serialize(ackMessage);
+    private void sendAck(InetSocketAddress sourceAddress, ProtocolFrameManager.FrameMessage protocolMessage) throws IOException {
+        int messageId = protocolMessage.getMessageId();
+        ProtocolFrameManager.FrameMessage ackMessage = ProtocolFrameManager.createAck(messageId);
+        byte[] serializedAck = ProtocolFrameManager.serialize(ackMessage, null);
         //InetSocketAddress ackDestination = new InetSocketAddress(sourceAddress.getAddress(), protocolMessage.getTransportPort());
         dataTraffic.send(sourceAddress, serializedAck);
     }
 
-    private void handleTransportMessage(ProtocolMessage protocolMessage, Consumer<Integer> ackSendMessageCallback) {
+    private void handleTransportMessage(ProtocolFrameManager.FrameMessage protocolMessage, Consumer<Integer> ackSendMessageCallback) {
         if (protocolMessage.isAck()) {
-            int packetId = protocolMessage.getPacketId();
+            int packetId = protocolMessage.getMessageId();
             Object ackLock = ackWaitLocks.remove(packetId);
             if (ackLock != null) {
                 synchronized (ackLock) {
@@ -238,11 +248,11 @@ public class ProtocolEngine {
         }
     }
 
-    public String prepareMessageForSending(String message) {
+    public byte[] prepareMessageForSending(byte[] message) {
         return pipeline != null ? pipeline.processToSend(message) : message;
     }
 
-    public String processReceivedMessage(String message) {
+    public byte[] processReceivedMessage(byte[] message) {
         return pipeline != null ? pipeline.processToReceive(message) : message;
     }
 
@@ -254,12 +264,12 @@ public class ProtocolEngine {
     private static class MessageQueueEntry {
         private final int packetId;
         private final InetSocketAddress destination;
-        private final String serializedMessage;
+        private final byte[] serializedMessage;
         private final boolean ackRequested;
         private long time;
         private byte retry;
 
-        public MessageQueueEntry(InetSocketAddress destination, int packetId, String serializedMessage, boolean ackRequested) {
+        public MessageQueueEntry(InetSocketAddress destination, int packetId, byte[] serializedMessage, boolean ackRequested) {
             this.packetId = packetId;
             this.destination = destination;
             this.serializedMessage = serializedMessage;

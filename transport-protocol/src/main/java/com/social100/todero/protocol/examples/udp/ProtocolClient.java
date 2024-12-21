@@ -9,6 +9,7 @@ import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
@@ -41,7 +42,7 @@ public class ProtocolClient {
             InetSocketAddress serverAddress = new InetSocketAddress("localhost", 9876);
 
             while (true) {
-                int packetId = engine.sendMessage(serverAddress, "Hello, Server!", true);
+                int packetId = engine.sendMessage(serverAddress, "Hello, Server!".getBytes(StandardCharsets.UTF_8), true);
                 System.out.println("Sending Message to Server packetId: " + packetId);
 
                 Scanner scanner = new Scanner(System.in);

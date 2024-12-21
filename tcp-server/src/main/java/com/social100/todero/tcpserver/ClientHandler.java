@@ -2,6 +2,10 @@ package com.social100.todero.tcpserver;
 
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.channel.ChannelMessage;
+import com.social100.todero.common.message.channel.ChannelType;
+import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import com.social100.todero.console.base.CliCommandManager;
 import org.jline.utils.InputStreamReader;
 
@@ -44,7 +48,15 @@ class ClientHandler implements Runnable {
                 if (line.equalsIgnoreCase("exit")) {
                     break;
                 }
-                commandManager.process(line);
+                MessageContainer messageContainer = MessageContainer.builder()
+                        .addChannelMessage(ChannelMessage.builder()
+                                .channel(ChannelType.PUBLIC_DATA)
+                                .payload(PublicDataPayload.builder()
+                                        .message(line)
+                                        .build())
+                                .build())
+                        .build();
+                commandManager.process(messageContainer);
             }
         } catch (IOException ignore) {
         } finally {

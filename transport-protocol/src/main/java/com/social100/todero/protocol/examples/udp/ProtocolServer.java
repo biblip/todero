@@ -9,6 +9,7 @@ import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
 public class ProtocolServer {
@@ -17,8 +18,8 @@ public class ProtocolServer {
         ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
             // Respond back to the sender
             try {
-                System.out.println("Server Receive Message : packetId: " + receivedMessage.getPacketId() + " > " + receivedMessage.getPayload());
-                int packetId = responder.sendMessage("Echo............... 1", true);
+                System.out.println("Server Receive Message : packetId: " + receivedMessage.getMessageId() + " > " + receivedMessage.getPayload());
+                int packetId = responder.sendMessage("Echo............... 1".getBytes(StandardCharsets.UTF_8), true);
                 System.out.println("Sending Message to Client packetId: " + packetId);
             } catch (Exception e) {
                 e.printStackTrace();

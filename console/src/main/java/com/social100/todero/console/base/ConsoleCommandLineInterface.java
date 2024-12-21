@@ -2,6 +2,10 @@ package com.social100.todero.console.base;
 
 import com.social100.todero.common.Constants;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.channel.ChannelMessage;
+import com.social100.todero.common.message.channel.ChannelType;
+import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -43,7 +47,15 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
             System.out.print("> ");
             while (!(line = scanner.nextLine()).equals(Constants.CLI_COMMAND_EXIT)) {
                 if (!line.trim().isEmpty()) {
-                    commandProcessor.process(line);
+                    MessageContainer messageContainer = MessageContainer.builder()
+                            .addChannelMessage(ChannelMessage.builder()
+                                    .channel(ChannelType.PUBLIC_DATA)
+                                    .payload(PublicDataPayload.builder()
+                                            .message(line)
+                                            .build())
+                                    .build())
+                            .build();
+                    commandProcessor.process(messageContainer);
                 }
                 System.out.print("\n> ");
             }
@@ -57,7 +69,17 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
         }
         TerminalInputHandler inputHandler = new TerminalInputHandler(autocompleteStrings);
         try {
-            inputHandler.processInput(commandProcessor::process);
+            inputHandler.processInput( line -> {
+                MessageContainer messageContainer = MessageContainer.builder()
+                        .addChannelMessage(ChannelMessage.builder()
+                                .channel(ChannelType.PUBLIC_DATA)
+                                .payload(PublicDataPayload.builder()
+                                        .message(line)
+                                        .build())
+                                .build())
+                        .build();
+                commandProcessor.process(messageContainer);
+            });
         } finally {
             inputHandler.close();
         }

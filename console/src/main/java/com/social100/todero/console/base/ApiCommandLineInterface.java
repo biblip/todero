@@ -1,6 +1,7 @@
 package com.social100.todero.console.base;
 
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.stream.PipelineStream;
 
 public class ApiCommandLineInterface implements CommandLineInterface {
@@ -21,8 +22,8 @@ public class ApiCommandLineInterface implements CommandLineInterface {
         commandProcessor.getBridge().readAsync(byteDataHandler);
     }
 
-    public void process(String line) {
-        commandProcessor.process(line);
+    public void process(MessageContainer messageContainer) {
+        commandProcessor.process(messageContainer);
     }
 
     public void writeAsync(byte[] data) {

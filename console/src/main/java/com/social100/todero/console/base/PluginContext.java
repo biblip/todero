@@ -1,6 +1,7 @@
 package com.social100.todero.console.base;
 
 import com.social100.todero.common.channels.EventChannel;
+import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
@@ -94,7 +95,7 @@ public class PluginContext {
          */
     }
 
-    public Object execute(String pluginName, String command, String[] commandArgs) {
+    public Object execute(String pluginName, String command, CommandContext context) {
         Optional<Plugin> selectedPlugin = plugins
                 .values()
                 .stream()
@@ -103,7 +104,7 @@ public class PluginContext {
         if (selectedPlugin.isEmpty()) {
             return "Command Not Found";
         }
-        return selectedPlugin.get().getPluginInstance().execute(pluginName, command, commandArgs);
+        return selectedPlugin.get().getPluginInstance().execute(pluginName, command, context);
     }
 
     private static boolean isPluginAndHasCommand(String pluginName, String command, Plugin p) {

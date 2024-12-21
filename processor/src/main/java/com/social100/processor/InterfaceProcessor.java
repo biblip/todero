@@ -199,21 +199,22 @@ public class InterfaceProcessor extends AbstractProcessor {
         String generatedClassName = classSimpleName + pluginName + "MR";
 
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
+                "import com.social100.todero.common.command.CommandContext;\n\n" +
                 "import java.util.HashMap;\n" +
                 "import java.util.Map;\n" +
                 "import java.util.function.BiFunction;\n" +
                 "import java.util.function.Function;\n" +
                 "\n" +
                 "public class " + generatedClassName + " {\n\n" +
-                "    public static final Map<String, Map<String, Function<String[], Boolean>>> STATIC_REGISTRY = new HashMap<>();\n" +
-                "    public static final Map<String, Map<String, BiFunction<Object, String[], Boolean>>> INSTANCE_REGISTRY = new HashMap<>();\n" +
+                "    public static final Map<String, Map<String, Function<CommandContext, Boolean>>> STATIC_REGISTRY = new HashMap<>();\n" +
+                "    public static final Map<String, Map<String, BiFunction<Object, CommandContext, Boolean>>> INSTANCE_REGISTRY = new HashMap<>();\n" +
                 "\n" +
                 "    static {\n");
         //for (Map.Entry<String, Map<String, MethodDetails>> nameToMethodDetail : nameToMethodDetails.entrySet()) {
             String instanceRegistryName = "instance" + getSimpleName(pluginClassQualifiedName) + "Registry";
             String staticRegistryName = "static" + getSimpleName(pluginClassQualifiedName) + "Registry";
-            classContent.append("        Map<String, BiFunction<Object, String[], Boolean>> " +  instanceRegistryName + " = new HashMap<>();\n");
-            classContent.append("        Map<String, Function<String[], Boolean>> " + staticRegistryName + " = new HashMap<>();\n");
+            classContent.append("        Map<String, BiFunction<Object, CommandContext, Boolean>> " +  instanceRegistryName + " = new HashMap<>();\n");
+            classContent.append("        Map<String, Function<CommandContext, Boolean>> " + staticRegistryName + " = new HashMap<>();\n");
             // Populate the STATIC_REGISTRY for static methods
             for (Map.Entry<String, MethodDetails> entry : nameToMethodDetails.entrySet()) {
                 String methodName = entry.getKey();
@@ -226,11 +227,11 @@ public class InterfaceProcessor extends AbstractProcessor {
                             .append(".put(\"")
                             .append(methodName)
                             .append("\", ")
-                            .append("args -> ")
+                            .append("context -> ")
                             .append(details.className)
                             .append(".")
                             .append(details.methodName)
-                            .append("(args));\n");
+                            .append("(context));\n");
                 } else {
                     // Populate the INSTANCE_REGISTRY for instance methods
                     classContent.append("        ")
@@ -238,11 +239,11 @@ public class InterfaceProcessor extends AbstractProcessor {
                             .append(".put(\"")
                             .append(methodName)
                             .append("\", ")
-                            .append("(instance, args) -> ((")
+                            .append("(instance, context) -> ((")
                             .append(details.className)
                             .append(") instance).")
                             .append(details.methodName)
-                            .append("(args));\n");
+                            .append("(context));\n");
                 }
             }
             classContent.append("        STATIC_REGISTRY.put(\"" + pluginClassQualifiedName + "\", " + staticRegistryName + ");\n");
@@ -250,30 +251,30 @@ public class InterfaceProcessor extends AbstractProcessor {
         //}
 
         classContent.append("    }\n\n" +
-                "    public static Boolean executeStatic(String plugin, String pluginName, String command, String[] args) {\n" +
-                "        Function<String[], Boolean> function = STATIC_REGISTRY.get(plugin).get(command);\n" +
+                "    public static Boolean executeStatic(String plugin, String pluginName, String command, CommandContext context) {\n" +
+                "        Function<CommandContext, Boolean> function = STATIC_REGISTRY.get(plugin).get(command);\n" +
                 "        if (function != null) {\n" +
-                "            return function.apply(args);\n" +
+                "            return function.apply(context);\n" +
                 "        } else {\n" +
                 "            throw new IllegalArgumentException(\"No static method found for command: \" + command);\n" +
                 "        }\n" +
                 "    }\n\n" +
-                "    public static Boolean executeInstance(String plugin, String pluginName, String command, Object instance, String[] args) {\n" +
-                "        BiFunction<Object, String[], Boolean> function = INSTANCE_REGISTRY.get(plugin).get(command);\n" +
+                "    public static Boolean executeInstance(String plugin, String pluginName, String command, Object instance, CommandContext context) {\n" +
+                "        BiFunction<Object, CommandContext, Boolean> function = INSTANCE_REGISTRY.get(plugin).get(command);\n" +
                 "        if (function != null) {\n" +
-                "            return function.apply(instance, args);\n" +
+                "            return function.apply(instance, context);\n" +
                 "        } else {\n" +
                 "            throw new IllegalArgumentException(\"No instance method found for command: \" + command);\n" +
                 "        }\n" +
                 "    }\n\n" +
-                "    public static Boolean execute(String plugin, String pluginName, String command, Object instance, String[] args) {\n" +
-                "        BiFunction<Object, String[], Boolean> instanceFunction = INSTANCE_REGISTRY.get(plugin).get(command);\n" +
+                "    public static Boolean execute(String plugin, String pluginName, String command, Object instance, CommandContext context) {\n" +
+                "        BiFunction<Object, CommandContext, Boolean> instanceFunction = INSTANCE_REGISTRY.get(plugin).get(command);\n" +
                 "        if (instanceFunction != null) {\n" +
-                "            return instanceFunction.apply(instance, args);\n" +
+                "            return instanceFunction.apply(instance, context);\n" +
                 "        }\n" +
-                "        Function<String[], Boolean> staticFunction = STATIC_REGISTRY.get(plugin).get(command);\n" +
+                "        Function<CommandContext, Boolean> staticFunction = STATIC_REGISTRY.get(plugin).get(command);\n" +
                 "        if (staticFunction != null) {\n" +
-                "            return staticFunction.apply(args);\n" +
+                "            return staticFunction.apply(context);\n" +
                 "        }\n" +
                 "        throw new IllegalArgumentException(\"No method found for command: \" + command);\n" +
                 "    }" +
@@ -303,6 +304,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "\n" +
                 "import " + pluginClassQualifiedName + ";\n" +
+                "import com.social100.todero.common.command.CommandContext;\n" +
                 "import com.social100.todero.common.observer.PublisherManager;\n" +
                 "import com.social100.todero.common.channels.ComponentEventListenerSupport;\n" +
                 "import com.social100.todero.common.channels.EventChannel;\n" +
@@ -355,8 +357,8 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    public Boolean execute(String pluginName, String command, String[] commandArgs) {\n" +
-                "        return " + generatedMethodRegistryClassName + ".execute(\"" + pluginClassQualifiedName + "\", pluginName, command, " + classVariableName + ", commandArgs);\n" +
+                "    public Boolean execute(String pluginName, String command, CommandContext context) {\n" +
+                "        return " + generatedMethodRegistryClassName + ".execute(\"" + pluginClassQualifiedName + "\", pluginName, command, " + classVariableName + ", context);\n" +
                 "    }\n" +
                 "}\n");
         try {

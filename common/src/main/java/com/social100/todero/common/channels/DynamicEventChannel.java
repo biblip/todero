@@ -1,5 +1,10 @@
 package com.social100.todero.common.channels;
 
+import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.MessageContainerUtils;
+import com.social100.todero.common.message.channel.ChannelMessageFactory;
+import com.social100.todero.common.message.channel.ChannelType;
+import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -86,7 +91,13 @@ public class DynamicEventChannel implements EventChannel {
     @Override
     public void respond(String message) {
         EventChannel.ReservedEvent reservedEvent = EventChannel.ReservedEvent.RESPONSE;
-        ReservedEventRegistry.trigger(reservedEvent, message);
+        MessageContainer messageContainer = MessageContainer.builder()
+                .version(MessageContainer.VERSION)
+                .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA, PublicDataPayload.builder()
+                        .message(message)
+                        .build()))
+                .build();
+        ReservedEventRegistry.trigger(reservedEvent, MessageContainerUtils.serialize(messageContainer));
     }
 
     @Override

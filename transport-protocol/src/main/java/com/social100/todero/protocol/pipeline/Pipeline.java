@@ -21,8 +21,8 @@ public class Pipeline {
      * @param message the original message
      * @return the fully processed message
      */
-    public String processToSend(String message) {
-        String processedMessage = message;
+    public byte[] processToSend(byte[] message) {
+        byte[] processedMessage = message;
         for (PipelineStage stage : stages) {
             processedMessage = stage.processToSend(processedMessage);
         }
@@ -34,8 +34,8 @@ public class Pipeline {
      * @param message the raw received message
      * @return the fully processed message
      */
-    public String processToReceive(String message) {
-        String processedMessage = message;
+    public byte[] processToReceive(byte[] message) {
+        byte[] processedMessage = message;
         for (PipelineStage stage : reversedStages) {
             processedMessage = stage.processToReceive(processedMessage);
         }

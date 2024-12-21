@@ -8,6 +8,7 @@ import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class ProtocolExample {
     public static void main(String[] args) {
@@ -26,13 +27,17 @@ public class ProtocolExample {
             ProtocolEngine engine = new ProtocolEngine(dataTransport, pipeline);
             // engine.start(); // No need to start the engine's selector loop
 
-            String originalMessage = "Hello, Secure World!";
+            String originalMessage = "Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! ";
             System.out.println("Original Message: " + originalMessage);
-            String preparedMessage = engine.prepareMessageForSending(originalMessage);
-            System.out.println("Prepared Message: " + preparedMessage);
+            byte[] preparedMessage = engine.prepareMessageForSending(originalMessage.getBytes(StandardCharsets.UTF_8));
+            System.out.println("Prepared Message: " + new String(preparedMessage));
 
-            String receivedMessage = engine.processReceivedMessage(preparedMessage);
-            System.out.println("Received Message: " + receivedMessage);
+            byte[] receivedMessage = engine.processReceivedMessage(preparedMessage);
+            System.out.println("Received Message: " + new String(receivedMessage));
+
+            //Thread.currentThread().join();
+
+            System.exit(1);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

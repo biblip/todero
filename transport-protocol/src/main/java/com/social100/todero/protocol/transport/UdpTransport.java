@@ -25,8 +25,8 @@ public class UdpTransport implements TransportInterface {
     }
 
     @Override
-    public void send(InetSocketAddress destination, String message) throws IOException {
-        ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
+    public void send(InetSocketAddress destination, byte[] message) throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(message);
         channel.send(buffer, destination);
     }
 
