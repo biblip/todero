@@ -61,7 +61,7 @@ public interface EventChannel {
      * @param eventName  the name of the event to trigger.
      * @param message    the message to send to listeners.
      */
-    void triggerEvent(String eventName, String message);
+    void triggerEvent(String eventName, MessageContainer message);
 
     /**
      * Triggers an event, notifying all subscribed listeners.

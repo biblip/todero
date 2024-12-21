@@ -61,12 +61,14 @@ public class EventsProcessor extends AbstractProcessor {
                                 "        }\n");
                         writer.write("    }\n\n");
 
+                        /*
                         // Methods to trigger events
                         for (EventDefinition event : annotation.value()) {
                             writer.write("    public void " + event.name() + "(String message) {\n");
                             writer.write("        this.triggerEvent(EVENT_" + event.name().toUpperCase() + ", message);\n");
                             writer.write("    }\n\n");
                         }
+                        */
 
                         writer.write("}\n");
                     }

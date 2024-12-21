@@ -199,6 +199,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         String generatedClassName = classSimpleName + pluginName + "MR";
 
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
+                "import com.social100.todero.common.channels.DynamicEventChannel;\n" +
                 "import com.social100.todero.common.command.CommandContext;\n\n" +
                 "import java.util.HashMap;\n" +
                 "import java.util.Map;\n" +
@@ -239,11 +240,15 @@ public class InterfaceProcessor extends AbstractProcessor {
                             .append(".put(\"")
                             .append(methodName)
                             .append("\", ")
-                            .append("(instance, context) -> ((")
+                            .append("(instance, context) -> {\n")
+                            .append("            context.setInstance((DynamicEventChannel) instance);\n")
+                            .append("            return ((")
                             .append(details.className)
                             .append(") instance).")
                             .append(details.methodName)
-                            .append("(context));\n");
+                            .append("(context);\n")
+                            .append("        }")
+                            .append(");\n");
                 }
             }
             classContent.append("        STATIC_REGISTRY.put(\"" + pluginClassQualifiedName + "\", " + staticRegistryName + ");\n");

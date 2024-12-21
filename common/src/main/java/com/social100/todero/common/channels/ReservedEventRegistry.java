@@ -27,7 +27,13 @@ public class ReservedEventRegistry {
     // Trigger a reserved event
     public static void trigger(EventChannel.ReservedEvent reservedEvent, MessageContainer message) {
         for (EventChannel.EventListener listener : reservedListeners.get(reservedEvent)) {
-            listener.onEvent(reservedEvent.getEventName(), message);
+            try {
+                listener.onEvent(reservedEvent.getEventName(), message);
+            } catch (Exception e) {
+                // Log the error and proceed with the next listener
+                e.printStackTrace();
+            }
+
         }
     }
 }

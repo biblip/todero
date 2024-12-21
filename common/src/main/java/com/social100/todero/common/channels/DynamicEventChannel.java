@@ -8,9 +8,10 @@ import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class DynamicEventChannel implements EventChannel {
 
@@ -26,17 +27,17 @@ public class DynamicEventChannel implements EventChannel {
                 throw new IllegalArgumentException("Event description cannot be null or empty.");
             }
             this.description = description;
-            this.listeners = new HashSet<>();
+            this.listeners = new CopyOnWriteArraySet<>();
         }
 
     }
 
     public DynamicEventChannel() {
-        this.dynamicEvents = new HashMap<>();
+        this.dynamicEvents = new ConcurrentHashMap<>();
     }
 
     @Override
-    public void registerEvent(String eventName, String description) {
+    public synchronized void registerEvent(String eventName, String description) {
         if (eventName == null || eventName.isEmpty()) {
             throw new IllegalArgumentException("Event name cannot be null or empty.");
         }
@@ -55,7 +56,7 @@ public class DynamicEventChannel implements EventChannel {
     }
 
     @Override
-    public void subscribeToEvent(String eventName, EventListener listener) {
+    public synchronized void subscribeToEvent(String eventName, EventListener listener) {
         if (EventChannel.ReservedEvent.isReserved(eventName)) {
             EventChannel.ReservedEvent reservedEvent = Arrays.stream(EventChannel.ReservedEvent.values())
                     .filter(e -> e.getEventName().equals(eventName))
@@ -70,44 +71,31 @@ public class DynamicEventChannel implements EventChannel {
     }
 
     @Override
-    public void triggerEvent(String eventName, String message) {
+    public void triggerEvent(String eventName, MessageContainer message) {
         if (EventChannel.ReservedEvent.isReserved(eventName)) {
             EventChannel.ReservedEvent reservedEvent = Arrays.stream(EventChannel.ReservedEvent.values())
                     .filter(e -> e.getEventName().equals(eventName))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Invalid reserved event name: " + eventName));
-            ReservedEventRegistry.trigger(reservedEvent, MessageContainer.builder()
-                    .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
-                            PublicDataPayload.builder()
-                                    .message(message)
-                                    .build()))
-                    .build());
+            ReservedEventRegistry.trigger(reservedEvent, message);
         } else if (dynamicEvents.containsKey(eventName)) {
             EventDetails details = dynamicEvents.get(eventName);
-            for (EventListener listener : details.getListeners()) {
-                listener.onEvent(eventName, MessageContainer.builder()
-                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
-                                PublicDataPayload.builder()
-                                        .message(message)
-                                        .build()))
-                        .build());
+
+            synchronized (details) {
+                for (EventListener listener : details.getListeners()) {
+                    try {
+                        listener.onEvent(eventName, message); // Notify listener
+                    } catch (Exception e) {
+                        // Log the error and proceed with the next listener
+                        System.err.println("Error in listener : " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
             }
         } else {
             throw new IllegalArgumentException("Event '" + eventName + "' is not registered.");
         }
     }
-
-    /*@Override
-    public void respond(String message) {
-        EventChannel.ReservedEvent reservedEvent = EventChannel.ReservedEvent.RESPONSE;
-        MessageContainer messageContainer = MessageContainer.builder()
-                .version(MessageContainer.VERSION)
-                .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA, PublicDataPayload.builder()
-                        .message(message)
-                        .build()))
-                .build();
-        ReservedEventRegistry.trigger(reservedEvent, MessageContainerUtils.serialize(messageContainer));
-    }*/
 
     @Override
     public Map<String, String> getAvailableEvents() {
