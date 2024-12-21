@@ -174,11 +174,8 @@ public class ProtocolEngine {
                                                 // Send ACK back to the sender
                                                 sendAck(sourceAddress, frameMessage);
                                             }
-                                            System.out.println("ReceiveMesssage: ");
-
                                             handleDataMessage(frameMessage, responder, messageCallback);
                                         } else {
-                                            System.out.println("ReceiveAck: ");
                                             handleTransportMessage(frameMessage, ackSendMessageCallback);
                                         }
                                     }

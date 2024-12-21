@@ -47,9 +47,7 @@ public class AiaCommandProcessor implements CommandProcessor {
     }
 
     ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback(frameMessage -> {
-        System.out.println("receiveMessageCallback");
         if (Optional.ofNullable(this.bridge).isPresent()) {
-            System.out.println("Llego algo en receiveMessageCallback: " + frameMessage.getPayload());
             this.bridge.writeAsync(frameMessage.getPayload());
         }
     });

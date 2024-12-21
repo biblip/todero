@@ -41,25 +41,12 @@ public class AIAServer {
         ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
             byte[] message = receivedMessage.getPayload();
             String line = new String(message);
-            System.out.println(line);
             MessageContainer receivedMessageContainer = MessageContainerUtils.deserialize(line);
             MessageContainer messageContainer = MessageContainer.builder()
                     .responderId(receivedMessage.getResponderId())
                     .addAllMessages(receivedMessageContainer.getMessages())
                     .build();
-            // TODO: el siguiente response puede cambiar a una respuesta en linea, ya que solo retorna Booleano.
-
-            // TODO: el messageContainer debe contener el receivedMessage.getResponderId()
-
-            commandManager.process(messageContainer, response -> {
-                if (!response.isEmpty()) {
-                    try {
-                        responder.sendMessage(response.replace("\n", "\r\n").getBytes(StandardCharsets.UTF_8), true);
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
-            });
+            commandManager.process(messageContainer);
         });
 
         Consumer<Integer> ackSendMessageCallback = (packetId) -> {

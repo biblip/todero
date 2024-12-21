@@ -3,6 +3,7 @@ package com.social100.todero.console.base;
 import com.social100.todero.common.Constants;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
+import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.common.message.channel.ChannelMessage;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
@@ -21,7 +22,11 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
     }
 
     private void outputDataHandler(byte[] data) {
-        System.out.print(new String(data));
+        String json = new String(data);
+        System.out.println(json);
+        MessageContainer messageContainer = MessageContainerUtils.deserialize(json);
+        System.out.println(messageContainer.getMessages().get(ChannelType.PUBLIC_DATA));
+        //System.out.print();
     }
 
     @Override

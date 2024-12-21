@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,8 +47,6 @@ public class CliCommandManager implements CommandManager {
 
     @Override
     public boolean process(final MessageContainer messageContainer) {
-        // TODO: procesa public_data, pero envia a ejecucion todo el MessageContainer o un derivado de el.
-        //       por ahora se esta enviando, el contenido del canal public_data parseado.
         final PublicDataPayload publicDataPayload = (PublicDataPayload)messageContainer.getMessages().get(ChannelType.PUBLIC_DATA);
         final String line = publicDataPayload.getMessage();
         if (line == null || line.isBlank()) {
@@ -77,6 +74,7 @@ public class CliCommandManager implements CommandManager {
         switch (pluginOrCommandName) {
             case Constants.CLI_COMMAND_COMPONENT:
                 this.eventListener.onEvent("command", MessageContainer.builder()
+                        .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                 PublicDataPayload.builder()
                                         .message(toJsonComponent(getComponent()))
@@ -88,6 +86,7 @@ public class CliCommandManager implements CommandManager {
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 String commandName = arguments.isEmpty() ? null : arguments.remove(0);
                 this.eventListener.onEvent("command", MessageContainer.builder()
+                        .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                 PublicDataPayload.builder()
                                         .message(formatOutput(getHelpMessage(subCommand, commandName)))
@@ -96,6 +95,7 @@ public class CliCommandManager implements CommandManager {
                 return true;
             case Constants.CLI_COMMAND_LOAD:
                 this.eventListener.onEvent("command", MessageContainer.builder()
+                        .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                 PublicDataPayload.builder()
                                         .message(formatOutput(load()))
@@ -104,6 +104,7 @@ public class CliCommandManager implements CommandManager {
                 return true;
             case Constants.CLI_COMMAND_UNLOAD:
                 this.eventListener.onEvent("command", MessageContainer.builder()
+                        .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                 PublicDataPayload.builder()
                                         .message(formatOutput(unload()))
@@ -112,6 +113,7 @@ public class CliCommandManager implements CommandManager {
                 return true;
             case Constants.CLI_COMMAND_RELOAD:
                 this.eventListener.onEvent("command", MessageContainer.builder()
+                        .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                 PublicDataPayload.builder()
                                         .message(formatOutput(reload()))
@@ -121,6 +123,7 @@ public class CliCommandManager implements CommandManager {
             case Constants.CLI_COMMAND_SET:
                 if (arguments.size() < 2) {
                     this.eventListener.onEvent("error", MessageContainer.builder()
+                            .responderId(messageContainer.getResponderId())
                             .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                     PublicDataPayload.builder()
                                             .message("Error: 'set' command requires a property and a value.")
@@ -131,6 +134,7 @@ public class CliCommandManager implements CommandManager {
                 String property = arguments.get(0).toLowerCase();
                 String value = arguments.get(1);
                 this.eventListener.onEvent("command", MessageContainer.builder()
+                        .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                 PublicDataPayload.builder()
                                         .message(handleSetCommand(property, value))
@@ -148,12 +152,6 @@ public class CliCommandManager implements CommandManager {
                 //this.eventListener.onEvent("command",formatOutput(output));
                 return true;
         }
-    }
-
-    @Override
-    public boolean process(MessageContainer messageContainer, Consumer<String> consumer) {
-        process(messageContainer);
-        return true;
     }
 
     // Handle the `set` command to update properties dynamically
