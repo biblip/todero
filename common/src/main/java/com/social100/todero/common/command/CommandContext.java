@@ -8,6 +8,7 @@ import com.social100.todero.common.message.channel.ChannelMessageFactory;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.EventPayload;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
+import com.social100.todero.processor.EventDefinition;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,13 +16,13 @@ import lombok.Setter;
 
 @Builder
 @AllArgsConstructor
-public class CommandContext {
+public class CommandContext<T extends DynamicEventChannel> {
     private final String sourceId;
     @Getter
     private final String[] args;
     @Setter
     @Getter
-    private DynamicEventChannel instance;
+    private T instance;
 
     public void respond(String message) {
         EventChannel.ReservedEvent reservedEvent = EventChannel.ReservedEvent.RESPONSE;
@@ -35,7 +36,8 @@ public class CommandContext {
         ReservedEventRegistry.trigger(reservedEvent, messageContainer);
     }
 
-    public void event(String eventName, String message) {
+    public void event(EventDefinition event, String message) {
+        String eventName = event.name();
         MessageContainer messageContainer = MessageContainer.builder()
                 .version(MessageContainer.VERSION)
                 .responderId(sourceId)

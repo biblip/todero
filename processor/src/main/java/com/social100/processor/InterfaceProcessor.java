@@ -1,5 +1,8 @@
 package com.social100.processor;
 
+import com.social100.todero.processor.EventDefinition;
+import com.social100.todero.processor.NoEvents;
+
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
@@ -10,6 +13,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
@@ -135,9 +139,86 @@ public class InterfaceProcessor extends AbstractProcessor {
             }
         }
 
+        for (Element element : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
+            if (element.getKind() == ElementKind.CLASS) {
+                TypeElement classElement = (TypeElement) element;
+                AIAController annotation = classElement.getAnnotation(AIAController.class);
+
+                String className = classElement.getSimpleName() + "Tools";
+                String packageName = processingEnv.getElementUtils().getPackageOf(classElement).toString();
+
+                String eventEnumType = getEventEnumType(annotation);
+
+                try {
+                    JavaFileObject file = processingEnv.getFiler().createSourceFile(packageName + "." + className);
+                    try (Writer writer = file.openWriter()) {
+                        // Package and imports
+                        writer.write("package " + packageName + ";\n\n");
+                        writer.write("import com.social100.todero.common.channels.DynamicEventChannel;\n");
+                        writer.write("import com.social100.todero.common.channels.ComponentEventListenerSupport;\n");
+                        writer.write("import com.social100.todero.common.channels.EventChannel;\n");
+                        writer.write("import com.social100.todero.common.channels.ReservedEventRegistry;\n");
+                        writer.write("import com.social100.todero.processor.EventDefinition;\n");
+
+                        if (eventEnumType != null) {
+                            writer.write("import " + eventEnumType + ";\n\n"); // Import the enum class
+                        }
+
+                        // Class declaration
+                        writer.write("public class " + className + " extends DynamicEventChannel implements ComponentEventListenerSupport {\n\n");
+
+                        // Constructor
+                        writer.write("    public " + className + "() {\n");
+                        if (eventEnumType != null) {
+                            writer.write("        for (EventDefinition event : " + eventEnumType + ".values()) {\n");
+                            writer.write("            this.registerEvent(event.name(), event.getDescription());\n");
+                            writer.write("        }\n");
+                        }
+                        writer.write("    }\n\n");
+
+                        // Add component event listener method
+                        writer.write("    public void addComponentEventListener(EventChannel.EventListener listener) {\n");
+                        if (eventEnumType != null) {
+                            writer.write("        for (EventDefinition event : " + eventEnumType + ".values()) {\n");
+                            writer.write("            this.subscribeToEvent(event.name(), listener);\n");
+                            writer.write("        }\n");
+                        }
+                        writer.write("        // Subscribe to reserved events directly\n");
+                        writer.write("        for (EventChannel.ReservedEvent reservedEvent : EventChannel.ReservedEvent.values()) {\n");
+                        writer.write("            ReservedEventRegistry.subscribe(reservedEvent, listener);\n");
+                        writer.write("        }\n");
+                        writer.write("    }\n\n");
+
+                        // Close class
+                        writer.write("}\n");
+                    }
+                } catch (IOException e) {
+                    processingEnv.getMessager().printMessage(javax.tools.Diagnostic.Kind.ERROR, e.getMessage());
+                }
+            }
+        }
+
         processCompleted = true;
 
         return true;
+    }
+
+    private static String getEventEnumType(AIAController annotation) {
+        String eventEnumType = null;
+        try {
+            // Attempt to access the enum type directly
+            Class<? extends EventDefinition> eventType = annotation.events();
+            if (!eventType.equals(NoEvents.class)) {
+                eventEnumType = eventType.getCanonicalName();
+            }
+        } catch (MirroredTypeException e) {
+            // Handle annotation processing context
+            TypeMirror typeMirror = e.getTypeMirror();
+            if (!"com.social100.todero.processor.NoEvents".equals(typeMirror.toString())) {
+                eventEnumType = typeMirror.toString();
+            }
+        }
+        return eventEnumType;
     }
 /*
     @Override

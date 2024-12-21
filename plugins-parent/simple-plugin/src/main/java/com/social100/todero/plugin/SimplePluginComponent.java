@@ -1,32 +1,60 @@
 package com.social100.todero.plugin;
 
-/*
+
+import com.social100.processor.AIAController;
+import com.social100.processor.Action;
+import com.social100.todero.common.command.CommandContext;
+import com.social100.todero.processor.EventDefinition;
+
+import java.util.Arrays;
+import java.util.Map;
+
 @AIAController(name = "simple",
         type = "",
         description = "Simple Plugin")
- */
-public class SimplePluginComponent {
-/*    final static String MAIN_GROUP = "Main";
+public class SimplePluginComponent extends SimplePluginComponentTools {
+    final static String MAIN_GROUP = "Main";
 
     public SimplePluginComponent() {
     }
 
-    @Action(group = MAIN_GROUP, 
+    public enum SimpleEvent implements EventDefinition {
+        SIMPLE_EVENT("A event to demo"),
+        OTHER_EVENT("Other event to demo");
+
+        private final String description;
+
+        SimpleEvent(String description) {
+            this.description = description;
+        }
+
+        @Override
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    @Action(group = MAIN_GROUP,
             command = "ping",
             description = "Does the ping")
-    public String pingCommand(String[] commandArgs) {
-        return "Ping Ok" + (commandArgs.length>0 ? " : " + commandArgs[0] : "");
+    public Boolean pingCommand(CommandContext<SimplePluginComponent> context) {
+        String[] commandArgs = context.getArgs();
+        context.event(SimpleEvent.SIMPLE_EVENT, "No va a salir");
+        context.respond("Ping Ok" + (commandArgs.length>0 ? " : " + commandArgs[0] : ""));
+        return true;
     }
 
     @Action(group = MAIN_GROUP,
             command = "hello",
             description = "Does a friendly hello")
-    public Map<String, Object> instanceMethod(String[] args) {
-        return Map.of(
+    public Boolean instanceMethod(CommandContext<SimplePluginComponent> context) {
+        String[] commandArgs = context.getArgs();
+        Map<String, Object> mm = Map.of(
                 "message", "Hello from instanceMethod",
-                "args", Arrays.toString(args),
+                "args", Arrays.toString(commandArgs),
                 "metadata", Map.of("key1", "value1", "key2", "value2")
         );
+        context.respond(mm.toString());
+        return true;
     }
- */
 }

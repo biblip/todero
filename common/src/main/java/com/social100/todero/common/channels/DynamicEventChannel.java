@@ -1,9 +1,6 @@
 package com.social100.todero.common.channels;
 
 import com.social100.todero.common.message.MessageContainer;
-import com.social100.todero.common.message.channel.ChannelMessageFactory;
-import com.social100.todero.common.message.channel.ChannelType;
-import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -93,7 +90,7 @@ public class DynamicEventChannel implements EventChannel {
                 }
             }
         } else {
-            throw new IllegalArgumentException("Event '" + eventName + "' is not registered.");
+            System.err.println("Event '" + eventName + "' is not registered.");
         }
     }
 

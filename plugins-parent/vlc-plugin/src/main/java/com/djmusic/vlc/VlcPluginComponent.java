@@ -3,8 +3,7 @@ package com.djmusic.vlc;
 import com.djmusic.vlc.base.ChannelManager;
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
-import com.social100.processor.EventDefinition;
-import com.social100.processor.Events;
+import com.social100.todero.processor.EventDefinition;
 import com.social100.todero.common.command.CommandContext;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
@@ -15,12 +14,9 @@ import java.io.File;
 
 @AIAController(name = "vlc",
         type = "",
-        description = "description")
+        description = "description",
+        events = VlcPluginComponent.VlcPluginEvents.class)
 //@AIADependencies(components = {DjyPluginComponent.class, SimplePluginComponent.class})
-@Events({
-        @EventDefinition( name = "volume_change", description = "A change in the volume" ),
-        @EventDefinition( name = "channel_end", description = "a channel stop playing" ),
-        @EventDefinition( name = "channel_start", description = "a channel start playing" )})
 public class VlcPluginComponent extends VlcPluginComponentTools {
     final static String MAIN_GROUP = "Main";
     final static String CHANNELS_GROUP = "Channels";
@@ -38,10 +34,27 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
         channelManager = new ChannelManager();
     }
 
+    public enum VlcPluginEvents implements EventDefinition {
+        VOLUME_CHANGE("A change in the volume" ),
+        CHANNEL_END("a channel stop playing" ),
+        CHANNEL_START("a channel start playing" );
+
+        private final String description;
+
+        VlcPluginEvents(String description) {
+            this.description = description;
+        }
+
+        @Override
+        public String getDescription() {
+            return description;
+        }
+    }
+
     @Action(group = MAIN_GROUP, 
             command = "move",
             description = "Moves the playback to the specified time. Usage: move <HH:MM:SS|MM:SS|SS>")
-    public Boolean moveCommand(CommandContext context) {
+    public Boolean moveCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         if (args.length == 0) {
             context.respond("Error: Please specify the time to move to. Usage: move <time>");
@@ -66,7 +79,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "mute",
             description = "Toggles the mute state of the playback if valid media is loaded.")
-    public Boolean muteCommand(CommandContext context) {
+    public Boolean muteCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
 
@@ -91,7 +104,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
             command = "pause",
             description = "Pauses the playback if it is currently playing.")
 
-    public Boolean pauseCommand(CommandContext context) {
+    public Boolean pauseCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
 
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
@@ -117,7 +130,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "play",
             description = "Plays the specified media file. If no file is specified, resumes the current one.")
-    public Boolean playCommand(CommandContext context) {
+    public Boolean playCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         MediaPlayer mediaPlayer = audioPlayer.mediaPlayer();
@@ -155,7 +168,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "skip",
             description = "Skips the playback forward or backward by the specified number of seconds. Usage: skip <+/-seconds>")
-    public Boolean skipCommand(CommandContext context) {
+    public Boolean skipCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         if (args.length == 0) {
             context.respond("Error: Please specify the number of seconds to skip. Usage: skip <+/-seconds>");
@@ -186,7 +199,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "status",
             description = "Displays the current status of VLC. Use 'status all' for all media info available.")
-    public Boolean statusCommand(CommandContext context) {
+    public Boolean statusCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         StringBuilder statusBuilder = new StringBuilder();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
@@ -234,7 +247,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "stop",
             description = "Stops the playback if it is currently active.")
-    public Boolean stopCommand(CommandContext context) {
+    public Boolean stopCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         State currentState = audioPlayer.mediaPlayer().status().state();
@@ -252,7 +265,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "volume",
             description = "Sets the volume to a specified level between 0 and 150. Usage: volume <level>")
-    public Boolean volumeCommand(CommandContext context) {
+    public Boolean volumeCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
 
@@ -280,7 +293,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "volume-down",
             description = "Decreases the volume by 5 units.")
-    public Boolean volumeDownCommand(CommandContext context) {
+    public Boolean volumeDownCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         int volume = audioPlayer.mediaPlayer().audio().volume();
@@ -299,7 +312,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = MAIN_GROUP, 
             command = "volume-up",
             description = "Increases the volume by 5 units.")
-    public Boolean volumeUpCommand(CommandContext context) {
+    public Boolean volumeUpCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
         int volume = audioPlayer.mediaPlayer().audio().volume();
@@ -319,7 +332,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = CHANNELS_GROUP,
             command = "add-channel",
             description = "Adds a new channel. Usage: add-channel <channelName>")
-    public Boolean addChannelCommand(CommandContext context) {
+    public Boolean addChannelCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         if (args.length > 0) {
             String channelName = args[0];
@@ -334,7 +347,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = CHANNELS_GROUP,
             command = "list-channels",
             description = "Lists all available channels.")
-    public Boolean listChannelCommand(CommandContext context) {
+    public Boolean listChannelCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         context.respond(channelManager.listChannels());
         return true;
@@ -343,7 +356,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = CHANNELS_GROUP,
             command = "remove-channel",
             description = "Removes an existing channel. Usage: remove-channel <channelName>")
-    public Boolean removeChannelCommand(CommandContext context) {
+    public Boolean removeChannelCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         if (args.length > 0) {
             String channelName = args[0];
@@ -359,7 +372,7 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
     @Action(group = CHANNELS_GROUP,
             command = "select-channel",
             description = "Selects an existing channel. Usage: select-channel <channelName>")
-    public Boolean selectChannelCommand(CommandContext context) {
+    public Boolean selectChannelCommand(CommandContext<VlcPluginComponent> context) {
         String[] args = context.getArgs();
         if (args.length > 0) {
             String channelName = args[0];

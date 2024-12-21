@@ -1,5 +1,8 @@
 package com.social100.processor;
 
+import com.social100.todero.processor.EventDefinition;
+import com.social100.todero.processor.NoEvents;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,4 +14,5 @@ public @interface AIAController {
     String name();
     String type();
     String description();
+    Class<? extends EventDefinition> events() default NoEvents.class;
 }
