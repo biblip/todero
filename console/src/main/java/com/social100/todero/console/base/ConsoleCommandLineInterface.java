@@ -1,11 +1,17 @@
 package com.social100.todero.console.base;
 
 import com.social100.todero.common.Constants;
+import com.social100.todero.common.channels.EventChannel;
+import com.social100.todero.common.channels.process.ChannelHandler;
+import com.social100.todero.common.channels.process.ChannelProcessor;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
-import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.common.message.channel.ChannelMessage;
 import com.social100.todero.common.message.channel.ChannelType;
+import com.social100.todero.common.message.channel.impl.ControlPayload;
+import com.social100.todero.common.message.channel.impl.EventPayload;
+import com.social100.todero.common.message.channel.impl.HiddenDataPayload;
+import com.social100.todero.common.message.channel.impl.NotificationPayload;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 
 import java.io.IOException;
@@ -14,19 +20,23 @@ import java.util.Scanner;
 
 public class ConsoleCommandLineInterface implements CommandLineInterface {
     private final CommandProcessor commandProcessor;
+    ChannelProcessor processor = ChannelProcessor.builder()
+            .registerHandler(ChannelType.PUBLIC_DATA, new PublicDataHandler())
+            .registerHandler(ChannelType.HIDDEN_DATA, new HiddenDataHandler())
+            .registerHandler(ChannelType.NOTIFICATION, new NotificationHandler())
+            .registerHandler(ChannelType.EVENT, new EventHandler())
+            .registerHandler(ChannelType.CONTROL, new ControlHandler())
+            .build();
+    EventChannel.EventListener eventListener = new EventChannel.EventListener() {
+        @Override
+        public void onEvent(String eventName, MessageContainer message) {
+            processor.processAllMessages(message.getMessages());
+        }
+    };
 
     public ConsoleCommandLineInterface(AppConfig appConfig, boolean aiaProtocol) {
-        this.commandProcessor = CommandProcessorFactory.createProcessor(appConfig, aiaProtocol);
+        this.commandProcessor = CommandProcessorFactory.createProcessor(appConfig, eventListener, aiaProtocol);
         this.commandProcessor.open();
-        this.commandProcessor.getBridge().readAsync(this::outputDataHandler);
-    }
-
-    private void outputDataHandler(byte[] data) {
-        String json = new String(data);
-        System.out.println(json);
-        MessageContainer messageContainer = MessageContainerUtils.deserialize(json);
-        System.out.println(messageContainer.getMessages().get(ChannelType.PUBLIC_DATA));
-        //System.out.print();
     }
 
     @Override
@@ -87,6 +97,66 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
             });
         } finally {
             inputHandler.close();
+        }
+    }
+
+    private static class PublicDataHandler implements ChannelHandler<PublicDataPayload> {
+        @Override
+        public void process(PublicDataPayload payload) {
+            System.out.println(payload.getMessage());
+        }
+
+        @Override
+        public Class<PublicDataPayload> getPayloadType() {
+            return PublicDataPayload.class;
+        }
+    }
+
+    private static class HiddenDataHandler implements ChannelHandler<HiddenDataPayload> {
+        @Override
+        public void process(HiddenDataPayload payload) {
+            System.out.println("Processing Hidden Data: " + payload.getMessage());
+        }
+
+        @Override
+        public Class<HiddenDataPayload> getPayloadType() {
+            return HiddenDataPayload.class;
+        }
+    }
+
+    private static class NotificationHandler implements ChannelHandler<NotificationPayload> {
+        @Override
+        public void process(NotificationPayload payload) {
+            System.out.println("Processing Notification: " + payload.getMessage());
+        }
+
+        @Override
+        public Class<NotificationPayload> getPayloadType() {
+            return NotificationPayload.class;
+        }
+    }
+
+    private static class EventHandler implements ChannelHandler<EventPayload> {
+        @Override
+        public void process(EventPayload payload) {
+            System.out.println("Processing Event: " + payload.getName() + " : " + payload.getMessage());
+        }
+
+        @Override
+        public Class<EventPayload> getPayloadType() {
+            return EventPayload.class;
+        }
+    }
+
+    private static class ControlHandler implements ChannelHandler<ControlPayload> {
+        @Override
+        public void process(ControlPayload payload) {
+            System.out.println("Processing Control: " + payload.getMessage());
+        }
+
+        @Override
+        public Class<ControlPayload> getPayloadType() {
+            return ControlPayload.class;
         }
     }
 }

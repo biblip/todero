@@ -10,9 +10,9 @@ public class ThePlugin extends DynamicEventChannel { // implements PluginInterfa
     Component component;
 
     public ThePlugin(EventListener eventListener) {
-        this.apiCommandLineInterface = new ApiCommandLineInterface(null, true);
-        this.apiCommandLineInterface.setOutputDataHandler(this::outputDataHandler);
-        this.apiCommandLineInterface.writeAsync("component\n".getBytes());
+        this.apiCommandLineInterface = new ApiCommandLineInterface(null, eventListener, true);
+        //this.apiCommandLineInterface.setOutputDataHandler(this::outputDataHandler);
+        //this.apiCommandLineInterface.writeAsync("component\n".getBytes());
     }
 
     public void outputDataHandler(byte[] data) {
@@ -68,9 +68,16 @@ public class ThePlugin extends DynamicEventChannel { // implements PluginInterfa
 
         String fullCommand = sb.toString();
 
+        if (true) {
+            throw new RuntimeException("Chekar aqui: TODO: implementar el process creando MessageContainer");
+        }
+
         try {
             // Send the command via the API
-            this.apiCommandLineInterface.writeAsync(fullCommand.getBytes());
+            // this.apiCommandLineInterface.writeAsync(fullCommand.getBytes());
+
+            // TODO: implementar el process creando MessageContainer
+            // this.apiCommandLineInterface.process(...);
             // Optionally return a success indicator
             return null;
         } catch (Exception ignore) {

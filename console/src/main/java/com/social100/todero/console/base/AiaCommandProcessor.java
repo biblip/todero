@@ -1,11 +1,9 @@
 package com.social100.todero.console.base;
 
+import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.MessageContainerUtils;
-import com.social100.todero.common.message.channel.ChannelMessage;
-import com.social100.todero.common.message.channel.ChannelType;
-import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import com.social100.todero.protocol.core.ProtocolEngine;
 import com.social100.todero.protocol.core.ReceiveMessageCallback;
 import com.social100.todero.protocol.pipeline.ChecksumStage;
@@ -13,9 +11,7 @@ import com.social100.todero.protocol.pipeline.CompressionStage;
 import com.social100.todero.protocol.pipeline.EncryptionStage;
 import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
-import com.social100.todero.stream.PipelineStreamBridge;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -23,7 +19,7 @@ import java.util.function.Consumer;
 
 public class AiaCommandProcessor implements CommandProcessor {
     private final AppConfig appConfig;
-    private PipelineStreamBridge bridge;
+    private EventChannel.EventListener eventListener = null;
     // Data transport
     UdpTransport dataTraffic;
     // Pipeline
@@ -33,23 +29,18 @@ public class AiaCommandProcessor implements CommandProcessor {
     // Server Address
     InetSocketAddress serverAddress;
 
-    public AiaCommandProcessor(AppConfig appConfig) {
+    public AiaCommandProcessor(AppConfig appConfig, EventChannel.EventListener eventListener) {
         this.appConfig = appConfig;
-
-        // Build the bridge with an internal onReceive handler
-        try {
-            this.bridge = new PipelineStreamBridge.Builder()
-                    .onReceive(this::handleIncomingData)
-                    .build();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to initialize PipelineStreamBridge", e);
-        }
+        this.eventListener = eventListener;
     }
 
     ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback(frameMessage -> {
-        if (Optional.ofNullable(this.bridge).isPresent()) {
-            this.bridge.writeAsync(frameMessage.getPayload());
-        }
+        byte[] data = frameMessage.getPayload();
+        String json = new String(data);
+        MessageContainer messageContainer = MessageContainerUtils.deserialize(json);
+
+        this.eventListener.onEvent("command", messageContainer);
+
     });
 
     Consumer<Integer> ackSendMessageCallback = (packetId) -> {
@@ -95,7 +86,6 @@ public class AiaCommandProcessor implements CommandProcessor {
     @Override
     public void close() {
         this.engine.close();
-        this.bridge.close();
     }
 
     @Override
@@ -103,7 +93,7 @@ public class AiaCommandProcessor implements CommandProcessor {
         return null;
     }
 
-    @Override
+    /*@Override
     public PipelineStreamBridge.PipelineStreamBridgeShadow getBridge() {
         return this.bridge.getBridge();
     }
@@ -123,5 +113,5 @@ public class AiaCommandProcessor implements CommandProcessor {
                         .build())
                 .build();
         process(messageContainer); // Process the received data as if it were passed to `process(String line)`
-    }
+    }*/
 }

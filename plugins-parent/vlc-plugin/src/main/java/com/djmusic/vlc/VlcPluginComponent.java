@@ -135,11 +135,13 @@ public class VlcPluginComponent extends VlcPluginComponentTools {
 
             if (!mediaPathToPlay.equals(currentMediaPath)) {
                 mediaPlayer.media().play(mediaPathToPlay, mediaOptions);
-                context.respond("ViaNormal: Playing new media: \"" + mediaPathToPlay + "\"");
+                context.event(EVENT_VOLUME_CHANGE, "HEY");
+                context.respond("Playing new media: \"" + mediaPathToPlay + "\"");
                 return true;
             } else {
                 mediaPlayer.controls().play();
-                context.respond("ViaNormal: Resuming current media.");
+                context.event(EVENT_VOLUME_CHANGE, "HEY");
+                context.respond("Resuming current media.");
                 return true;
             }
         } else if (mediaPlayer.media().isValid()) {
