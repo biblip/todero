@@ -89,25 +89,4 @@ public class AiaCommandProcessor implements CommandProcessor {
         return null;
     }
 
-    /*@Override
-    public PipelineStreamBridge.PipelineStreamBridgeShadow getBridge() {
-        return this.bridge.getBridge();
-    }
-
-    @Override
-    public void handleIncomingData(byte[] data) {
-        // TODO: this data contains already a MessageContainer?
-        String line = new String(data);
-        System.out.println("TODO: this data contains already a MessageContainer?");
-        System.out.println(line);
-        MessageContainer messageContainer = MessageContainer.builder()
-                .addChannelMessage(ChannelMessage.builder()
-                        .channel(ChannelType.PUBLIC_DATA)
-                        .payload(PublicDataPayload.builder()
-                                .message(line)
-                                .build())
-                        .build())
-                .build();
-        process(messageContainer); // Process the received data as if it were passed to `process(String line)`
-    }*/
 }

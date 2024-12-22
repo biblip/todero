@@ -1,14 +1,15 @@
 package com.djmusic.vlc;
 
 import com.djmusic.vlc.service.VlcService;
+import com.social100.processor.AIAController;
 import com.social100.processor.Action;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.scheduler.TaskScheduler;
 
-/*@AIAController(name = "vlc",
+@AIAController(name = "vlc",
         type = "",
         description = "description",
-        events = VlcService.VlcPluginEvents.class)*/
+        events = VlcService.VlcPluginEvents.class)
 //@AIADependencies(components = {DjyPluginComponent.class, SimplePluginComponent.class})
 public class VlcPluginComponent {
     private final VlcService vlcService;

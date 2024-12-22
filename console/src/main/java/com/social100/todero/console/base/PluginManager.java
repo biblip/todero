@@ -73,18 +73,20 @@ public class PluginManager {
                 .get().getComponent();
     }
 
-    public Object execute(String pluginName, String command, CommandContext context) {
+    public void execute(String pluginName, String command, CommandContext context) {
         // Find the specified plugin
         Plugin plugin = plugins.get(pluginName);
 
         if (plugin == null) {
-            return "Plugin with name '" + pluginName + "' not found.";
+            context.respond("Plugin with name '" + pluginName + "' not found.");
+            return;
         }
 
         // Get the associated Component and validate the command
         Component component = plugin.getComponent();
         if (component == null || component.getCommands() == null || component.getCommands().isEmpty()) {
-            return "Plugin '" + pluginName + "' has no commands defined.";
+            context.respond("Plugin '" + pluginName + "' has no commands defined.");
+            return;
         }
 
         // Search for the command in the nested structure
@@ -98,21 +100,23 @@ public class PluginManager {
         }
 
         if (foundCommand == null) {
-            return "Command '" + command + "' does not exist in plugin '" + pluginName + "'.";
+            context.respond("Command '" + command + "' does not exist in plugin '" + pluginName + "'.");
+            return;
         }
 
         // Get the associated PluginContext
         PluginInterface pluginInstance = plugin.getPluginInstance();
 
         if (pluginInstance == null) {
-            return "Plugin '" + pluginName + "' has no associated Instance.";
+            context.respond("Plugin '" + pluginName + "' has no associated Instance.");
+            return;
         }
 
         // Call the execute method on the PluginInstance
         try {
-            return pluginInstance.execute(pluginName, command, context);
+            pluginInstance.execute(pluginName, command, context);
         } catch (Exception e) {
-            return "Failed to execute command '" + command + "' on plugin '" + pluginName + "': " + e.getMessage();
+            context.respond("Failed to execute command '" + command + "' on plugin '" + pluginName + "': " + e.getMessage());
         }
     }
 
