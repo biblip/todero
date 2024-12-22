@@ -12,7 +12,7 @@ import java.util.Map;
 @AIAController(name = "simple",
         type = "",
         description = "Simple Plugin")
-public class SimplePluginComponent extends SimplePluginComponentTools {
+public class SimplePluginComponent {
     final static String MAIN_GROUP = "Main";
 
     public SimplePluginComponent() {
@@ -37,7 +37,7 @@ public class SimplePluginComponent extends SimplePluginComponentTools {
     @Action(group = MAIN_GROUP,
             command = "ping",
             description = "Does the ping")
-    public Boolean pingCommand(CommandContext<SimplePluginComponent> context) {
+    public Boolean pingCommand(CommandContext context) {
         String[] commandArgs = context.getArgs();
         context.event(SimpleEvent.SIMPLE_EVENT, "No va a salir");
         context.respond("Ping Ok" + (commandArgs.length>0 ? " : " + commandArgs[0] : ""));
@@ -47,7 +47,7 @@ public class SimplePluginComponent extends SimplePluginComponentTools {
     @Action(group = MAIN_GROUP,
             command = "hello",
             description = "Does a friendly hello")
-    public Boolean instanceMethod(CommandContext<SimplePluginComponent> context) {
+    public Boolean instanceMethod(CommandContext context) {
         String[] commandArgs = context.getArgs();
         Map<String, Object> mm = Map.of(
                 "message", "Hello from instanceMethod",

@@ -321,15 +321,12 @@ public class InterfaceProcessor extends AbstractProcessor {
                             .append(".put(\"")
                             .append(methodName)
                             .append("\", ")
-                            .append("(instance, context) -> {\n")
-                            .append("            context.setInstance((DynamicEventChannel) instance);\n")
-                            .append("            return ((")
+                            .append("(instance, context) -> \n")
+                            .append("            ((")
                             .append(details.className)
                             .append(") instance).")
                             .append(details.methodName)
-                            .append("(context);\n")
-                            .append("        }")
-                            .append(");\n");
+                            .append("(context));\n");
                 }
             }
             classContent.append("        STATIC_REGISTRY.put(\"" + pluginClassQualifiedName + "\", " + staticRegistryName + ");\n");
@@ -390,6 +387,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "\n" +
                 "import " + pluginClassQualifiedName + ";\n" +
+                "import " + pluginClassQualifiedName + "Tools;\n" +
                 "import com.social100.todero.common.command.CommandContext;\n" +
                 "import com.social100.todero.common.observer.PublisherManager;\n" +
                 "import com.social100.todero.common.channels.ComponentEventListenerSupport;\n" +
@@ -407,12 +405,14 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "public class " + generatedClassName + " extends PublisherManager implements PluginInterface {\n" +
                 "\n" +
                 "    private static " + pluginClassQualifiedName + " " + classVariableName + ";\n" +
+                "    private static " + pluginClassQualifiedName + "Tools " + classVariableName + "Tools;\n" +
                 "    private final Component component;\n" +
                 "\n" +
                 "    public " + generatedClassName + "(EventChannel.EventListener listener" + (commandManagerRequired ? ", CommandManager commandManager" : "") + ") {\n" +
                 "        " + classVariableName + " = new " + classSimpleName + "(" + (commandManagerRequired ? ", commandManager" : "") + ");\n" +
-                "        if (" + classVariableName + " instanceof ComponentEventListenerSupport) {\n" +
-                "            ((ComponentEventListenerSupport)" + classVariableName + ").addComponentEventListener(listener);\n" +
+                "        " + classVariableName + "Tools = new " + classSimpleName + "Tools();\n" +
+                "        if (" + classVariableName + "Tools instanceof ComponentEventListenerSupport) {\n" +
+                "            ((ComponentEventListenerSupport)" + classVariableName + "Tools).addComponentEventListener(listener);\n" +
                 "        }\n" +
                 "        component = Component\n" +
                 "                .builder()\n" +
@@ -444,6 +444,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "\n" +
                 "    @Override\n" +
                 "    public Boolean execute(String pluginName, String command, CommandContext context) {\n" +
+                "        context.setInstance(" + classVariableName + "Tools);\n" +
                 "        return " + generatedMethodRegistryClassName + ".execute(\"" + pluginClassQualifiedName + "\", pluginName, command, " + classVariableName + ", context);\n" +
                 "    }\n" +
                 "}\n");

@@ -16,13 +16,13 @@ import lombok.Setter;
 
 @Builder
 @AllArgsConstructor
-public class CommandContext<T extends DynamicEventChannel> {
+public class CommandContext {
     private final String sourceId;
     @Getter
     private final String[] args;
     @Setter
     @Getter
-    private T instance;
+    private DynamicEventChannel instance;
 
     public void respond(String message) {
         EventChannel.ReservedEvent reservedEvent = EventChannel.ReservedEvent.RESPONSE;

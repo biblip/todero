@@ -1,7 +1,6 @@
 package com.social100.todero.console.base;
 
 import com.social100.todero.common.channels.EventChannel;
-import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.protocol.core.ProtocolEngine;
@@ -18,7 +17,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public class AiaCommandProcessor implements CommandProcessor {
-    private final AppConfig appConfig;
     private EventChannel.EventListener eventListener = null;
     // Data transport
     UdpTransport dataTraffic;
@@ -29,8 +27,8 @@ public class AiaCommandProcessor implements CommandProcessor {
     // Server Address
     InetSocketAddress serverAddress;
 
-    public AiaCommandProcessor(AppConfig appConfig, EventChannel.EventListener eventListener) {
-        this.appConfig = appConfig;
+    public AiaCommandProcessor(InetSocketAddress serverAddress, EventChannel.EventListener eventListener) {
+        this.serverAddress = serverAddress;
         this.eventListener = eventListener;
     }
 
@@ -50,7 +48,6 @@ public class AiaCommandProcessor implements CommandProcessor {
     @Override
     public void open() {
         try {
-            // Data transport uses any available port (0)
             dataTraffic = new UdpTransport(0);
 
             pipeline = new Pipeline();
@@ -61,7 +58,6 @@ public class AiaCommandProcessor implements CommandProcessor {
             engine = new ProtocolEngine(dataTraffic, pipeline);
             engine.startClient(receiveMessageCallback, ackSendMessageCallback);
 
-            serverAddress = new InetSocketAddress("localhost", 9876);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

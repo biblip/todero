@@ -1,16 +1,17 @@
 package com.social100.todero.console.base;
 
 import com.social100.todero.common.channels.EventChannel;
-import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.stream.PipelineStream;
+
+import java.net.InetSocketAddress;
 
 public class ApiCommandLineInterface implements CommandLineInterface {
     private final CommandProcessor commandProcessor;
     private PipelineStream.ByteDataHandler outputDataHandler;
 
-    public ApiCommandLineInterface(AppConfig appConfig, EventChannel.EventListener eventListener, boolean aiaProtocol) {
-        this.commandProcessor = CommandProcessorFactory.createProcessor(appConfig, eventListener, aiaProtocol);
+    public ApiCommandLineInterface(InetSocketAddress serverAddress, EventChannel.EventListener eventListener) {
+        this.commandProcessor = new AiaCommandProcessor(serverAddress, eventListener);
         this.commandProcessor.open();
     }
 
