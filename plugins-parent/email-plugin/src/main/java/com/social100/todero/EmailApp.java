@@ -1,7 +1,7 @@
 package com.social100.todero;
 
-import com.social100.todero.handler.ImapProtocolHandler;
 import com.social100.todero.handler.MailProtocolHandler;
+import com.social100.todero.handler.MailProtocolHandlerFactory;
 
 import java.util.Properties;
 
@@ -18,9 +18,9 @@ public class EmailApp {
 
         Properties imapProperties = EmailConfig.getProperties(protocol, host, port, useSSL);
 
+        MailProtocolHandler protocolHandler = MailProtocolHandlerFactory.create(protocol, imapProperties, username, password);
         Properties smtpProperties = EmailConfig.getProperties("smtp", "smtp.gmail.com", 587, true);
 
-        MailProtocolHandler protocolHandler = new ImapProtocolHandler(imapProperties, username, password);
         EmailService emailService = new EmailService(protocolHandler, smtpProperties, username, password, useOAuth2, provider);
 
         // Fetch emails
