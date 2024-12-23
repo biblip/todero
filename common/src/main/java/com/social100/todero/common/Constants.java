@@ -9,4 +9,5 @@ public class Constants {
     public static final String CLI_COMMAND_RELOAD = "reload";
     public static final String CLI_COMMAND_SET = "set";
     public static final String CLI_COMMAND_UNLOAD = "unload";
+    public static final String CLI_COMMAND_WORKSPACE = "workspace";
 }

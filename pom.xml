@@ -20,6 +20,7 @@
         <module>transport-protocol</module>
         <module>annotations</module>
         <module>processor</module>
+        <module>email-plugin</module>
     </modules>
 
     <properties>

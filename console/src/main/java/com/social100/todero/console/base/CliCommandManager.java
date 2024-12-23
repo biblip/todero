@@ -7,7 +7,6 @@ import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.message.MessageContainer;
-import com.social100.todero.common.message.channel.ChannelMessageFactory;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import com.social100.todero.common.model.plugin.Component;
@@ -70,9 +69,17 @@ public class CliCommandManager implements CommandManager {
         String subCommand = null;
         String[] commandArgs = null;
 
+        // Build the command context at this stage 'commandArgs' is not relevant because it is null.
+        CommandContext context = CommandContext.builder()
+                .sourceId(messageContainer.getResponderId())
+                //.args(commandArgs)
+                .build();
+
         // Reserved command logic
         switch (pluginOrCommandName) {
             case Constants.CLI_COMMAND_COMPONENT:
+                context.respond(toJsonComponent(getComponent()));
+                /*
                 this.eventListener.onEvent("command", MessageContainer.builder()
                         .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
@@ -80,11 +87,14 @@ public class CliCommandManager implements CommandManager {
                                         .message(toJsonComponent(getComponent()))
                                         .build()))
                         .build());
+                 */
                 return true;
             case Constants.CLI_COMMAND_HELP:
                 // Pass both the plugin name and sub-command (or null if missing)
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 String commandName = arguments.isEmpty() ? null : arguments.remove(0);
+                context.respond(formatOutput(getHelpMessage(subCommand, commandName)));
+                /*
                 this.eventListener.onEvent("command", MessageContainer.builder()
                         .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
@@ -92,26 +102,22 @@ public class CliCommandManager implements CommandManager {
                                         .message(formatOutput(getHelpMessage(subCommand, commandName)))
                                         .build()))
                         .build());
+                 */
                 return true;
             case Constants.CLI_COMMAND_LOAD:
+                context.respond(formatOutput(load()));
+                /*
                 this.eventListener.onEvent("command", MessageContainer.builder()
                         .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                 PublicDataPayload.builder()
                                         .message(formatOutput(load()))
                                         .build()))
-                        .build());
-                return true;
-            case Constants.CLI_COMMAND_UNLOAD:
-                this.eventListener.onEvent("command", MessageContainer.builder()
-                        .responderId(messageContainer.getResponderId())
-                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
-                                PublicDataPayload.builder()
-                                        .message(formatOutput(unload()))
-                                        .build()))
-                        .build());
+                        .build());*/
                 return true;
             case Constants.CLI_COMMAND_RELOAD:
+                context.respond(formatOutput(reload()));
+                /*
                 this.eventListener.onEvent("command", MessageContainer.builder()
                         .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
@@ -119,36 +125,65 @@ public class CliCommandManager implements CommandManager {
                                         .message(formatOutput(reload()))
                                         .build()))
                         .build());
+                 */
                 return true;
             case Constants.CLI_COMMAND_SET:
                 if (arguments.size() < 2) {
+                    context.respond("Error: 'set' command requires a property and a value.");
+                    /*
                     this.eventListener.onEvent("error", MessageContainer.builder()
                             .responderId(messageContainer.getResponderId())
                             .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                     PublicDataPayload.builder()
                                             .message("Error: 'set' command requires a property and a value.")
                                             .build()))
-                            .build());
+                            .build());*/
                     return false;
                 }
                 String property = arguments.get(0).toLowerCase();
                 String value = arguments.get(1);
+                context.respond(handleSetCommand(property, value));
+                /*
                 this.eventListener.onEvent("command", MessageContainer.builder()
                         .responderId(messageContainer.getResponderId())
                         .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
                                 PublicDataPayload.builder()
                                         .message(handleSetCommand(property, value))
                                         .build()))
-                        .build());
+                        .build());*/
+                return true;
+            case Constants.CLI_COMMAND_UNLOAD:
+                context.respond(formatOutput(unload()));
+                /*
+                this.eventListener.onEvent("command", MessageContainer.builder()
+                        .responderId(messageContainer.getResponderId())
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(formatOutput(unload()))
+                                        .build()))
+                        .build());*/
+                return true;
+            case Constants.CLI_COMMAND_WORKSPACE:
+                context.respond(formatOutput(unload()));
+                /*
+                this.eventListener.onEvent("command", MessageContainer.builder()
+                        .responderId(messageContainer.getResponderId())
+                        .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA,
+                                PublicDataPayload.builder()
+                                        .message(formatOutput(unload()))
+                                        .build()))
+                        .build());*/
                 return true;
             default:
                 // If it's not a reserved command, treat it as a plugin name
                 subCommand = arguments.isEmpty() ? null : arguments.remove(0);
                 commandArgs = arguments.toArray(new String[0]);
-                pluginManager.execute(pluginOrCommandName, subCommand, CommandContext.builder()
+                // Rebuild Command Context to use commandArgs for commands
+                context = CommandContext.builder()
                         .sourceId(messageContainer.getResponderId())
                         .args(commandArgs)
-                        .build());
+                        .build();
+                pluginManager.execute(pluginOrCommandName, subCommand, context);
                 //this.eventListener.onEvent("command",formatOutput(output));
                 return true;
         }
