@@ -1,11 +1,14 @@
 package com.social100.todero;
 
 import com.social100.todero.handler.MailProtocolHandler;
+import jakarta.mail.Authenticator;
 import jakarta.mail.BodyPart;
 import jakarta.mail.Folder;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
+import jakarta.mail.Part;
+import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
@@ -13,6 +16,9 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 public class EmailService {
@@ -44,6 +50,19 @@ public class EmailService {
                 System.out.println("Subject: " + message.getSubject());
                 System.out.println("From: " + message.getFrom()[0]);
                 System.out.println("Content: " + getMessageContent(message));
+
+                // Process attachments
+                if (message.isMimeType("multipart/*")) {
+                    MimeMultipart multipart = (MimeMultipart) message.getContent();
+                    for (int i = 0; i < multipart.getCount(); i++) {
+                        BodyPart bodyPart = multipart.getBodyPart(i);
+                        if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
+                            System.out.println("Attachment: " + bodyPart.getFileName());
+                            InputStream is = bodyPart.getInputStream();
+                            Files.copy(is, Paths.get("/path/to/save/" + bodyPart.getFileName()));
+                        }
+                    }
+                }
             }
 
             folder.close(false);
@@ -66,7 +85,7 @@ public class EmailService {
                 smtpProperties.put("mail.smtp.auth.mechanisms", "XOAUTH2");
 
                 // Get the OAuth2 token
-                String oauthToken = OAuth2TokenProvider.getToken(provider, smtpUsername);
+                String oauthToken = OAuth2TokenProvider.getToken(provider);
 
                 session.setDebug(true); // Enable debug for testing
 

@@ -14,13 +14,14 @@
         <module>console</module>
         <module>tcp-server</module>
         <module>aia-server</module>
-        <module>plugins-parent/vlc-plugin</module>
-        <module>plugins-parent/simple-plugin</module>
-        <module>plugins-parent/aia-protocol-plugin</module>
+        <module>plugins-develop/vlc-plugin</module>
+        <module>plugins-develop/email-plugin</module>
+        <module>plugins-develop/simple-plugin</module>
+        <module>plugins-develop/aia-protocol-plugin</module>
         <module>transport-protocol</module>
         <module>annotations</module>
         <module>processor</module>
-        <module>email-plugin</module>
+        <module>aia-web</module>
     </modules>
 
     <properties>

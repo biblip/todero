@@ -29,8 +29,7 @@ public class Pop3ProtocolHandler implements MailProtocolHandler {
 
     @Override
     public Folder getFolder(String folderName) throws MessagingException {
-        // POP3 generally supports only the INBOX folder.
-        return store.getFolder("INBOX");
+        return store.getFolder(folderName);
     }
 
     @Override
