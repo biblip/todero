@@ -6,24 +6,46 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class OAuth2CallbackServer extends NanoHTTPD {
 
-    private Configuration freemarkerConfig;
+    private final Configuration freemarkerConfig;
+    private final WebSocketManager webSocketManager;
+    private final int ws_port;
 
     public OAuth2CallbackServer(int port) {
         super(port);
-        setupFreemarker();
-    }
 
-    private void setupFreemarker() {
+        // Setup Freemarker
         freemarkerConfig = new Configuration(Configuration.VERSION_2_3_31);
         freemarkerConfig.setClassForTemplateLoading(getClass(), "/templates");
         freemarkerConfig.setDefaultEncoding("UTF-8");
+
+        // Setup WebSocket
+        this.ws_port = port + 1;
+        this.webSocketManager = new WebSocketManager(ws_port);
+    }
+
+    @Override
+    public void start() throws IOException {
+        super.start();
+        this.webSocketManager.start(60_000);
+    }
+
+    @Override
+    public void start(int timeout) throws IOException {
+        super.start(timeout);
+        this.webSocketManager.start(60_000);
+    }
+
+    @Override
+    public void start(int timeout, boolean daemon) throws IOException {
+        super.start(timeout, daemon);
+        this.webSocketManager.start(60_000, daemon);
     }
 
     @Override
@@ -73,21 +95,20 @@ public class OAuth2CallbackServer extends NanoHTTPD {
     private Response handleWebSocketJavascript(IHTTPSession session) throws TemplateException, IOException {
         String uri = session.getUri();
 
-        // Serve static files
         if (uri.startsWith("/ws.js")) {
-            try {
-                InputStream inputStream = getClass().getResourceAsStream("/static/ws.js");
-                if (inputStream == null) {
-                    return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "File not found");
-                }
-                return newFixedLengthResponse(Response.Status.OK, "application/javascript", inputStream, inputStream.available());
-            } catch (IOException e) {
-                e.printStackTrace();
-                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Internal Server Error");
-            }
+            Configuration freemarkerConfig = new Configuration(Configuration.VERSION_2_3_31);
+            freemarkerConfig.setClassForTemplateLoading(getClass(), "/templates");
+
+            Template template = freemarkerConfig.getTemplate("ws.js.ftl");
+            Map<String, Object> dataModel = new HashMap<>();
+            dataModel.put("WS_PORT", String.valueOf(ws_port));
+
+            StringWriter writer = new StringWriter();
+            template.process(dataModel, writer);
+
+            return newFixedLengthResponse(Response.Status.OK, "application/javascript", writer.toString());
         }
 
-        // Handle other requests (e.g., dynamic templates)
         return super.serve(session);
     }
 

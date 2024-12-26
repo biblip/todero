@@ -1,7 +1,6 @@
 package com.social100.todero;
 
 import com.social100.todero.oauth2.OAuth2CallbackServer;
-import com.social100.todero.oauth2.WebSocketManager;
 import fi.iki.elonen.NanoHTTPD;
 
 import java.io.IOException;
@@ -15,12 +14,5 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-        WebSocketManager wsManager = new WebSocketManager(8081);
-
-        try {
-            wsManager.start(60_000, false);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

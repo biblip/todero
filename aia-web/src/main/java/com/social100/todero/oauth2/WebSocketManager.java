@@ -87,7 +87,7 @@ public class WebSocketManager extends NanoWSD {
 
         private String handleInteraction(String payload) {
             // Parse and process the payload
-            return "Processed: " + payload;
+            return payload;
         }
 
         @Override

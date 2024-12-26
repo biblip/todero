@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-
 @AIAController(name = "aia",
         type = "",
         description = "AIA Protocol Plugin",

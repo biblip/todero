@@ -1,6 +1,6 @@
 let ws;
 function connectWebSocket() {
-    ws = new WebSocket("ws://localhost:8081/ws");
+    ws = new WebSocket("ws://localhost:${WS_PORT}/ws");
 
     ws.onopen = () => {
         console.log("WebSocket connected");
