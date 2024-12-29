@@ -1,4 +1,4 @@
-package com.social100.todero.oauth2;
+package com.social100.todero.web;
 
 import fi.iki.elonen.NanoHTTPD;
 import freemarker.template.Configuration;
@@ -11,13 +11,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OAuth2CallbackServer extends NanoHTTPD {
+public class WebServer extends NanoHTTPD {
 
     private final Configuration freemarkerConfig;
     private final WebSocketManager webSocketManager;
     private final int ws_port;
 
-    public OAuth2CallbackServer(int port) {
+    public WebServer(int port) {
         super(port);
 
         // Setup Freemarker
@@ -55,20 +55,17 @@ public class OAuth2CallbackServer extends NanoHTTPD {
         Method method = session.getMethod();
 
         try {
-            switch (uri) {
-                case "/":
-                    return handleIndex(processor, session);
-                case "/ws.js":
-                    return handleWebSocketJavascript(session);
-                case "/oauth2":
-                    return handleOAuth2Launch(processor, session);
-                case "/wstest":
-                    return handleWSTest(processor, session);
-                case "/callback":
-                    return handleCallback(processor, session);
-                default:
-                    return handleNotFound(processor, uri);
+            if (Method.GET.equals(method)) {
+                return switch (uri) {
+                    case "/" -> handleIndex(processor, session);
+                    case "/ws.js" -> handleWebSocketJavascript(session);
+                    case "/oauth2" -> handleOAuth2Launch(processor, session);
+                    case "/wstest" -> handleWSTest(processor, session);
+                    case "/callback" -> handleCallback(processor, session);
+                    default -> handleNotFound(processor, uri);
+                };
             }
+            return handleNotFound(processor, uri);
         } catch (Exception e) {
             e.printStackTrace();
             return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Internal Server Error");
@@ -174,7 +171,7 @@ public class OAuth2CallbackServer extends NanoHTTPD {
 
     public static void main(String[] args) {
         try {
-            OAuth2CallbackServer server = new OAuth2CallbackServer(8080);
+            WebServer server = new WebServer(8080);
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
             System.out.println("Server is running on http://localhost:8080/");
         } catch (IOException e) {

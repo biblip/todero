@@ -74,3 +74,8 @@ mindmap
       Security increased.
     Each protocol can have his own plugin - POP3, IMAP, FTP, etc.
 ```
+
+
+```mermaid
+B (OAuth 2.0 Authorization Code Flow with Offline Access)
+```

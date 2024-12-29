@@ -1,4 +1,4 @@
-package com.social100.todero.oauth2;
+package com.social100.todero.web;
 
 import fi.iki.elonen.NanoWSD;
 
