@@ -18,6 +18,7 @@ public class AIAServerMain {
             yamlMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
 
             appConfig = yamlMapper.readValue(new File("config.yaml"), AppConfig.class);
+
             AIAServer server = new AIAServer(appConfig);
             server.start();
         } catch (Exception e) {

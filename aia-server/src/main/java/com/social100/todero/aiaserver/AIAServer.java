@@ -22,9 +22,11 @@ import java.util.function.Consumer;
 public class AIAServer {
     private final CliCommandManager commandManager;
     private ProtocolEngine engine;
+    private Integer port;
     Map<String, ResponderRegistry.Responder> profileResponderMap = new HashMap<>();
 
     public AIAServer(AppConfig appConfig) {
+        port = appConfig.getApp().getServer().getPort();
         commandManager = new CliCommandManager(appConfig, (eventName, message) -> {
             ResponderRegistry.Responder responder = engine.getResponder(message.getResponderId());
             try {
@@ -53,8 +55,8 @@ public class AIAServer {
         };
 
         try {
-            // Data transport listens on port 9876
-            UdpTransport dataTraffic = new UdpTransport(9876);
+            // Data transport listens on port 'port'
+            UdpTransport dataTraffic = new UdpTransport(port);
 
             Pipeline pipeline = new Pipeline();
             pipeline.addStage(new CompressionStage());

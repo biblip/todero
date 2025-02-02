@@ -6,12 +6,12 @@ services:
       context: .
       dockerfile: docker/Dockerfile-simple
       args:
-        CONFIG_TCP_SERVER_PORT: 9876
+        CONFIG_TCP_SERVER_PORT: 9875
         CONFIG_PLUGIN_LIST: "simple-plugin.jar"
     ports:
-      - "9876:9876/udp"  # Map UDP port 9876 from the host to the container
+      - "9875:9875/udp"  # Map UDP port 9876 from the host to the container
     environment:
-      CONFIG_TCP_SERVER_PORT: 9876
+      CONFIG_TCP_SERVER_PORT: 9875
       CONFIG_PLUGIN_LIST: "simple-plugin.jar"
     networks:
       - custom-network
@@ -27,7 +27,7 @@ services:
         CONFIG_TCP_SERVER_PORT: 9877
         CONFIG_PLUGIN_LIST: "simple-plugin.jar"
     ports:
-      - "9876:9876/udp"  # Map UDP port 9876 from the host to the container
+      - "9877:9877/udp"  # Map UDP port 9876 from the host to the container
     environment:
       CONFIG_TCP_SERVER_PORT: 9877
       CONFIG_PLUGIN_LIST: "simple-plugin.jar"

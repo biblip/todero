@@ -2,6 +2,8 @@ version: 1.0
 nuevo: value
 app:
   version: 1.0
+  server:
+    port: SERVER-PORT
   tcpserver:
     port: TCP-SERVER-PORT
     thread_pool_size: 10

@@ -3,7 +3,6 @@ package com.social100.todero.common.config;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 import java.util.Map;
 
@@ -12,6 +11,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 public class Config extends ConfigParameters {
     private String version;
+    private ServerConfig server;
     private PluginsConfig plugins;
     private WorkspacesConfig workspaces;
     private Map<String, UserConfig> users;

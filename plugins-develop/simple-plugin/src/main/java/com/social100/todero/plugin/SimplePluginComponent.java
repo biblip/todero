@@ -11,9 +11,11 @@ import java.util.Map;
 
 @AIAController(name = "simple",
         type = "",
-        description = "Simple Plugin")
+        description = "Simple Plugin",
+        events = SimplePluginComponent.SimpleEvent.class)
 public class SimplePluginComponent {
     final static String MAIN_GROUP = "Main";
+    private CommandContext globalContext = null;
 
     public SimplePluginComponent() {
     }
@@ -54,7 +56,28 @@ public class SimplePluginComponent {
                 "args", Arrays.toString(commandArgs),
                 "metadata", Map.of("key1", "value1", "key2", "value2")
         );
+        context.event(SimpleEvent.OTHER_EVENT, "Aja, aqui va!");
         context.respond(mm.toString());
+        return true;
+    }
+
+    @Action(group = MAIN_GROUP,
+            command = "events",
+            description = "Start / Stop Sending events. Usage: events ON|OFF")
+    public Boolean eventsCommand(CommandContext context) {
+        String[] args = context.getArgs();
+        if (args.length == 0) {
+            context.respond(context.getInstance().getAvailableEvents().toString());
+        } else {
+            boolean eventsOn = "on".equalsIgnoreCase(args[0]);
+            if (eventsOn) {
+                this.globalContext = context;
+                context.respond("events are now ON");
+            } else {
+                context.respond("events are now OFF");
+                this.globalContext = null;
+            }
+        }
         return true;
     }
 }

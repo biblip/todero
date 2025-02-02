@@ -21,6 +21,8 @@ COPY ../config.yaml.seed /app/config.yaml
 # Replace "TCP-SERVER-PORT" with CONFIG_TCP_SERVER_PORT value in config.yaml
 RUN sed -i "s/TCP-SERVER-PORT/${CONFIG_TCP_SERVER_PORT}/g" /app/config.yaml
 
+RUN sed -i "s/SERVER-PORT/${CONFIG_TCP_SERVER_PORT}/g" /app/config.yaml
+
 # Copy the plugins directory to the root of the application
 COPY ../plugins /app/tmp-plugins/
 
