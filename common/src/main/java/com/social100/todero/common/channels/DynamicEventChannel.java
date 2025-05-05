@@ -90,7 +90,7 @@ public class DynamicEventChannel implements EventChannel {
                 }
             }
         } else {
-            System.err.println("Event '" + eventName + "' is not registered.");
+            throw new RuntimeException("Event '" + eventName + "' is not registered.");
         }
     }
 
