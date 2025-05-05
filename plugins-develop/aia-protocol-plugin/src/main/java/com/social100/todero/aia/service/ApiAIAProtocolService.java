@@ -12,15 +12,21 @@ import java.net.InetSocketAddress;
 public class ApiAIAProtocolService {
     public final static String MAIN_GROUP = "Main";
     public final static String RESERVED_GROUP = "Reserved";
+    private final String server;
 
     ApiCommandLineInterface apiCommandLineInterface = null;
 
-    public void initiate(InetSocketAddress serverAddress, EventChannel.EventListener eventListener) {
-        if (apiCommandLineInterface == null) {
-            apiCommandLineInterface = new ApiCommandLineInterface(serverAddress, eventListener);
-        } else {
-            throw new RuntimeException("Already Open");
-        }
+    public ApiAIAProtocolService(InetSocketAddress serverAddress, EventChannel.EventListener eventListener) {
+        server = serverAddress.getHostString() + ":" + serverAddress.getPort();
+        apiCommandLineInterface = new ApiCommandLineInterface(serverAddress, eventListener);
+    }
+
+    public String getServer() {
+        return server;
+    }
+
+    public String getStatus() {
+        return "status";
     }
 
     public void exec(String line) {
@@ -32,7 +38,7 @@ public class ApiAIAProtocolService {
         apiCommandLineInterface.process(messageContainer);
     }
 
-    public void conclude() {
+    public void unregister() {
         if (apiCommandLineInterface != null) {
             apiCommandLineInterface = null;
         }

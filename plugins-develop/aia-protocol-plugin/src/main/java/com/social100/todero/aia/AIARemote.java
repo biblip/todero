@@ -64,29 +64,31 @@ public class AIARemote {
 
     @Action(group = ApiAIAProtocolService.MAIN_GROUP,
             command = "list",
-            description = "List all established relationships")
+            description = "List all registrations")
     public Boolean listCommand(CommandContext context) {
-        context.respond(stringApiAIAProtocolServiceMap.keySet().toString());
+        context.respond("[" + stringApiAIAProtocolServiceMap.entrySet().stream()
+                .map(entry -> entry.getKey() + " : " + entry.getValue().getServer() + " -> " + entry.getValue().getStatus())
+                .collect(Collectors.joining("\n")) + "]");
         return true;
     }
 
     @Action(group = ApiAIAProtocolService.MAIN_GROUP,
-            command = "initiate",
-            description = "Initiate a relationship with an aia server   initiate --url <url> --remote <name>")
-    public Boolean initiateCommand(CommandContext context) {
+            command = "register",
+            description = "Register a aia server   register --url <url> --name <name>")
+    public Boolean registerCommand(CommandContext context) {
         this.context[0] = context;
         ArgumentParser parser = new ArgumentParser();
 
         // Define rules with default values
         parser.addRule("url", value -> value.contains(":") || value.startsWith("aia://"), "localhost:9876");
-        parser.addRule("remote", value -> value != null && !value.trim().isEmpty(), "defaultName");
+        parser.addRule("name", value -> value != null && !value.trim().isEmpty(), "defaultName");
 
         if (parser.parse(context.getArgs())) {
             String url = parser.getArgument("url");
-            String name = parser.getArgument("remote").toLowerCase(Locale.ROOT);
+            String name = parser.getArgument("name").toLowerCase(Locale.ROOT);
 
             if (stringApiAIAProtocolServiceMap.containsKey(name)) {
-                context.respond("Remote name already used ... '" + url + "'   name: " + name);
+                context.respond("name already used ... '" + url + "'   name: " + name);
                 return false;
             }
 
@@ -105,13 +107,11 @@ public class AIARemote {
                 }
             };
 
-            ApiAIAProtocolService service = new ApiAIAProtocolService();
+            ApiAIAProtocolService service = new ApiAIAProtocolService(serverAddress, eventListener);
 
             stringApiAIAProtocolServiceMap.put(name, service);
 
-            service.initiate(serverAddress, eventListener);
-
-            context.respond("Relationship now active with '" + hostInfo.getHost() + " : " + hostInfo.getPort() + "'");
+            context.respond("Registration active with '" + hostInfo.getHost() + " : " + hostInfo.getPort() + "'");
         } else {
             context.respond(parser.errorMessage());
         }
@@ -119,25 +119,25 @@ public class AIARemote {
     }
 
     @Action(group = ApiAIAProtocolService.MAIN_GROUP,
-            command = "conclude",
-            description = "Conclude the relationship with the aia server   conclude --remote <name>")
-    public Boolean concludeCommand(CommandContext context) {
+            command = "unregister",
+            description = "De register the aia server   unregister --name <name>")
+    public Boolean unregisterCommand(CommandContext context) {
         this.context[0] = context;
         ArgumentParser parser = new ArgumentParser();
 
         // Define rules with default values
-        parser.addRule("remote", value -> value != null && !value.trim().isEmpty(), "defaultName");
+        parser.addRule("name", value -> value != null && !value.trim().isEmpty(), "defaultName");
 
         if (parser.parse(context.getArgs())) {
-            String name = parser.getArgument("remote").toLowerCase(Locale.ROOT);
+            String name = parser.getArgument("name").toLowerCase(Locale.ROOT);
 
-            context.respond("Concluding ... '" + name + "'");
+            context.respond("Unregister ... '" + name + "'");
 
             ApiAIAProtocolService service = stringApiAIAProtocolServiceMap.remove(name);
 
-            service.conclude();
+            service.unregister();
 
-            context.respond("Relationship is no longer active name : '" + name + "'");
+            context.respond("server is no longer active name : '" + name + "'");
         } else {
             context.respond(parser.errorMessage());
         }
@@ -146,25 +146,25 @@ public class AIARemote {
 
     @Action(group = ApiAIAProtocolService.MAIN_GROUP,
             command = "exec",
-            description = "Execute a command into the remote console  exec --remote <name> command...")
+            description = "Execute a command into the remote console  exec --name <name> command...")
     public Boolean execCommand(CommandContext context) {
         this.context[0] = context;
         ArgumentParser parser = new ArgumentParser();
 
         // Define rules with default values
-        parser.addRule("remote", value -> value != null && !value.trim().isEmpty(), "defaultName");
+        parser.addRule("name", value -> value != null && !value.trim().isEmpty(), "defaultName");
 
         if (context.getArgs().length < 2) {
-            context.respond("Not enough arguments  exec --remote <name> command...");
+            context.respond("Not enough arguments  exec --name <name> command...");
         }
 
         String[] subArray = Arrays.copyOfRange(context.getArgs(), 0, 2);
         String[] rest = Arrays.copyOfRange(context.getArgs(), 2, context.getArgs().length);
 
         if (parser.parse(subArray)) {
-            String name = parser.getArgument("remote").toLowerCase(Locale.ROOT);
+            String name = parser.getArgument("name").toLowerCase(Locale.ROOT);
 
-            Set<String> stopWords = Set.of("exec", "aia", "initiate");
+            Set<String> stopWords = Set.of("exec", "aia", "register");
 
             // Initialize a variable to store the offended word
             final String[] offendingWord = {null};
@@ -193,7 +193,7 @@ public class AIARemote {
                 service.exec(line);
                 return true;
             }
-            context.respond("Remote not found:  remote='" + name + "'");
+            context.respond("name not found:  name='" + name + "'");
             return false;
         } else {
             context.respond(parser.errorMessage());
