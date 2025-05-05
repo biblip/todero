@@ -10,13 +10,14 @@ import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
 import com.social100.todero.common.model.plugin.Component;
+import com.social100.todero.console.workspace.Workspace;
+import com.social100.todero.console.workspace.WorkspaceManager;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,14 +25,21 @@ public class CliCommandManager implements CommandManager {
     final static private ObjectMapper objectMapper = new ObjectMapper();
     private final EventChannel.EventListener eventListener;
     PluginManager pluginManager;
+    WorkspaceManager workspaceManager;
     private OutputType outputType = OutputType.JSON; // Default output type
     private final Map<String, String> properties = new HashMap<>(); // Stores properties
 
     public CliCommandManager(AppConfig appConfig, EventChannel.EventListener eventListener) {
-        String pluginDirectory = Optional.ofNullable(appConfig.getApp().getPlugins().getDir())
-                .orElseThrow(() -> new IllegalArgumentException("Wrong value in plugin directory"));
+        //String pluginDirectory = Optional.ofNullable(appConfig.getApp().getPlugins().getDir())
+        //        .orElseThrow(() -> new IllegalArgumentException("Wrong value in plugin directory"));
+
         properties.put("output", outputType.name());
-        pluginManager = new PluginManager(new File(pluginDirectory), eventListener);
+
+        workspaceManager = new WorkspaceManager();
+        Workspace userWorkspace = workspaceManager.getWorkspace("guest");
+
+        pluginManager = new PluginManager(new File(userWorkspace.getPluginsDir().getAbsolutePath()), eventListener);
+
         this.eventListener = eventListener;
     }
 
