@@ -3,26 +3,65 @@ package com.social100.todero;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.aiaserver.AIAServer;
+import com.social100.todero.common.config.AppConfig;
 
 import java.io.File;
+import java.io.IOException;
 
 public class AIAServerMain {
     static private AppConfig appConfig;
 
     public static void main(String[] args) {
-        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+        appConfig = loadAppConfig(args);
+        AIAServer server = new AIAServer(appConfig);
+        server.start();
+    }
+
+    public static AppConfig loadAppConfig(String[] args) {
+        String configFilePath = null;
+
+        // Check for the "--config" parameter in the command-line arguments.
+        for (int i = 0; i < args.length; i++) {
+            if ("--config".equals(args[i]) && (i + 1) < args.length) {
+                configFilePath = args[i + 1];
+                break;
+            }
+        }
+
+        // If no config file is specified via parameter, look for "config.conf" in the jar directory.
+        if (configFilePath == null) {
+            try {
+                File jarFile = new File(AIAServerMain.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+                String jarDir = jarFile.getParent();
+                configFilePath = jarDir + File.separator + "config.yaml";
+            } catch (Exception e) {
+                System.err.println("Error determining jar file location: " + e.getMessage());
+                System.exit(1);
+            }
+        }
+
+        // Check if the configuration file exists.
+        File configFile = new File(configFilePath);
+        if (!configFile.exists()) {
+            System.err.println("Configuration file not found: " + configFilePath);
+            System.exit(1);
+        }
+
+        // Parse the configuration file using YAML mapper.
         try {
+            ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
             yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             yamlMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
 
-            appConfig = yamlMapper.readValue(new File("config.yaml"), AppConfig.class);
-
-            AIAServer server = new AIAServer(appConfig);
-            server.start();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+            AppConfig appConfig = yamlMapper.readValue(configFile, AppConfig.class);
+            return appConfig;
+        } catch (IOException e) {
+            System.err.println("Error reading configuration file: " + e.getMessage());
+            System.exit(1);
         }
+
+        // This point is never reached because System.exit is called on error.
+        return null;
     }
 }
