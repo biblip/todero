@@ -7,6 +7,6 @@ import java.net.InetSocketAddress;
 
 public class CommandProcessorFactory {
     public static CommandProcessor createProcessor(AppConfig appConfig, EventChannel.EventListener eventListener, boolean aiaProtocol) {
-        return aiaProtocol ? new AiaCommandProcessor(new InetSocketAddress("172.29.189.217", 9876), eventListener) : new CliCommandProcessor(appConfig, eventListener);
+        return aiaProtocol ? new AiaCommandProcessor(new InetSocketAddress(appConfig.getApp().getServer().getHost(), appConfig.getApp().getServer().getPort()), eventListener) : new CliCommandProcessor(appConfig, eventListener);
     }
 }
