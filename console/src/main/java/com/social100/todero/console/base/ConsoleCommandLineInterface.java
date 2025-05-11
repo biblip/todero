@@ -52,7 +52,10 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
         } catch (IOException e) {
             System.out.println("Error during CLI execution: " + e.getMessage());
         } finally {
-            commandProcessor.close();
+            try {
+                commandProcessor.close();
+            } catch (IOException ignore) {
+            }
         }
     }
 

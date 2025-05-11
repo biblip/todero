@@ -11,10 +11,10 @@ import com.social100.todero.protocol.pipeline.EncryptionStage;
 import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public class AiaCommandProcessor implements CommandProcessor {
     private EventChannel.EventListener eventListener = null;
@@ -41,10 +41,6 @@ public class AiaCommandProcessor implements CommandProcessor {
 
     });
 
-    Consumer<Integer> ackSendMessageCallback = (packetId) -> {
-        // Do nothing
-    };
-
     @Override
     public void open() {
         try {
@@ -56,7 +52,7 @@ public class AiaCommandProcessor implements CommandProcessor {
             pipeline.addStage(new ChecksumStage());
 
             engine = new ProtocolEngine(dataTraffic, pipeline);
-            engine.startClient(receiveMessageCallback, ackSendMessageCallback);
+            engine.startClient(receiveMessageCallback);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -80,7 +76,7 @@ public class AiaCommandProcessor implements CommandProcessor {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         this.engine.close();
     }
 

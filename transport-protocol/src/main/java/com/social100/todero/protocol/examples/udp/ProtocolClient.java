@@ -11,17 +11,12 @@ import com.social100.todero.protocol.transport.UdpTransport;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
-import java.util.function.Consumer;
 
 public class ProtocolClient {
     public static void main(String[] args) {
-        ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage) -> {
-            System.out.println("Client Receive Message: " + receivedMessage.getPayload());
+        ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
+            System.out.println("Client Receive Message: " + new String(receivedMessage.getPayload()));
         });
-
-        Consumer<Integer> ackSendMessageCallback = (packetId) -> {
-            System.out.println("Server Confirmed Message packetId: " + packetId);
-        };
 
         try {
             // Data transport uses any available port (0)
@@ -37,12 +32,12 @@ public class ProtocolClient {
 
 
             ProtocolEngine engine = new ProtocolEngine(dataTraffic, pipeline);
-            engine.startClient(receiveMessageCallback, ackSendMessageCallback);
+            engine.startClient(receiveMessageCallback);
 
             InetSocketAddress serverAddress = new InetSocketAddress("localhost", 9876);
 
             while (true) {
-                int packetId = engine.sendMessage(serverAddress, "Hello, Server!".getBytes(StandardCharsets.UTF_8), true);
+                int packetId = engine.sendMessage(serverAddress, "Hello Server, From Client!".getBytes(StandardCharsets.UTF_8), true);
                 System.out.println("Sending Message to Server packetId: " + packetId);
 
                 Scanner scanner = new Scanner(System.in);

@@ -10,7 +10,6 @@ import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.function.Consumer;
 
 public class ProtocolServer {
 
@@ -18,15 +17,13 @@ public class ProtocolServer {
         ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
             // Respond back to the sender
             try {
-                System.out.println("Server Receive Message : packetId: " + receivedMessage.getMessageId() + " > " + receivedMessage.getPayload());
+                System.out.println("Server Receive Message : packetId: " + receivedMessage.getMessageId() + " > " + new String(receivedMessage.getPayload()));
                 int packetId = responder.sendMessage("Echo............... 1".getBytes(StandardCharsets.UTF_8), true);
                 System.out.println("Sending Message to Client packetId: " + packetId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-
-        Consumer<Integer> ackSendMessageCallback = (packetId) -> System.out.println("Server Confirmed Message packetId: " + packetId);
 
         try {
             // Data transport listens on port 9876
@@ -39,7 +36,7 @@ public class ProtocolServer {
 
             ProtocolEngine engine = new ProtocolEngine(dataTraffic, pipeline);
 
-            engine.startServer(receiveMessageCallback, ackSendMessageCallback);
+            engine.startServer(receiveMessageCallback);
 
             System.out.println("Server is running and ready to receive messages...");
 
