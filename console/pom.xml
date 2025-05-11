@@ -144,7 +144,7 @@
                         <configuration>
                             <target>
                                 <!-- Copy the shaded JAR to the project root -->
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../console.jar" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../playground/console.jar" />
                             </target>
                         </configuration>
                     </execution>
@@ -157,7 +157,7 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>${project.basedir}/..</directory>
+                            <directory>${project.basedir}/../playground</directory>
                             <includes>
                                 <include>console.jar</include>
                             </includes>

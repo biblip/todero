@@ -76,7 +76,7 @@
                         <configuration>
                             <target>
                                 <!-- Copy the shaded JAR to the project root -->
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../plugins/simple-plugin.jar" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../playground/workspaces/guest/plugins/simple-plugin.jar" />
                             </target>
                         </configuration>
                     </execution>
@@ -89,7 +89,7 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>${project.basedir}/../../plugins</directory>
+                            <directory>${project.basedir}/../../playground/workspaces/guest/plugins</directory>
                             <includes>
                                 <include>simple-plugin.jar</include>
                             </includes>

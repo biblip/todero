@@ -101,7 +101,7 @@
                         <configuration>
                             <target>
                                 <!-- Copy the shaded JAR to the project root -->
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../tcp-server.jar" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../playground/tcp-server.jar" />
                             </target>
                         </configuration>
                     </execution>
@@ -114,7 +114,7 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>${project.basedir}/..</directory>
+                            <directory>${project.basedir}/../playground</directory>
                             <includes>
                                 <include>tcp-server.jar</include>
                             </includes>

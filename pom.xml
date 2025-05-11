@@ -22,6 +22,8 @@
         <module>annotations</module>
         <module>processor</module>
         <module>aia-web</module>
+        <module>server</module>
+        <module>ssh-server</module>
     </modules>
 
     <properties>

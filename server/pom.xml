@@ -125,6 +125,8 @@
                             <target>
                                 <copy file="${project.build.directory}/${project.build.finalName}.jar"
                                       tofile="${project.basedir}/../playground/aia-server.jar"/>
+                                <copy file="${project.basedir}/config.yaml"
+                                      tofile="${project.basedir}/../playground/config.yaml"/>
                             </target>
                         </configuration>
                     </execution>
@@ -138,9 +140,10 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>${project.basedir}/..</directory>
+                            <directory>${project.basedir}/../playground</directory>
                             <includes>
-                                <include>console-app.jar</include>
+                                <include>aia-server.jar</include>
+                                <include>config.yaml</include>
                             </includes>
                         </fileset>
                     </filesets>
