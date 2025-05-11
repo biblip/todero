@@ -63,15 +63,14 @@ public class AIAServerMain {
                 return appConfig;
             } catch (IOException e) {
                 System.err.println("Error reading configuration file: " + e.getMessage());
-                System.exit(1);
             }
         }
 
-        // This point is never reached because System.exit is called on error.
-        appConfig = new AppConfig();
+        // Load AppConfig defaults
+        AppConfig appConfig = new AppConfig();
         appConfig.setApp(new Config());
         appConfig.getApp().setServer(new ServerConfig());
-        //appConfig.getApp().getServer().setPort(9876);
+        appConfig.getApp().getServer().setPort(9876);
         return appConfig;
     }
 }
