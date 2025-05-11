@@ -12,14 +12,14 @@ import com.social100.todero.protocol.pipeline.CompressionStage;
 import com.social100.todero.protocol.pipeline.EncryptionStage;
 import com.social100.todero.protocol.pipeline.Pipeline;
 import com.social100.todero.protocol.transport.UdpTransport;
+import com.social100.todero.server.RawServer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
-public class AIAServer {
+public class AIAServer implements RawServer {
     private final CliCommandManager commandManager;
     private ProtocolEngine engine;
     private Integer port;
@@ -37,6 +37,7 @@ public class AIAServer {
         });
     }
 
+    @Override
     public void start() {
 
         ReceiveMessageCallback receiveMessageCallback = new ReceiveMessageCallback((receivedMessage, responder) -> {
@@ -50,10 +51,6 @@ public class AIAServer {
             commandManager.process(messageContainer);
         });
 
-        Consumer<Integer> ackSendMessageCallback = (packetId) -> {
-            //System.out.println("Server Confirmed Message packetId: " + packetId);
-        };
-
         try {
             // Data transport listens on port 'port'
             UdpTransport dataTraffic = new UdpTransport(port);
@@ -65,13 +62,13 @@ public class AIAServer {
 
             engine = new ProtocolEngine(dataTraffic, pipeline);
 
-            engine.startServer(receiveMessageCallback, ackSendMessageCallback);
+            engine.startServer(receiveMessageCallback);
 
             System.out.println("Server is running and ready to receive messages...");
 
             // Keep the server running indefinitely
-            Thread.currentThread().join();
-        } catch (IOException | InterruptedException e) {
+            //Thread.currentThread().join();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
