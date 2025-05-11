@@ -1,0 +1,1 @@
+java -cp "aia-server.jar;lib\*" com.social100.todero.AIAServerMain

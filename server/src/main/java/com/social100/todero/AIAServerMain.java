@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.social100.todero.aiaserver.AIAServer;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.config.Config;
+import com.social100.todero.common.config.ServerConfig;
+import com.social100.todero.server.RawServer;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,10 +15,13 @@ import java.io.IOException;
 public class AIAServerMain {
     static private AppConfig appConfig;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         appConfig = loadAppConfig(args);
-        AIAServer server = new AIAServer(appConfig);
-        server.start();
+        RawServer aiaServer = new AIAServer(appConfig);
+        aiaServer.start();
+
+        RawServer sshServer = new SshServer(appConfig);
+        sshServer.start();
     }
 
     public static AppConfig loadAppConfig(String[] args) {
@@ -45,23 +51,27 @@ public class AIAServerMain {
         File configFile = new File(configFilePath);
         if (!configFile.exists()) {
             System.err.println("Configuration file not found: " + configFilePath);
-            System.exit(1);
-        }
+            //System.exit(1);
+        } else {
+            // Parse the configuration file using YAML mapper.
+            try {
+                ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+                yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                yamlMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
 
-        // Parse the configuration file using YAML mapper.
-        try {
-            ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-            yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            yamlMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-
-            AppConfig appConfig = yamlMapper.readValue(configFile, AppConfig.class);
-            return appConfig;
-        } catch (IOException e) {
-            System.err.println("Error reading configuration file: " + e.getMessage());
-            System.exit(1);
+                AppConfig appConfig = yamlMapper.readValue(configFile, AppConfig.class);
+                return appConfig;
+            } catch (IOException e) {
+                System.err.println("Error reading configuration file: " + e.getMessage());
+                System.exit(1);
+            }
         }
 
         // This point is never reached because System.exit is called on error.
-        return null;
+        appConfig = new AppConfig();
+        appConfig.setApp(new Config());
+        appConfig.getApp().setServer(new ServerConfig());
+        //appConfig.getApp().getServer().setPort(9876);
+        return appConfig;
     }
 }
