@@ -60,13 +60,21 @@ public class CliCommandManager implements CommandManager {
             return true; // Early exit if input is null or empty
         }
 
-        // Regex pattern to extract arguments (handles quoted strings correctly)
-        Pattern pattern = Pattern.compile("([^\"]\\S*|\".+?\")\\s*");
+        // Regex pattern to extract arguments:
+        // - Quoted strings: "some phrase"
+        // - Placeholders: ${some placeholder}
+        // - Unquoted words: play, loud, etc.
+        Pattern pattern = Pattern.compile("(\\$\\{[^}]+}|\"[^\"]+\"|\\S+)");
         Matcher matcher = pattern.matcher(line);
 
         ArrayList<String> arguments = new ArrayList<>();
         while (matcher.find()) {
-            arguments.add(matcher.group(1).replace("\"", ""));
+            String arg = matcher.group(1);
+            // Remove quotes (but keep placeholders as-is)
+            if (arg.startsWith("\"") && arg.endsWith("\"")) {
+                arg = arg.substring(1, arg.length() - 1);
+            }
+            arguments.add(arg);
         }
 
         if (arguments.isEmpty()) {

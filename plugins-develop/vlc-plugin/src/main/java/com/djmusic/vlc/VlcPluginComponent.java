@@ -5,6 +5,7 @@ import com.social100.processor.AIAController;
 import com.social100.processor.Action;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.scheduler.TaskScheduler;
+import io.github.cdimascio.dotenv.Dotenv;
 
 @AIAController(name = "vlc",
         type = "",
@@ -12,12 +13,15 @@ import com.social100.todero.scheduler.TaskScheduler;
         events = VlcService.VlcPluginEvents.class)
 //@AIADependencies(components = {DjyPluginComponent.class, SimplePluginComponent.class})
 public class VlcPluginComponent {
+    private final String vlcMediaDirectory;
     private final VlcService vlcService;
     private final TaskScheduler scheduler = new TaskScheduler();
     CommandContext globalContext = null;
 
     public VlcPluginComponent() {
-        this.vlcService = new VlcService();
+        Dotenv dotenv = Dotenv.configure().filename(".env-vlc").load();
+        vlcMediaDirectory = dotenv.get("MEDIA");
+        this.vlcService = new VlcService(vlcMediaDirectory);
 
         // Create an instance of the TaskScheduler
 
@@ -84,7 +88,7 @@ public class VlcPluginComponent {
 
     @Action(group = VlcService.MAIN_GROUP,
             command = "play",
-            description = "Plays the specified media file. If no file is specified, resumes the current one.")
+            description = "Plays the specified media file. If no file is specified, resumes the current one. Usage: play [media]")
     public Boolean playCommand(CommandContext context) {
         String[] args = context.getArgs();
         String mediaPathToPlay = "";
@@ -157,53 +161,40 @@ public class VlcPluginComponent {
         return true;
     }
 
-    @Action(group = VlcService.CHANNELS_GROUP,
-            command = "add-channel",
-            description = "Adds a new channel. Usage: add-channel <channelName>")
-    public Boolean addChannelCommand(CommandContext context) {
+    @Action(group = VlcService.PLAYLIST_GROUP,
+            command = "playlist-add",
+            description = "Adds the specified media file to the playlist. Usage: add-playlist [media]")
+    public Boolean playlistAdd(CommandContext context) {
         String[] args = context.getArgs();
-        if (args.length == 0) {
-            context.respond("Error: Please provide a channel name. Usage: add-channel <channelName>");
-            return true;
+        String mediaPathToAdd = "";
+        if (args.length > 0) {
+            mediaPathToAdd = args[0];
         }
-        String channelName = args[0];
-        context.respond(this.vlcService.addChannelCommand(channelName));
+        context.respond(this.vlcService.playlistAdd(mediaPathToAdd));
         return true;
     }
 
-    @Action(group = VlcService.CHANNELS_GROUP,
-            command = "list-channels",
-            description = "Lists all available channels.")
-    public Boolean listChannelCommand(CommandContext context) {
-        context.respond(this.vlcService.listChannelCommand());
+    @Action(group = VlcService.PLAYLIST_GROUP,
+            command = "playlist-remove",
+            description = "Remove current paying media from the playlist Usage: playlist-remove, if there is no current media playing then does nothing")
+    public Boolean playlistRemove(CommandContext context) {
+        context.respond(this.vlcService.playlistRemove());
         return true;
     }
 
-    @Action(group = VlcService.CHANNELS_GROUP,
-            command = "remove-channel",
-            description = "Removes an existing channel. Usage: remove-channel <channelName>")
-    public Boolean removeChannelCommand(CommandContext context) {
-        String[] args = context.getArgs();
-        if (args.length == 0) {
-            context.respond("Error: Please provide a channel name. Usage: remove-channel <channelName>");
-            return true;
-        }
-        String channelName = args[0];
-        context.respond(this.vlcService.removeChannelCommand(channelName));
+    @Action(group = VlcService.PLAYLIST_GROUP,
+            command = "playlist-next",
+            description = "Play the next media in the playlist. Usage: playlist-next")
+    public Boolean playlistNext(CommandContext context) {
+        context.respond(this.vlcService.playlistNext());
         return true;
     }
 
-    @Action(group = VlcService.CHANNELS_GROUP,
-            command = "select-channel",
-            description = "Selects an existing channel. Usage: select-channel <channelName>")
-    public Boolean selectChannelCommand(CommandContext context) {
-        String[] args = context.getArgs();
-        if (args.length == 0) {
-            context.respond("Error: Please provide a channel name. Usage: select-channel <channelName>");
-            return true;
-        }
-        String channelName = args[0];
-        context.respond(this.vlcService.selectChannelCommand(channelName));
+    @Action(group = VlcService.PLAYLIST_GROUP,
+            command = "playlist-list",
+            description = "Inform the user of the playlist items and which is the current item. Usage: playlist-list")
+    public Boolean playlistList(CommandContext context) {
+        context.respond(this.vlcService.playlistList());
         return true;
     }
 }

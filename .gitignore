@@ -39,6 +39,7 @@ Thumbs.db
 
 # Environment files
 .env
+.env-vlc
 .env.local
 
 # Node modules if you are using Node.js in your project
@@ -56,3 +57,5 @@ backup/
 plugins/
 
 playground/
+
+workspaces/

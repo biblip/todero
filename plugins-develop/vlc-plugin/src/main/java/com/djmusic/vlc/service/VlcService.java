@@ -1,18 +1,19 @@
 package com.djmusic.vlc.service;
 
 import com.djmusic.vlc.base.ChannelManager;
+import com.djmusic.vlc.media.MediaIndexer;
 import com.social100.todero.processor.EventDefinition;
+import com.social100.todero.util.PlaceholderUtils;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.State;
-import uk.co.caprica.vlcj.player.component.AudioPlayerComponent;
 
-import java.io.File;
+import java.util.List;
 
 public class VlcService {
     public final static String MAIN_GROUP = "Main";
-    public final static String CHANNELS_GROUP = "Channels";
-
+    public final static String PLAYLIST_GROUP = "Playlist";
+    private final MediaIndexer mediaIndexer;
     private final ChannelManager channelManager;
 
     private static final String[] mediaOptions = {
@@ -21,9 +22,22 @@ public class VlcService {
             ":norm-max-level=1.0"  // Maximum level for normalized audio
     };
 
-    public VlcService() {
+    private static final String[] mediaOptions2 = {
+            ":audio-filter=compressor",
+            ":compressor-rms-peak=0",
+            ":compressor-attack=10",
+            ":compressor-release=100",
+            ":compressor-threshold=-20",
+            ":compressor-ratio=4",
+            ":compressor-knee=0.5",
+            ":compressor-makeup-gain=5"
+    };
+
+    public VlcService(String vlcMediaDirectory) {
         System.setProperty("jna.library.path", "C:\\Program Files\\VideoLAN\\VLC");
         channelManager = new ChannelManager();
+        channelManager.presetSeamless(10000);
+        mediaIndexer = new MediaIndexer(vlcMediaDirectory);
     }
 
     public enum VlcPluginEvents implements EventDefinition {
@@ -44,10 +58,10 @@ public class VlcService {
     }
 
     public String moveCommand(String moveTo) {
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
         try {
             long moveToTime = parseTime(moveTo);  // Parse the time string
-            audioPlayer.mediaPlayer().controls().setTime(moveToTime);
+            mediaPlayer.controls().setTime(moveToTime);
             return "Playback moved to " + moveTo + ".";
         } catch (IllegalArgumentException e) {
             return e.getMessage();
@@ -57,35 +71,35 @@ public class VlcService {
     }
 
     public String muteCommand() {
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
 
         // Ensure media is present and valid
-        if (!audioPlayer.mediaPlayer().media().isValid()) {
+        if (!mediaPlayer.media().isValid()) {
             return "No valid media loaded. Mute operation is not available.";
         }
 
         // Check the current mute state to predict the toggle outcome
-        boolean wasMute = audioPlayer.mediaPlayer().audio().isMute();
+        boolean wasMute = mediaPlayer.audio().isMute();
 
         // Toggle the mute state
-        audioPlayer.mediaPlayer().audio().mute();
+        mediaPlayer.audio().mute();
 
         // Feedback based on the expected outcome, not the immediate check
         return wasMute ? "Playback has been unmuted." : "Playback has been muted.";
     }
 
     public String pauseCommand() {
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
-        State state = audioPlayer.mediaPlayer().status().state();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
+        State state = mediaPlayer.status().state();
 
         // If the player is currently playing, it will be paused
         if (state == State.PLAYING) {
-            audioPlayer.mediaPlayer().controls().pause();
+            mediaPlayer.controls().pause();
             return "Playback paused.";
         }
         // If the player is already paused, it might be intended to resume playback
         else if (state == State.PAUSED) {
-            audioPlayer.mediaPlayer().controls().play();
+            mediaPlayer.controls().play();
             return "Playback resumed.";
         } else {
             return "Playback is not active. Current state: " + state;
@@ -93,20 +107,13 @@ public class VlcService {
     }
 
     public String playCommand(String mediaPathToPlay) {
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
-        MediaPlayer mediaPlayer = audioPlayer.mediaPlayer();
-
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
         String currentMediaPath = mediaPlayer.media().info() != null ? mediaPlayer.media().info().mrl() : null;
-
         if (!mediaPathToPlay.isEmpty()) {
-            File file = new File(mediaPathToPlay);
-
-            if (!file.exists()) {
-                return "File not found: " + mediaPathToPlay;
-            }
-
+            mediaPathToPlay = processSearchMedia(mediaPathToPlay);
             if (!mediaPathToPlay.equals(currentMediaPath)) {
-                mediaPlayer.media().play(mediaPathToPlay, mediaOptions);
+                Integer index = verifyAndAddToPlaylist(mediaPathToPlay);
+                mediaPathToPlay = channelManager.playAtIndex(index);
                 return "Playing new media: \"" + mediaPathToPlay + "\"";
             } else {
                 mediaPlayer.controls().play();
@@ -120,19 +127,43 @@ public class VlcService {
         }
     }
 
+    private String processSearchMedia(String mediaPathToPlay) {
+        String search = PlaceholderUtils.extractPlaceholder(mediaPathToPlay);
+        System.out.println(mediaPathToPlay);
+        System.out.println(search);
+
+        if (search != null && !search.isEmpty()) {
+            List<String> found = mediaIndexer.search(search);
+            System.out.println("----------------------");
+            for (String item : found) {
+                System.out.println(item);
+            }
+            System.out.println("----------------------");
+
+            String mediaFile = !found.isEmpty() ? found.get(0) : "";
+            String quotedMedia = !mediaFile.isEmpty() ? mediaFile : "";
+            System.out.println("Selected: " + quotedMedia);
+
+            if (!mediaFile.isEmpty()) {
+                mediaPathToPlay = PlaceholderUtils.replacePlaceholder(mediaPathToPlay, quotedMedia);
+            }
+        }
+        return mediaPathToPlay;
+    }
+
     public String skipCommand(long skipTime) { // Positive for forward, negative for backward
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
-        long mediaLength = audioPlayer.mediaPlayer().status().length();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
+        long mediaLength = mediaPlayer.status().length();
 
         try {
-            long currentTime = audioPlayer.mediaPlayer().status().time();
+            long currentTime = mediaPlayer.status().time();
             long newTime = currentTime + skipTime * 1000;
 
             // Ensure new time is within media bounds
             newTime = Math.max(newTime, 0);  // Prevent going before the start
             newTime = Math.min(newTime, mediaLength);  // Prevent going beyond the end
 
-            audioPlayer.mediaPlayer().controls().setTime(newTime);
+            mediaPlayer.controls().setTime(newTime);
             return String.format("Skipped to %d seconds (%s).", newTime / 1000, formatTime(newTime));
         } catch (NumberFormatException e) {
             return "Error: Invalid skip time format. Please specify the number of seconds as a numeric value.";
@@ -141,34 +172,34 @@ public class VlcService {
 
     public String statusCommand(Boolean all) {
         StringBuilder statusBuilder = new StringBuilder();
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
 
-        if (audioPlayer.mediaPlayer().media().isValid()) {
+        if (mediaPlayer.media().isValid()) {
             if (all) {
                 // Handle "status all" command
                 for (Meta meta : Meta.values()) {
-                    String value = audioPlayer.mediaPlayer().media().meta().get(meta);
+                    String value = mediaPlayer.media().meta().get(meta);
                     if (value != null && !value.isEmpty()) {
                         statusBuilder.append(meta.name()).append(": ").append(value).append("\n");
                     }
                 }
             } else {
                 // Handle regular "status" command
-                String title = audioPlayer.mediaPlayer().media().meta().get(Meta.TITLE);
-                String mediaName = audioPlayer.mediaPlayer().media().info().mrl(); // Gets the MRL
+                String title = mediaPlayer.media().meta().get(Meta.TITLE);
+                String mediaName = mediaPlayer.media().info().mrl(); // Gets the MRL
                 statusBuilder.append("Media Name: ").append(title != null && !title.isEmpty() ? title : mediaName).append("\n");
 
-                long durationMs = audioPlayer.mediaPlayer().status().length();
+                long durationMs = mediaPlayer.status().length();
                 String duration = formatTime(durationMs);
                 statusBuilder.append("Duration: ").append(duration).append("\n");
             }
 
             // Additional media status information
-            String mediaPath = audioPlayer.mediaPlayer().media().info().mrl();
-            String mediaState = audioPlayer.mediaPlayer().status().state().toString();
-            String currentTime = formatTime(audioPlayer.mediaPlayer().status().time());
-            int volume = audioPlayer.mediaPlayer().audio().volume();
-            boolean isMute = audioPlayer.mediaPlayer().audio().isMute();
+            String mediaPath = mediaPlayer.media().info().mrl();
+            String mediaState = mediaPlayer.status().state().toString();
+            String currentTime = formatTime(mediaPlayer.status().time());
+            int volume = mediaPlayer.audio().volume();
+            boolean isMute = mediaPlayer.audio().isMute();
 
             statusBuilder.append("Media Path: ").append(mediaPath).append("\n")
                     .append("Media State: ").append(mediaState).append("\n")
@@ -183,11 +214,11 @@ public class VlcService {
     }
 
     public String stopCommand() {
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
-        State currentState = audioPlayer.mediaPlayer().status().state();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
+        State currentState = mediaPlayer.status().state();
 
         if (currentState != State.STOPPED) {
-            audioPlayer.mediaPlayer().controls().stop();
+            mediaPlayer.controls().stop();
             return "Playback stopped.";
         } else {
             return "Playback is already stopped.";
@@ -195,10 +226,10 @@ public class VlcService {
     }
 
     public String volumeCommand(int volume) {
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
         try {
             if (volume >= 0 && volume <= 150) {
-                audioPlayer.mediaPlayer().audio().setVolume(volume);
+                mediaPlayer.audio().setVolume(volume);
                 return "Volume set to " + volume + ".";
             } else {
                 return "Invalid volume level. Volume must be between 0 and 150.";
@@ -209,10 +240,10 @@ public class VlcService {
     }
 
     public String volumeDownCommand() {
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
-        int volume = audioPlayer.mediaPlayer().audio().volume();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
+        int volume = mediaPlayer.audio().volume();
         int newVolume = Math.max(0, volume - 5);  // Ensure volume does not go below 0
-        audioPlayer.mediaPlayer().audio().setVolume(newVolume);
+        mediaPlayer.audio().setVolume(newVolume);
 
         if (newVolume == volume) {
             return "Volume is already at the minimum level.";
@@ -222,11 +253,11 @@ public class VlcService {
     }
 
     public String volumeUpCommand() {
-        AudioPlayerComponent audioPlayer = channelManager.getCurrentChannel();
-        int volume = audioPlayer.mediaPlayer().audio().volume();
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
+        int volume = mediaPlayer.audio().volume();
         int newVolume = Math.min(150, volume + 5);  // Ensure volume does not exceed the max limit of 150
 
-        audioPlayer.mediaPlayer().audio().setVolume(newVolume);
+        mediaPlayer.audio().setVolume(newVolume);
 
         if (newVolume == volume) {
             return "Volume is already at the maximum level.";
@@ -235,21 +266,39 @@ public class VlcService {
         }
     }
 
-    public String addChannelCommand(String channelName) {
-        return channelManager.addChannel(channelName);
+    public String playlistAdd(String mediaPathToAdd) {
+        System.out.println("mediaPathToAdd");
+        System.out.println(mediaPathToAdd);
+        mediaPathToAdd = processSearchMedia(mediaPathToAdd);
+        if (verifyAndAddToPlaylist(mediaPathToAdd) >= 0) {
+            return "Adding new media: \"" + mediaPathToAdd + "\"";
+        }
+        return "Error Adding new media: \"" + mediaPathToAdd + "\"";
     }
 
-    public String listChannelCommand() {
-        return channelManager.listChannels();
+    public String playlistRemove() {
+        return "Removed From Playlist : " + channelManager.remove();
     }
 
-    public String removeChannelCommand(String channelName) {
-        // Use the removeChannel method and return its message
-        return channelManager.removeChannel(channelName);
+    public String playlistNext() {
+        return "Playing " + channelManager.playNext();
     }
 
-    public String selectChannelCommand(String channelName) {
-        return channelManager.selectChannel(channelName);
+    public String playlistList() {
+        return "Not yet";
+    }
+
+    private Integer verifyAndAddToPlaylist(String mediaPathToAdd) {
+        MediaPlayer mediaPlayer = channelManager.getCurrentChannel();
+
+        String currentMediaPath = mediaPlayer.media().info() != null ? mediaPlayer.media().info().mrl() : null;
+
+        if (!mediaPathToAdd.isEmpty()) {
+            if (!mediaPathToAdd.equals(currentMediaPath)) {
+                return channelManager.addToPlaylist(mediaPathToAdd);
+            }
+        }
+        return -1;
     }
 
     private long parseTime(String timeStr) {

@@ -21,7 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Define the main class for the executable JAR -->
-        <main.class>com.social100.todero.App</main.class>
+        <main.class>com.social100.todero.AIAServerMain</main.class>
     </properties>
 
     <dependencies>

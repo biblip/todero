@@ -20,8 +20,8 @@ public class AIAServerMain {
         RawServer aiaServer = new AIAServer(appConfig);
         aiaServer.start();
 
-        RawServer sshServer = new SshServer(appConfig);
-        sshServer.start();
+        //RawServer sshServer = new SshServer(appConfig);
+        //sshServer.start();
     }
 
     public static AppConfig loadAppConfig(String[] args) {
