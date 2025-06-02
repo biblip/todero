@@ -16,7 +16,7 @@ public class Console {
     static private AppConfig appConfig;
 
     public static void main(String[] args) {
-        boolean aiaProtocol = false;
+        boolean aiaProtocol = true;
         ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
         if (args != null && args.length > 0) {
             if (Arrays.asList(args).contains("--aia")) {

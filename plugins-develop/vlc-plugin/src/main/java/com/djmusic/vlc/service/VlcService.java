@@ -2,12 +2,15 @@ package com.djmusic.vlc.service;
 
 import com.djmusic.vlc.base.ChannelManager;
 import com.djmusic.vlc.media.MediaIndexer;
+import com.djmusic.vlc.util.PlaylistFormatter;
 import com.social100.todero.processor.EventDefinition;
 import com.social100.todero.util.PlaceholderUtils;
+import uk.co.caprica.vlcj.binding.support.runtime.RuntimeUtil;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.State;
 
+import java.io.File;
 import java.util.List;
 
 public class VlcService {
@@ -33,11 +36,66 @@ public class VlcService {
             ":compressor-makeup-gain=5"
     };
 
+    private static String val(String val) {
+        return val != null ? val : "<not set>";
+    }
+
     public VlcService(String vlcMediaDirectory) {
-        System.setProperty("jna.library.path", "C:\\Program Files\\VideoLAN\\VLC");
+        if (RuntimeUtil.isMac()) {
+            System.setProperty("jna.library.path", "/Applications/VLC.app/Contents/MacOS/lib/");
+            if (loadVLC()) {
+                System.out.println("loadVLC success");
+            } else {
+                System.out.println("loadVLC failure");
+            }
+        } else if (RuntimeUtil.isWindows()) {
+            System.setProperty("jna.library.path", "C:\\Program Files\\VideoLAN\\VLC");
+        } else if (RuntimeUtil.isNix()) {
+            System.out.println("what?  jna.library.path for linux?");
+        }
+
         channelManager = new ChannelManager();
         channelManager.presetSeamless(10000);
+        vlcMediaDirectory = expandHomeDir(vlcMediaDirectory);
         mediaIndexer = new MediaIndexer(vlcMediaDirectory);
+    }
+
+    public static String expandHomeDir(String path) {
+        if (path == null) return null;
+        if (path.startsWith("~" + File.separator) || path.equals("~")) {
+            String userHome = System.getProperty("user.home");
+            return path.replaceFirst("^~", userHome);
+        }
+        return path;
+    }
+
+    private static boolean loadVLC() {
+        try {
+            String libvlcCorePath = "/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib";
+            String libvlcPath = "/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib";
+
+            // Print the paths to confirm
+            System.out.println("Checking for libvlc at: " + libvlcPath);
+            System.out.println("Checking for libvlccore at: " + libvlcCorePath);
+
+            // Check if the files exist
+            if (!new java.io.File(libvlcCorePath).exists()) {
+                System.out.println("libvlccore.dylib not found!");
+                return false;
+            }
+            if (!new java.io.File(libvlcPath).exists()) {
+                System.out.println("libvlc.dylib not found!");
+                return false;
+            }
+
+            System.load(libvlcCorePath);
+            System.load(libvlcPath);
+            System.out.println("VLC libraries loaded successfully.");
+            return true;
+        } catch (UnsatisfiedLinkError e) {
+            System.out.println("Failed to load VLC libraries: " + e.getMessage());
+            return false;
+        }
     }
 
     public enum VlcPluginEvents implements EventDefinition {
@@ -285,7 +343,7 @@ public class VlcService {
     }
 
     public String playlistList() {
-        return "Not yet";
+        return PlaylistFormatter.formatPlaylist(channelManager.getPlaylist(), channelManager.getPlaylistIndex());
     }
 
     private Integer verifyAndAddToPlaylist(String mediaPathToAdd) {
