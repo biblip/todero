@@ -1,0 +1,52 @@
+# .github/workflows/release.yml
+
+name: Build and Release Todero Zip
+
+on:
+  create:
+    tags:
+      - 'v*.*.*'  # example: v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup Java for backend
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Build backend
+      - name: Build backend
+        run: |
+          echo "Building Spring Boot app..."
+          mvn clean package -DskipTests
+
+      - name: Install zip
+        run: sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Copy VLC environment file
+        run: cp .env-vlc.example playground/.env-vlc
+
+      - name: Zip directory
+        run: |
+          cd playground
+          zip -r -qq ../playground.zip .
+
+      # Upload playground.zip to GitHub Release
+      - name: Upload Jar to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: playground.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

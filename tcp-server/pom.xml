@@ -89,7 +89,7 @@
             </plugin>
 
             <!-- Maven Antrun Plugin -->
-            <plugin>
+            <!--<plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
@@ -100,13 +100,13 @@
                         </goals>
                         <configuration>
                             <target>
-                                <!-- Copy the shaded JAR to the project root -->
+                                &lt;!&ndash; Copy the shaded JAR to the project root &ndash;&gt;
                                 <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../playground/tcp-server.jar" />
                             </target>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
 
             <!-- Maven Clean Plugin -->
             <plugin>
