@@ -95,7 +95,7 @@
                             <!-- 🔒 Exclude BouncyCastle to avoid conflicts and duplication -->
                             <artifactSet>
                                 <excludes>
-                                    <exclude>org.bouncycastle:bcprov-jdk15on</exclude>
+                                    <exclude>org.bouncycastle:bcprov-jdk18on</exclude>
                                 </excludes>
                             </artifactSet>
 

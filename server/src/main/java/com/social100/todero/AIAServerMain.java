@@ -7,6 +7,7 @@ import com.social100.todero.aiaserver.AIAServer;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.config.Config;
 import com.social100.todero.common.config.ServerConfig;
+import com.social100.todero.common.log.LogRedirector;
 import com.social100.todero.server.RawServer;
 
 import java.io.File;
@@ -16,6 +17,11 @@ public class AIAServerMain {
     static private AppConfig appConfig;
 
     public static void main(String[] args) throws IOException {
+        try {
+            LogRedirector.initialize();
+        } catch (IOException e) {
+            e.printStackTrace(); // fallback to console
+        }
         appConfig = loadAppConfig(args);
         RawServer aiaServer = new AIAServer(appConfig);
         aiaServer.start();
