@@ -4,12 +4,24 @@ import com.social100.todero.protocol.core.ProtocolFrameManager;
 import com.social100.todero.protocol.core.ProtocolFrameManager.FrameMessage;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 public class UdpTransport implements TransportInterface {
 
@@ -28,7 +40,7 @@ public class UdpTransport implements TransportInterface {
     /* ------------- ctor ------------- */
     public UdpTransport(int port) throws IOException {
         channel = DatagramChannel.open();
-        channel.bind(new InetSocketAddress(port));
+        channel.bind(new InetSocketAddress(InetAddress.getByName("0.0.0.0"), port));
         channel.configureBlocking(false);
 
         SocketAddress local = channel.getLocalAddress();
@@ -37,6 +49,11 @@ public class UdpTransport implements TransportInterface {
         startReceiver();
         startSender();
         startRetryLoop();
+    }
+
+    @Override
+    public void sendMessageRaw(byte[] data, SocketAddress destination) throws IOException {
+        channel.send(ByteBuffer.wrap(data), destination);
     }
 
     /* ------------- API ------------- */
@@ -78,9 +95,7 @@ public class UdpTransport implements TransportInterface {
                 while (running) {
                     sel.select();
 
-                    for (Iterator<SelectionKey> it = sel.selectedKeys().iterator();
-                         it.hasNext();) {
-
+                    for (Iterator<SelectionKey> it = sel.selectedKeys().iterator(); it.hasNext();) {
                         SelectionKey key = it.next(); it.remove();
                         if (!key.isReadable()) continue;
 
@@ -91,28 +106,23 @@ public class UdpTransport implements TransportInterface {
                         buf.flip();
                         byte[] data = Arrays.copyOf(buf.array(), buf.limit());
 
-                        /* ----------  transport bookkeeping  ---------- */
-                        FrameMessage msg;
+                        /* ---------- Optional quick ACK handling ---------- */
                         try {
-                            msg = ProtocolFrameManager.deserialize(data, null, null);
-                        } catch (Exception ex) {
-                            System.err.println("Bad frame: " + ex.getMessage());
-                            continue;
-                        }
-                        if (msg == null) continue;
+                            // Try deserializing only enough to check for ACK
+                            FrameMessage peek = ProtocolFrameManager.peekMessageHeader(data);
+                            if (peek != null && peek.isAck()) {
+                                ackTracking.remove(peek.getMessageId());
+                                continue; // don't pass pure ACKs to engine
+                            }
 
-                        if (msg.isAck()) {
-                            /* Pure ACK:  handled here, never forwarded */
-                            ackTracking.remove(msg.getMessageId());
-                            continue;                       // ← crucial
-                        }
-
-                        /* DATA frame: maybe auto‑ACK … */
-                        if (msg.isAckRequested()) {
-                            sendAck(src, msg.getMessageId());
+                            if (peek != null && peek.isAckRequested()) {
+                                sendAck(src, peek.getMessageId());
+                            }
+                        } catch (Exception ignored) {
+                            // Not a frame — could be handshake or malformed — still forward
                         }
 
-                        /* …and now pass it to the application layer */
+                        /* ---------- Always forward raw message ---------- */
                         if (receiver != null) {
                             receiver.onMessageReceived(src, data);
                         }

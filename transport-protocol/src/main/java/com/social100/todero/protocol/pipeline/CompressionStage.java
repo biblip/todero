@@ -8,7 +8,7 @@ import java.util.zip.Inflater;
 public class CompressionStage implements PipelineStage {
 
     @Override
-    public byte[] processToSend(byte[] message) {
+    public byte[] processToSend(byte[] message, String destinationId) {
         if (message == null) {
             message = new byte[0];
         }
@@ -16,7 +16,7 @@ public class CompressionStage implements PipelineStage {
     }
 
     @Override
-    public byte[] processToReceive(byte[] message) {
+    public byte[] processToReceive(byte[] message, String sourceId) {
         if (message == null) {
             message = new byte[0];
         }

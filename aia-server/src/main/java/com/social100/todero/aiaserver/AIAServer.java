@@ -11,11 +11,12 @@ import com.social100.todero.protocol.pipeline.ChecksumStage;
 import com.social100.todero.protocol.pipeline.CompressionStage;
 import com.social100.todero.protocol.pipeline.EncryptionStage;
 import com.social100.todero.protocol.pipeline.Pipeline;
+import com.social100.todero.protocol.security.CertificateUtils;
 import com.social100.todero.protocol.transport.UdpTransport;
 import com.social100.todero.server.RawServer;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,10 +58,17 @@ public class AIAServer implements RawServer {
 
             Pipeline pipeline = new Pipeline();
             pipeline.addStage(new CompressionStage());
-            pipeline.addStage(new EncryptionStage("1tNXAlS+bFUZWyEpQI2fAUjKtyXHsUTgBVecFad98LY="));
+            pipeline.addStage(new EncryptionStage());
             pipeline.addStage(new ChecksumStage());
 
-            engine = new ProtocolEngine(dataTraffic, pipeline);
+            KeyPair serverIdentity = CertificateUtils.generateRsaKeyPair();
+
+            engine = new ProtocolEngine(
+                dataTraffic,
+                pipeline,
+                true,
+                "aia-server",
+                serverIdentity);
 
             engine.startServer(receiveMessageCallback);
 
@@ -68,7 +76,7 @@ public class AIAServer implements RawServer {
 
             // Keep the server running indefinitely
             //Thread.currentThread().join();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

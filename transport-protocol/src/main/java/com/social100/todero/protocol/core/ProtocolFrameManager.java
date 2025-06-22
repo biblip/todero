@@ -257,4 +257,47 @@ public class ProtocolFrameManager {
                 .build();
     }
 
+    public static FrameMessage peekMessageHeader(byte[] data) {
+        try {
+            if (data == null || data.length < 2 + (4 * 5) + 4) {
+                // Minimum size: 2 bytes (version+flags) + 20 bytes (5 ints) + 4 bytes (checksum) = 26
+                return null;
+            }
+
+            // First, verify checksum
+            // The last 4 bytes of 'data' are the CRC32. We compute a CRC over [0..length-5].
+            ByteBuffer verifyBuf = ByteBuffer.wrap(data);
+            verifyBuf.order(ByteOrder.BIG_ENDIAN);
+            int dataLen = data.length;
+
+            // The stored checksum is in the last 4 bytes
+            int storedChecksum = verifyBuf.getInt(dataLen - 4);
+
+            // Compute our own checksum over everything except those 4 bytes
+            CRC32 crc32 = new CRC32();
+            crc32.update(data, 0, dataLen - 4);
+            long computedChecksum = crc32.getValue();
+
+            // Now parse the frame
+            ByteBuffer buffer = ByteBuffer.wrap(data);
+            buffer.order(ByteOrder.BIG_ENDIAN);
+
+            byte version = buffer.get();
+            byte flags   = buffer.get();
+            int messageId   = buffer.getInt();
+
+            // Determine flags
+            boolean isTransport    = isFlagSet(flags, FLAG_TRANSPORT);
+            boolean isAck          = isFlagSet(flags, FLAG_ACK);
+            boolean isAckRequested = isFlagSet(flags, FLAG_ACK_REQUESTED);
+
+            return FrameMessage.builder()
+                .messageId(messageId)
+                .ack(isAck)
+                .ackRequested(isAckRequested)
+                .build();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

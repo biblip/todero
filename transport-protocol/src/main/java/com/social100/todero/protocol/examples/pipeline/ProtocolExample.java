@@ -29,10 +29,10 @@ public class ProtocolExample {
 
             String originalMessage = "Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! Hello, Secure World In the wild and anxious! ";
             System.out.println("Original Message: " + originalMessage);
-            byte[] preparedMessage = engine.prepareMessageForSending(originalMessage.getBytes(StandardCharsets.UTF_8));
+            byte[] preparedMessage = engine.prepareMessageForSending(originalMessage.getBytes(StandardCharsets.UTF_8), "id-value");
             System.out.println("Prepared Message: " + new String(preparedMessage));
 
-            byte[] receivedMessage = engine.processReceivedMessage(preparedMessage);
+            byte[] receivedMessage = engine.processReceivedMessage(preparedMessage, "id-value");
             System.out.println("Received Message: " + new String(receivedMessage));
 
             //Thread.currentThread().join();

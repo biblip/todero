@@ -31,7 +31,7 @@ public class ProtocolServer {
 
             Pipeline pipeline = new Pipeline();
             pipeline.addStage(new CompressionStage());
-            pipeline.addStage(new EncryptionStage("1tNXAlS+bFUZWyEpQI2fAUjKtyXHsUTgBVecFad98LY="));
+            pipeline.addStage(new EncryptionStage());
             pipeline.addStage(new ChecksumStage());
 
             ProtocolEngine engine = new ProtocolEngine(dataTraffic, pipeline);

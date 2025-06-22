@@ -27,6 +27,8 @@ public class Console {
             yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             yamlMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
             appConfig = yamlMapper.readValue(new File("config.yaml"), AppConfig.class);
+            System.out.println("host:" + appConfig.getApp().getServer().getHost());
+            System.out.println("port:" + appConfig.getApp().getServer().getPort());
             ConsoleCommandLineInterface consoleCommandLineInterface = new ConsoleCommandLineInterface(appConfig, aiaProtocol);
             consoleCommandLineInterface.run(args);
         } catch (NullPointerException e) {

@@ -9,11 +9,13 @@ import com.social100.todero.protocol.pipeline.ChecksumStage;
 import com.social100.todero.protocol.pipeline.CompressionStage;
 import com.social100.todero.protocol.pipeline.EncryptionStage;
 import com.social100.todero.protocol.pipeline.Pipeline;
+import com.social100.todero.protocol.security.CertificateUtils;
 import com.social100.todero.protocol.transport.UdpTransport;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.util.Optional;
 
 public class AiaCommandProcessor implements CommandProcessor {
@@ -48,10 +50,17 @@ public class AiaCommandProcessor implements CommandProcessor {
 
             pipeline = new Pipeline();
             pipeline.addStage(new CompressionStage());
-            pipeline.addStage(new EncryptionStage("1tNXAlS+bFUZWyEpQI2fAUjKtyXHsUTgBVecFad98LY="));
+            pipeline.addStage(new EncryptionStage());
             pipeline.addStage(new ChecksumStage());
 
-            engine = new ProtocolEngine(dataTraffic, pipeline);
+            KeyPair clientIdentity = CertificateUtils.generateRsaKeyPair();
+
+            engine = new ProtocolEngine(
+                dataTraffic,
+                pipeline,
+                true,
+                "aia-client",
+                clientIdentity);
             engine.startClient(receiveMessageCallback);
 
         } catch (Exception e) {
