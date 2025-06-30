@@ -102,7 +102,7 @@
                         <configuration>
                             <target>
                                 <!-- Copy the shaded JAR to the project root -->
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../playground/workspaces/guest/plugins/vlc-plugin.jar" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../playground/workspaces/guest/plugins/vlc-plugin/vlc-plugin.jar" />
                             </target>
                         </configuration>
                     </execution>
@@ -117,7 +117,8 @@
                         <fileset>
                             <directory>${project.basedir}/../../playground/workspaces/guest/plugins</directory>
                             <includes>
-                                <include>vlc-plugin.jar</include>
+                                <include>vlc-plugin/**</include>
+                                <include>vlc-plugin/</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>

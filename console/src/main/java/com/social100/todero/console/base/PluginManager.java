@@ -33,17 +33,26 @@ public class PluginManager {
             return;
         }
 
-        File[] pluginFiles = pluginsDir.listFiles((_ignore, name) -> name.endsWith(".jar"));
-        if (pluginFiles == null) {
-            return;
-        }
+        File[] pluginDirs = pluginsDir.listFiles(File::isDirectory);
+        if (pluginDirs == null) return;
 
-        for (File file : pluginFiles) {
+        for (File pluginDir : pluginDirs) {
+            File[] jarFiles = pluginDir.listFiles((dir, name) -> name.endsWith(".jar"));
+            if (jarFiles == null || jarFiles.length == 0) {
+                System.err.printf("Skipping %s: no .jar file found.%n", pluginDir.getName());
+                continue;
+            }
+
+            if (jarFiles.length > 1) {
+                System.err.printf("Skipping %s: multiple .jar files found.%n", pluginDir.getName());
+                continue;
+            }
+
+            File pluginJar = jarFiles[0];
             try {
-                pluginContextList.add(new PluginContext(file, eventListener));
-
+                pluginContextList.add(new PluginContext(pluginDir.toPath(), pluginJar, eventListener));
             } catch (Exception e) {
-                System.err.println("Error processing plugin JAR: " + file.getName());
+                System.err.printf("Error processing plugin in %s (%s):%n", pluginDir.getName(), pluginJar.getName());
                 e.printStackTrace();
             }
         }

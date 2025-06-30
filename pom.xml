@@ -18,6 +18,7 @@
         <module>plugins-develop/email-plugin</module>
         <module>plugins-develop/simple-plugin</module>
         <module>plugins-develop/aia-protocol-plugin</module>
+        <module>plugins-develop/ssh-plugin</module>
         <module>transport-protocol</module>
         <module>annotations</module>
         <module>processor</module>

@@ -1,4 +1,4 @@
-package com.social100.todero.plugin;
+package com.social100.todero.plugin.ssh;
 
 
 import com.social100.processor.AIAController;
@@ -9,15 +9,15 @@ import com.social100.todero.processor.EventDefinition;
 import java.util.Arrays;
 import java.util.Map;
 
-@AIAController(name = "simple",
+@AIAController(name = "simpler",
         type = "",
-        description = "Simple Plugin",
-        events = SimplePluginComponent.SimpleEvent.class)
-public class SimplePluginComponent {
+        description = "Simpler Plugin",
+        events = SimplerPluginComponent.SimpleEvent.class)
+public class SimplerPluginComponent {
     final static String MAIN_GROUP = "Main";
     private CommandContext globalContext = null;
 
-    public SimplePluginComponent() {
+    public SimplerPluginComponent() {
     }
 
     public enum SimpleEvent implements EventDefinition {
@@ -56,7 +56,7 @@ public class SimplePluginComponent {
                 "args", Arrays.toString(commandArgs),
                 "metadata", Map.of("key1", "value1", "key2", "value2")
         );
-        //context.event(SimpleEvent.OTHER_EVENT, "Aja, aqui va!");
+        context.event(SimpleEvent.OTHER_EVENT, "Aja, aqui va!");
         context.respond(mm.toString());
         return true;
     }
