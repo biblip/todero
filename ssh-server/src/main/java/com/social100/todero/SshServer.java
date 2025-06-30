@@ -1,6 +1,7 @@
 package com.social100.todero;
 
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.channel.ChannelMessage;
 import com.social100.todero.common.message.channel.ChannelType;
@@ -20,9 +21,9 @@ public class SshServer implements RawServer {
     private final CliCommandManager commandManager;
     private Integer port;
 
-    public SshServer(AppConfig appConfig) {
+    public SshServer(AppConfig appConfig, ServerType type) {
         port = appConfig.getApp().getServer().getPort();
-        commandManager = new CliCommandManager(appConfig, (eventName, message) -> {
+        commandManager = new CliCommandManager(appConfig, type, (eventName, message) -> {
             // TODO: the goal of this is to return casual events to the intended target.
             /*
             ResponderRegistry.Responder responder = engine.getResponder(message.getResponderId());

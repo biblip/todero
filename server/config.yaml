@@ -3,7 +3,7 @@ nuevo: value
 app:
   version: 1.0
   server:
-    port: 9876
+    port: 41
     host: localhost
   tcpserver:
     port: 8070

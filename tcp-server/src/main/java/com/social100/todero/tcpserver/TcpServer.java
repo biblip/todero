@@ -1,6 +1,7 @@
 package com.social100.todero.tcpserver;
 
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.tcpserver.config.TcpServerConfig;
 
 import java.io.IOException;
@@ -13,9 +14,11 @@ public class TcpServer {
     private final TcpServerConfig tcpServerConfig;
     private final ExecutorService threadPool;
     private final AppConfig appConfig;
+    private final ServerType type;
 
-    public TcpServer(AppConfig appConfig) {
+    public TcpServer(AppConfig appConfig, ServerType type) {
         this.appConfig = appConfig;
+        this.type = type;
         this.tcpServerConfig = new TcpServerConfig(appConfig);
         this.threadPool = Executors.newFixedThreadPool(tcpServerConfig.THREAD_POOL_SIZE);
     }
@@ -27,7 +30,7 @@ public class TcpServer {
             while (true) {
                 Socket socket = serverSocket.accept();
                 System.out.println("New client connected");
-                threadPool.execute(new ClientHandler(this.appConfig, socket));
+                threadPool.execute(new ClientHandler(this.appConfig, this.type, socket));
             }
         } catch (IOException ex) {
             System.err.println("Server exception: " + ex.getMessage());

@@ -2,22 +2,25 @@ package com.social100.todero.console.base;
 
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.message.MessageContainer;
 
 public class CliCommandProcessor implements CommandProcessor {
     private final AppConfig appConfig;
     private final EventChannel.EventListener eventListener;
     private CliCommandManager commandManager;
+    private final ServerType type;
 
-    public CliCommandProcessor(AppConfig appConfig, EventChannel.EventListener eventListener) {
+    public CliCommandProcessor(AppConfig appConfig, ServerType type, EventChannel.EventListener eventListener) {
         this.appConfig = appConfig;
         this.eventListener = eventListener;
+        this.type = type;
     }
 
     @Override
     public void open() {
         if (this.commandManager == null) {
-            this.commandManager = new CliCommandManager(this.appConfig, this.eventListener);
+            this.commandManager = new CliCommandManager(this.appConfig, type, this.eventListener);
         } else {
             throw new RuntimeException("CommandManager already created");
         }

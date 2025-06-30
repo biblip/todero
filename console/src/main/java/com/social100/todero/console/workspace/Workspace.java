@@ -1,5 +1,7 @@
 package com.social100.todero.console.workspace;
 
+import lombok.Getter;
+
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,7 +9,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Workspace {
     private String username;
     private File workspaceDir;
+    @Getter
     private File pluginsDir;
+    @Getter
+    private File beingsDir;
     private Map<String, PluginWorkspace> plugins = new ConcurrentHashMap<>();
 
     /**
@@ -21,6 +26,7 @@ public class Workspace {
         this.username = username;
         this.workspaceDir = workspaceDir;
         this.pluginsDir = new File(workspaceDir, "plugins");
+        this.beingsDir = new File(workspaceDir, "beings");
 
         // Ensure the directories exist.
         if (!workspaceDir.exists()) {
@@ -28,6 +34,9 @@ public class Workspace {
         }
         if (!pluginsDir.exists()) {
             pluginsDir.mkdirs();
+        }
+        if (!beingsDir.exists()) {
+            beingsDir.mkdirs();
         }
     }
 
@@ -45,9 +54,5 @@ public class Workspace {
 
     public File getWorkspaceDir() {
         return workspaceDir;
-    }
-
-    public File getPluginsDir() {
-        return pluginsDir;
     }
 }

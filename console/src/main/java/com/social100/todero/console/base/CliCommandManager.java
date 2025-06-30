@@ -6,6 +6,7 @@ import com.social100.todero.common.Constants;
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
@@ -29,7 +30,7 @@ public class CliCommandManager implements CommandManager {
     private OutputType outputType = OutputType.JSON; // Default output type
     private final Map<String, String> properties = new HashMap<>(); // Stores properties
 
-    public CliCommandManager(AppConfig appConfig, EventChannel.EventListener eventListener) {
+    public CliCommandManager(AppConfig appConfig, ServerType type, EventChannel.EventListener eventListener) {
         //String pluginDirectory = Optional.ofNullable(appConfig.getApp().getPlugins().getDir())
         //        .orElseThrow(() -> new IllegalArgumentException("Wrong value in plugin directory"));
 
@@ -38,7 +39,13 @@ public class CliCommandManager implements CommandManager {
         workspaceManager = new WorkspaceManager();
         Workspace userWorkspace = workspaceManager.getWorkspace("guest");
 
-        pluginManager = new PluginManager(new File(userWorkspace.getPluginsDir().getAbsolutePath()), eventListener);
+        if (ServerType.AI.equals(type)) {
+            pluginManager = new PluginManager(new File(userWorkspace.getBeingsDir().getAbsolutePath()), eventListener);
+        } else if (ServerType.AIA.equals(type)) {
+            pluginManager = new PluginManager(new File(userWorkspace.getPluginsDir().getAbsolutePath()), eventListener);
+        } else {
+            throw new IllegalArgumentException("Wrong Server Type");
+        }
 
         this.eventListener = eventListener;
     }

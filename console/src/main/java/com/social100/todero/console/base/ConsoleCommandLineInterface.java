@@ -5,6 +5,7 @@ import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.channels.process.ChannelHandler;
 import com.social100.todero.common.channels.process.ChannelProcessor;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.channel.ChannelMessage;
 import com.social100.todero.common.message.channel.ChannelType;
@@ -34,8 +35,8 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
         }
     };
 
-    public ConsoleCommandLineInterface(AppConfig appConfig, boolean aiaProtocol) {
-        this.commandProcessor = CommandProcessorFactory.createProcessor(appConfig, eventListener, aiaProtocol);
+    public ConsoleCommandLineInterface(AppConfig appConfig, ServerType type) {
+        this.commandProcessor = CommandProcessorFactory.createRemoteProcessor(appConfig, type, eventListener);
         this.commandProcessor.open();
     }
 

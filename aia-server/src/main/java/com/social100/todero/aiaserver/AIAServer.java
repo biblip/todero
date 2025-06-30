@@ -1,6 +1,7 @@
 package com.social100.todero.aiaserver;
 
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.console.base.CliCommandManager;
@@ -25,9 +26,9 @@ public class AIAServer implements RawServer {
     private Integer port;
     Map<String, ResponderRegistry.Responder> profileResponderMap = new HashMap<>();
 
-    public AIAServer(AppConfig appConfig) {
+    public AIAServer(AppConfig appConfig, ServerType type) {
         port = appConfig.getApp().getServer().getPort();
-        commandManager = new CliCommandManager(appConfig, (eventName, message) -> {
+        commandManager = new CliCommandManager(appConfig, type, (eventName, message) -> {
             ResponderRegistry.Responder responder = engine.getResponder(message.getResponderId());
             try {
                 responder.sendMessage(MessageContainerUtils.serialize(message).getBytes(StandardCharsets.UTF_8), true);

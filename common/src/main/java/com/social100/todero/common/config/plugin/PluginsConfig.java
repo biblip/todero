@@ -1,10 +1,10 @@
-package com.social100.todero.common.config;
+package com.social100.todero.common.config.plugin;
 
+import com.social100.todero.common.config.ConfigParameters;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.Map;
 
 @Data

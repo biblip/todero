@@ -1,5 +1,7 @@
 package com.social100.todero.common.config;
 
+import com.social100.todero.common.config.plugin.PluginConfig;
+
 import java.util.List;
 
 public interface ApplicationINI {

@@ -7,6 +7,7 @@ import com.social100.todero.aiaserver.AIAServer;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.config.Config;
 import com.social100.todero.common.config.ServerConfig;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.log.LogRedirector;
 import com.social100.todero.server.RawServer;
 
@@ -14,7 +15,8 @@ import java.io.File;
 import java.io.IOException;
 
 public class AIAServerMain {
-    static private AppConfig appConfig;
+    static private AppConfig appConfig_ai;
+    static private AppConfig appConfig_aia;
 
     public static void main(String[] args) throws IOException {
         try {
@@ -22,9 +24,17 @@ public class AIAServerMain {
         } catch (IOException e) {
             e.printStackTrace(); // fallback to console
         }
-        appConfig = loadAppConfig(args);
-        RawServer aiaServer = new AIAServer(appConfig);
-        aiaServer.start();
+        appConfig_ai = loadAppConfig(args);
+        appConfig_ai.getApp().setType(ServerType.AI);
+        appConfig_ai.getApp().getServer().setPort(ServerType.AI.getPort());
+        RawServer aiaServer_ai = new AIAServer(appConfig_ai, ServerType.AI);
+        aiaServer_ai.start();
+
+        appConfig_aia = loadAppConfig(args);
+        appConfig_ai.getApp().setType(ServerType.AIA);
+        appConfig_ai.getApp().getServer().setPort(ServerType.AIA.getPort());
+        RawServer aiaServer_aia = new AIAServer(appConfig_aia, ServerType.AIA);
+        aiaServer_aia.start();
 
         //RawServer sshServer = new SshServer(appConfig);
         //sshServer.start();

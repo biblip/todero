@@ -2,6 +2,7 @@ package com.social100.todero.tcpserver;
 
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.config.AppConfig;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.MessageContainerUtils;
 import com.social100.todero.common.message.channel.ChannelMessage;
@@ -20,10 +21,12 @@ import java.net.Socket;
 class ClientHandler implements Runnable {
 
     private final Socket socket;
+    private final ServerType type;
     private final AppConfig appConfig;
 
-    public ClientHandler(AppConfig appConfig, Socket socket) {
+    public ClientHandler(AppConfig appConfig, ServerType type, Socket socket) {
         this.appConfig = appConfig;
+        this.type = type;
         this.socket = socket;
     }
 
@@ -42,7 +45,7 @@ class ClientHandler implements Runnable {
                     writer.flush();
                 }
             };
-            commandManager = new CliCommandManager(this.appConfig, eventListener);
+            commandManager = new CliCommandManager(this.appConfig, this.type, eventListener);
 
             String line;
             while ((line = reader.readLine()) != null) {
