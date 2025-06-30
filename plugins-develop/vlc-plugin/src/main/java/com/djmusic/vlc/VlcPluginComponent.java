@@ -28,7 +28,7 @@ public class VlcPluginComponent {
 
         scheduler.scheduleTask(() -> {
             if (globalContext != null) {
-                globalContext.event(VlcService.VlcPluginEvents.VOLUME_CHANGE, "The Volume has changed");
+                globalContext.event(VlcService.VlcPluginEvents.VOLUME_CHANGE.name(), "The Volume has changed");
             }
         }, 10000);
 

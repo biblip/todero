@@ -83,7 +83,7 @@
                         <configuration>
                             <target>
                                 <!-- Copy the shaded JAR to the project root -->
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../playground/workspaces/guest/plugins/aia-protocol-plugin.jar" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../playground/workspaces/guest/plugins/aia-protocol-plugin/aia-protocol-plugin.jar" />
                             </target>
                         </configuration>
                     </execution>
@@ -98,7 +98,8 @@
                         <fileset>
                             <directory>${project.basedir}/../../playground/workspaces/guest/plugins</directory>
                             <includes>
-                                <include>aia-protocol-plugin.jar</include>
+                                <include>aia-protocol-plugin/**</include>
+                                <include>aia-protocol-plugin/</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>

@@ -8,7 +8,6 @@ import com.social100.todero.common.message.channel.ChannelMessageFactory;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.EventPayload;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
-import com.social100.todero.processor.EventDefinition;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,8 +35,7 @@ public class CommandContext {
         ReservedEventRegistry.trigger(reservedEvent, messageContainer);
     }
 
-    public void event(EventDefinition event, String message) {
-        String eventName = event.name();
+    public void event(String eventName, String message) {
         MessageContainer messageContainer = MessageContainer.builder()
                 .version(MessageContainer.VERSION)
                 .responderId(sourceId)

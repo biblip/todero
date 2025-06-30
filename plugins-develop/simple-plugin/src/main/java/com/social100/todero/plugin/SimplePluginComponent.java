@@ -41,7 +41,7 @@ public class SimplePluginComponent {
             description = "Does the ping")
     public Boolean pingCommand(CommandContext context) {
         String[] commandArgs = context.getArgs();
-        context.event(SimpleEvent.SIMPLE_EVENT, "No va a salir");
+        context.event(SimpleEvent.SIMPLE_EVENT.name(), "No va a salir");
         context.respond("Ping Ok" + (commandArgs.length>0 ? " : " + commandArgs[0] : ""));
         return true;
     }
@@ -56,7 +56,7 @@ public class SimplePluginComponent {
                 "args", Arrays.toString(commandArgs),
                 "metadata", Map.of("key1", "value1", "key2", "value2")
         );
-        context.event(SimpleEvent.OTHER_EVENT, "Aja, aqui va!");
+        context.event(SimpleEvent.OTHER_EVENT.name(), "Aja, aqui va!");
         context.respond(mm.toString());
         return true;
     }
