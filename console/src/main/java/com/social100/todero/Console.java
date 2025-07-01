@@ -28,6 +28,11 @@ public class Console {
             yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             yamlMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
             appConfig = yamlMapper.readValue(new File("config.yaml"), AppConfig.class);
+            if (aia) {
+                appConfig.getApp().getServer().setPort(ServerType.AIA.getPort());
+            } else {
+                appConfig.getApp().getServer().setPort(ServerType.AI.getPort());
+            }
             ConsoleCommandLineInterface consoleCommandLineInterface = new ConsoleCommandLineInterface(appConfig, aia ? ServerType.AIA : ServerType.AI);
             consoleCommandLineInterface.run(args);
         } catch (NullPointerException e) {

@@ -31,8 +31,8 @@ public class AIAServerMain {
         aiaServer_ai.start();
 
         appConfig_aia = loadAppConfig(args);
-        appConfig_ai.getApp().setType(ServerType.AIA);
-        appConfig_ai.getApp().getServer().setPort(ServerType.AIA.getPort());
+        appConfig_aia.getApp().setType(ServerType.AIA);
+        appConfig_aia.getApp().getServer().setPort(ServerType.AIA.getPort());
         RawServer aiaServer_aia = new AIAServer(appConfig_aia, ServerType.AIA);
         aiaServer_aia.start();
 
