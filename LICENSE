@@ -1,0 +1,170 @@
+                     PROPRIETARY SOURCE‑AVAILABLE LICENSE
+                   Version 2025‑07‑01 (“License” or “Agreement”)
+
+Copyright ©  2025 CARLOS ARTURO PORTILLA HENAO. All rights reserved.
+
+──────────────────────────────────────────────────────────────────────────────
+1. DEFINITIONS
+──────────────────────────────────────────────────────────────────────────────
+“**Licensor**” means CARLOS ARTURO PORTILLA HENAO, the copyright holder.
+“**You**” or “**Your**” means the individual or legal entity exercising rights
+under this License.  
+“**Software**” means the source code, object code, documentation, examples,
+and any accompanying files distributed by the Licensor under this License.  
+“**Contribution**” means any code, documentation, data, or other material that
+You submit to the Licensor for inclusion in the Software.  
+“**Commercial Use**” means use that is intended for or directed toward
+commercial advantage, monetary compensation, or deployment in production
+(including SaaS or hosted services).  
+“**Evaluation Use**” means internal testing, research, or educational use
+that is not Commercial Use and not made available to third parties.
+
+──────────────────────────────────────────────────────────────────────────────
+2. GRANT OF LIMITED LICENSE
+──────────────────────────────────────────────────────────────────────────────
+Subject to strict compliance with this Agreement, the Licensor grants You a
+limited, non‑exclusive, non‑transferable, non‑sublicensable, revocable license
+to:
+(a) download and view the Software;  
+(b) perform Evaluation Use on Your own computers; and  
+(c) create **local, non‑distributed** modifications or patches solely for
+the purpose of Evaluation Use.
+
+No other rights are granted—expressly, by implication, or otherwise.
+
+──────────────────────────────────────────────────────────────────────────────
+3. PROHIBITED USES
+──────────────────────────────────────────────────────────────────────────────
+Without a separate written **Commercial License** from the Licensor, You
+MUST NOT:
+• use the Software, in whole or in part, for any Commercial Use;  
+• host, sublicense, distribute, or make the Software (or derivative works)
+  available to any third party;  
+• remove or alter copyright, trademark, or other proprietary notices;  
+• reverse‑engineer, de‑obfuscate, or circumvent technical protections except
+  to the limited extent that applicable law expressly permits;  
+• use the Software to create or distribute malware or defamatory, infringing,
+  or unlawful material.
+
+──────────────────────────────────────────────────────────────────────────────
+4. OWNERSHIP
+──────────────────────────────────────────────────────────────────────────────
+The Software is licensed, not sold.  The Licensor retains all right, title,
+and interest, including all intellectual‑property rights, in and to the
+Software and all copies thereof.
+
+──────────────────────────────────────────────────────────────────────────────
+5. CONTRIBUTION & ASSIGNMENT
+──────────────────────────────────────────────────────────────────────────────
+5.1 **Assignment of Copyright and Patent Rights**  
+By submitting a Contribution, You **irrevocably assign and transfer** to the
+Licensor all worldwide right, title, and interest—including all copyrights,
+patent rights, and any related moral rights—in and to the Contribution.
+
+5.2 **License Back to Licensor**  
+You further grant the Licensor a **perpetual, worldwide, irrevocable,
+royalty‑free license** to use, reproduce, modify, adapt, publish, distribute,
+sublicense, and relicense the Contribution **for any purpose**, including
+Commercial Use.
+
+5.3 **Warranty of Non‑Infringement**  
+You represent and warrant that You have the legal right to make the
+Contribution and that it does not infringe any third‑party rights.
+
+5.4 **No Compensation**  
+You acknowledge that You will receive no compensation or attribution for
+Contributions unless the Licensor chooses to provide it voluntarily.
+
+──────────────────────────────────────────────────────────────────────────────
+6. PATENT GRANT & RETALIATION
+──────────────────────────────────────────────────────────────────────────────
+Subject to compliance with this License, the Licensor grants You a
+non‑exclusive, worldwide, royalty‑free patent license to make, use, and
+perform the Software for Evaluation Use.  
+**Patent Retaliation:** If You initiate a patent litigation (including a
+cross‑claim or counterclaim) alleging that the Software or a Contribution
+infringes a patent, Your license terminates immediately.
+
+──────────────────────────────────────────────────────────────────────────────
+7. FEEDBACK
+──────────────────────────────────────────────────────────────────────────────
+Any suggestion, enhancement request, or other feedback (“Feedback”) is
+voluntarily provided and deemed **non‑confidential**.  The Licensor may
+freely use, disclose, or commercialize Feedback without obligation to You.
+
+──────────────────────────────────────────────────────────────────────────────
+8. TRADEMARKS
+──────────────────────────────────────────────────────────────────────────────
+Nothing in this License grants You rights to use the Licensor’s names,
+logos, or trademarks without separate written permission.
+
+──────────────────────────────────────────────────────────────────────────────
+9. EXPORT & GOVERNMENT USE
+──────────────────────────────────────────────────────────────────────────────
+You must comply with all applicable export laws and regulations.  
+If the Software is acquired by or on behalf of the Government, it is
+provided as “commercial computer software” subject solely to this License.
+
+──────────────────────────────────────────────────────────────────────────────
+10. TERM & TERMINATION
+──────────────────────────────────────────────────────────────────────────────
+This License is effective until terminated. It will terminate automatically
+without notice if You breach any term. Upon termination, You must destroy all
+copies of the Software and cease all use. Sections 4–15 survive termination.
+
+──────────────────────────────────────────────────────────────────────────────
+11. DISCLAIMER OF WARRANTY
+──────────────────────────────────────────────────────────────────────────────
+THE SOFTWARE IS PROVIDED **“AS IS”** WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, OR NON‑INFRINGEMENT.  USE IS AT YOUR OWN RISK.
+
+──────────────────────────────────────────────────────────────────────────────
+12. LIMITATION OF LIABILITY
+──────────────────────────────────────────────────────────────────────────────
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE LICENSOR BE
+LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
+DAMAGES, OR ANY LOSS OF PROFITS OR REVENUE, WHETHER INCURRED DIRECTLY OR
+INDIRECTLY, OR ANY LOSS OF DATA, USE, OR GOODWILL, ARISING FROM YOUR USE OF
+THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+──────────────────────────────────────────────────────────────────────────────
+13. INDEMNIFICATION
+──────────────────────────────────────────────────────────────────────────────
+You agree to indemnify, defend, and hold harmless the Licensor from any
+claims, damages, liabilities, and expenses (including reasonable attorneys’
+fees) arising out of or related to Your use of the Software or breach of this
+License.
+
+──────────────────────────────────────────────────────────────────────────────
+14. GOVERNING LAW & DISPUTE RESOLUTION
+──────────────────────────────────────────────────────────────────────────────
+This Agreement is governed by the laws of REPUBLIC OF COLOMBIA,
+excluding its conflict‑of‑laws rules.  Any dispute shall be resolved
+exclusively in the courts located in SANTIAGO DE CALI, and the parties consent to
+personal jurisdiction therein.
+
+──────────────────────────────────────────────────────────────────────────────
+15. SEVERABILITY, WAIVER, ENTIRE AGREEMENT
+──────────────────────────────────────────────────────────────────────────────
+If any provision is held unenforceable, the remainder remains in full force.
+Failure to enforce any provision is not a waiver.  This Agreement constitutes
+the entire agreement between the parties regarding the Software and
+supersedes all prior or contemporaneous understandings.
+
+──────────────────────────────────────────────────────────────────────────────
+16. LICENSE AMENDMENTS
+──────────────────────────────────────────────────────────────────────────────
+This license may be updated periodically. Your continued use of the software
+after any such updates signifies your acceptance of the revised license terms.
+If you do not agree to the amended terms, you may terminate your use of the
+software.
+
+──────────────────────────────────────────────────────────────────────────────
+17. COMMERCIAL LICENSE CONTACT
+──────────────────────────────────────────────────────────────────────────────
+For Commercial Use rights, contact:  
+    WWW.SHELLAIA.COM
+
+──────────────────────────────────────────────────────────────────────────────
+END OF LICENSE
