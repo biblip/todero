@@ -1,5 +1,6 @@
 package com.social100.todero.console.base;
 
+import com.social100.todero.common.base.PluginManagerInterface;
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.model.plugin.Command;
@@ -13,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PluginManager {
+public class PluginManager implements PluginManagerInterface {
     final private Map<String, Plugin> plugins = new HashMap<>();
     final private List<PluginContext> pluginContextList = new ArrayList<>();
     private final File pluginsDir;
@@ -64,6 +65,7 @@ public class PluginManager {
         this.helpWrapper = new HelpWrapper(plugins);
     }
 
+    @Override
     public String getHelp(String pluginName, String commandName, OutputType outputType) {
         return helpWrapper.getHelp(pluginName, commandName, outputType);
     }
@@ -82,6 +84,7 @@ public class PluginManager {
                 .get().getComponent();
     }
 
+    @Override
     public void execute(String pluginName, String command, CommandContext context) {
         // Find the specified plugin
         Plugin plugin = plugins.get(pluginName);
@@ -141,6 +144,7 @@ public class PluginManager {
         initialize();
     }
 
+    @Override
     public List<String> generateAutocompleteStrings() {
         List<String> completions = new ArrayList<>();
 

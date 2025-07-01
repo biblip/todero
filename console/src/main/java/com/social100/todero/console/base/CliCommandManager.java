@@ -205,6 +205,7 @@ public class CliCommandManager implements CommandManager {
                 context = CommandContext.builder()
                         .sourceId(messageContainer.getResponderId())
                         .args(commandArgs)
+                        .pluginManager(pluginManager)
                         .build();
                 pluginManager.execute(pluginOrCommandName, subCommand, context);
                 //this.eventListener.onEvent("command",formatOutput(output));

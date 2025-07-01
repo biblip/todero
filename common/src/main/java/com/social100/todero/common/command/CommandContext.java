@@ -1,5 +1,6 @@
 package com.social100.todero.common.command;
 
+import com.social100.todero.common.base.PluginManagerInterface;
 import com.social100.todero.common.channels.DynamicEventChannel;
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.channels.ReservedEventRegistry;
@@ -22,6 +23,8 @@ public class CommandContext {
     @Setter
     @Getter
     private DynamicEventChannel instance;
+    @Getter
+    private final PluginManagerInterface pluginManager;
 
     public void respond(String message) {
         EventChannel.ReservedEvent reservedEvent = EventChannel.ReservedEvent.RESPONSE;
