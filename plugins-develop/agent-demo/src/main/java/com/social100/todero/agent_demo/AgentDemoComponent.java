@@ -4,13 +4,14 @@ import com.social100.processor.AIAController;
 import com.social100.processor.Action;
 import com.social100.todero.common.base.PluginManagerInterface;
 import com.social100.todero.common.command.CommandContext;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.processor.EventDefinition;
 
 import java.util.Arrays;
 import java.util.Map;
 
 @AIAController(name = "agent_demo",
-    type = "",
+    type = ServerType.AI,
     description = "Simple Agent Demo",
     events = AgentDemoComponent.SimpleEvent.class)
 public class AgentDemoComponent {

@@ -4,13 +4,14 @@ package com.social100.todero.plugin;
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
 import com.social100.todero.common.command.CommandContext;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.processor.EventDefinition;
 
 import java.util.Arrays;
 import java.util.Map;
 
 @AIAController(name = "simple",
-        type = "",
+        type = ServerType.AIA,
         description = "Simple Plugin",
         events = SimplePluginComponent.SimpleEvent.class)
 public class SimplePluginComponent {

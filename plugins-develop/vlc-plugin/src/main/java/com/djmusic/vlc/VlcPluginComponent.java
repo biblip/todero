@@ -4,11 +4,12 @@ import com.djmusic.vlc.service.VlcService;
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
 import com.social100.todero.common.command.CommandContext;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.scheduler.TaskScheduler;
 import io.github.cdimascio.dotenv.Dotenv;
 
 @AIAController(name = "vlc",
-        type = "",
+        type = ServerType.AIA,
         description = "description",
         events = VlcService.VlcPluginEvents.class)
 //@AIADependencies(components = {DjyPluginComponent.class, SimplePluginComponent.class})

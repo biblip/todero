@@ -7,6 +7,7 @@ import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.channels.process.ChannelHandler;
 import com.social100.todero.common.channels.process.ChannelProcessor;
 import com.social100.todero.common.command.CommandContext;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.ControlPayload;
@@ -27,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @AIAController(name = "aia",
-        type = "",
+        type = ServerType.AIA,
         description = "AIA Protocol Plugin",
         events = AIARemote.AIAProtocolEvents.class)
 public class AIARemote {

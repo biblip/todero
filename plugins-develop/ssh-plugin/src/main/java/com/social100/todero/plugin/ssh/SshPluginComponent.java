@@ -3,6 +3,7 @@ package com.social100.todero.plugin.ssh;
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
 import com.social100.todero.common.command.CommandContext;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.plugin.ssh.controller.SshController;
 import com.social100.todero.plugin.ssh.service.SshService;
 
@@ -12,7 +13,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 @AIAController(name = "ssh",
-    type = "",
+    type = ServerType.AIA,
     description = "description",
     events = SshService.SshEvents.class)
 public class SshPluginComponent {

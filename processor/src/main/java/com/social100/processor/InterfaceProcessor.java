@@ -1,25 +1,26 @@
 package com.social100.processor;
 
-import com.social100.todero.processor.EventDefinition;
-import com.social100.todero.processor.NoEvents;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,11 +48,18 @@ public class InterfaceProcessor extends AbstractProcessor {
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (classElement.getKind() == ElementKind.CLASS) {
                 TypeElement classTypeElement = (TypeElement) classElement;
-                AIAController classAnnotation = classElement.getAnnotation(AIAController.class);
-
                 String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
-                String pluginName = classAnnotation.name();
-                String pluginDescription = classAnnotation.description();
+
+                String pluginName = getAnnotationValueByKey(classTypeElement, AIAController.class, "name");
+                String pluginDescription = getAnnotationValueByKey(classTypeElement, AIAController.class, "description");
+                String pluginType = getAnnotationValueByKey(classTypeElement, AIAController.class, "type");
+
+                if (pluginName == null || pluginType == null || pluginDescription == null) {
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                        "Missing values in @AIAController for class: " + pluginClassQualifiedName,
+                        classElement);
+                    continue;
+                }
 
                 validateUniqueCommands(classTypeElement);
 
@@ -91,11 +99,10 @@ public class InterfaceProcessor extends AbstractProcessor {
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (classElement.getKind() == ElementKind.CLASS) {
                 TypeElement classTypeElement = (TypeElement) classElement;
-                AIAController classAnnotation = classElement.getAnnotation(AIAController.class);
 
                 String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
-                String pluginName = classAnnotation.name();
-                String pluginDescription = classAnnotation.description();
+                String pluginName = getAnnotationValueByKey(classTypeElement, AIAController.class, "name");
+                String pluginDescription = getAnnotationValueByKey(classTypeElement, AIAController.class, "description");
 
                 Map<String, MethodDetails> methodDetails = new HashMap<>();
 
@@ -125,11 +132,10 @@ public class InterfaceProcessor extends AbstractProcessor {
         for (Element classElement : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (classElement.getKind() == ElementKind.CLASS) {
                 TypeElement classTypeElement = (TypeElement) classElement;
-                AIAController classAnnotation = classElement.getAnnotation(AIAController.class);
 
                 String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
-                String pluginName = classAnnotation.name();
-                String pluginDescription = classAnnotation.description();
+                String pluginName = getAnnotationValueByKey(classTypeElement, AIAController.class, "name");
+                String pluginDescription = getAnnotationValueByKey(classTypeElement, AIAController.class, "description");
 
                 //String constructorParameters = generateNewObjectString(getClassTypeMirrorsForAIADependencies(classTypeElement));
                 AIADependencies annotation = classElement.getAnnotation(AIADependencies.class);
@@ -142,12 +148,12 @@ public class InterfaceProcessor extends AbstractProcessor {
         for (Element element : roundEnv.getElementsAnnotatedWith(AIAController.class)) {
             if (element.getKind() == ElementKind.CLASS) {
                 TypeElement classElement = (TypeElement) element;
-                AIAController annotation = classElement.getAnnotation(AIAController.class);
+                String pluginClassQualifiedName = classElement.getQualifiedName().toString();
 
-                String className = classElement.getSimpleName() + "Tools";
+                String className = getSimpleName(pluginClassQualifiedName) + "Tools";
                 String packageName = processingEnv.getElementUtils().getPackageOf(classElement).toString();
 
-                String eventEnumType = getEventEnumType(annotation);
+                String eventEnumType = getAnnotationValueByKey(classElement, AIAController.class, "events");
 
                 try {
                     JavaFileObject file = processingEnv.getFiler().createSourceFile(packageName + "." + className);
@@ -202,39 +208,6 @@ public class InterfaceProcessor extends AbstractProcessor {
 
         return true;
     }
-
-    private static String getEventEnumType(AIAController annotation) {
-        String eventEnumType = null;
-        try {
-            // Attempt to access the enum type directly
-            Class<? extends EventDefinition> eventType = annotation.events();
-            if (!eventType.equals(NoEvents.class)) {
-                eventEnumType = eventType.getCanonicalName();
-            }
-        } catch (MirroredTypeException e) {
-            // Handle annotation processing context
-            TypeMirror typeMirror = e.getTypeMirror();
-            if (!"com.social100.todero.processor.NoEvents".equals(typeMirror.toString())) {
-                eventEnumType = typeMirror.toString();
-            }
-        }
-        return eventEnumType;
-    }
-/*
-    @Override
-    public Set<String> getSupportedAnnotationTypes() {
-        return Set.of("com.social100.processor.AIAController", "com.social100.processor.Action");
-    }
-
-    @Override
-    public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.latestSupported();
-    }
-
-    @Override
-    public Set<String> getSupportedOptions() {
-        return Set.of("isSelfProcessing");
-    }*/
 
     private void generateRegistryClass(String packageName, String pluginClassQualifiedName, String pluginName, List<Map<String, String>> classToMethodsMap) {
 
@@ -556,5 +529,36 @@ public class InterfaceProcessor extends AbstractProcessor {
             this.className = className;
             this.methodName = methodName;
         }
+    }
+
+    public static String getAnnotationValueByKey(
+        Element element,
+        Class<? extends Annotation> annotationClass,
+        String keyName
+    ) {
+        for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+            if (!mirror.getAnnotationType().toString().equals(annotationClass.getName())) {
+                continue;
+            }
+
+            for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
+                mirror.getElementValues().entrySet()) {
+                String key = entry.getKey().getSimpleName().toString();
+                if (!key.equals(keyName)) continue;
+
+                Object value = entry.getValue().getValue();
+
+                if (value instanceof VariableElement) {
+                    // Enum constant: get simple name
+                    return ((VariableElement) value).getSimpleName().toString();
+                } else if (value instanceof TypeMirror) {
+                    // Class reference: get full type name
+                    return value.toString();
+                } else {
+                    return value.toString();
+                }
+            }
+        }
+        return null;
     }
 }
