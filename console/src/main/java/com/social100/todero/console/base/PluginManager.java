@@ -3,6 +3,7 @@ package com.social100.todero.console.base;
 import com.social100.todero.common.base.PluginManagerInterface;
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.command.CommandContext;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class PluginManager implements PluginManagerInterface {
     final private Map<String, Plugin> plugins = new HashMap<>();
@@ -20,10 +22,12 @@ public class PluginManager implements PluginManagerInterface {
     private final File pluginsDir;
     private HelpWrapper helpWrapper;
     final private EventChannel.EventListener eventListener;
+    final private ServerType type;
 
-    public PluginManager(File dir, EventChannel.EventListener eventListener) {
+    public PluginManager(File dir, ServerType type, EventChannel.EventListener eventListener) {
         this.pluginsDir = dir;
         this.eventListener = eventListener;
+        this.type = type;
         initialize();
 
     }
@@ -51,7 +55,7 @@ public class PluginManager implements PluginManagerInterface {
 
             File pluginJar = jarFiles[0];
             try {
-                pluginContextList.add(new PluginContext(pluginDir.toPath(), pluginJar, eventListener));
+                pluginContextList.add(new PluginContext(pluginDir.toPath(), pluginJar, this.type, eventListener));
             } catch (Exception e) {
                 System.err.printf("Error processing plugin in %s (%s):%n", pluginDir.getName(), pluginJar.getName());
                 e.printStackTrace();
@@ -59,7 +63,9 @@ public class PluginManager implements PluginManagerInterface {
         }
 
         for (PluginContext context : pluginContextList) {
-            plugins.putAll(context.getPlugins());
+            context.getPlugins().entrySet().stream()
+                .filter(e -> Objects.equals(e.getValue().getType(), type))
+                .forEach(e -> plugins.put(e.getKey(), e.getValue()));
         }
 
         this.helpWrapper = new HelpWrapper(plugins);

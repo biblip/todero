@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum ServerType {
   AI(41),
-  AIA(414);
+  AIA(414),
+  INTERNAL_ONLY(null);
 
   final Integer port;
 

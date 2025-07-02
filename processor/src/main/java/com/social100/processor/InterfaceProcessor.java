@@ -136,12 +136,13 @@ public class InterfaceProcessor extends AbstractProcessor {
                 String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
                 String pluginName = getAnnotationValueByKey(classTypeElement, AIAController.class, "name");
                 String pluginDescription = getAnnotationValueByKey(classTypeElement, AIAController.class, "description");
+                String type = getAnnotationValueByKey(classTypeElement, AIAController.class, "type");
 
                 //String constructorParameters = generateNewObjectString(getClassTypeMirrorsForAIADependencies(classTypeElement));
                 AIADependencies annotation = classElement.getAnnotation(AIADependencies.class);
                 boolean commandManagerRequired = annotation != null;
 
-                generatePluginInterfaceImplementation("com.social100.todero.generated", pluginClassQualifiedName, commandManagerRequired, pluginName, pluginDescription);
+                generatePluginInterfaceImplementation("com.social100.todero.generated", pluginClassQualifiedName, commandManagerRequired, pluginName, pluginDescription, type);
             }
         }
 
@@ -348,7 +349,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         }
     }
 
-    private void generatePluginInterfaceImplementation(String packageName, String pluginClassQualifiedName, boolean commandManagerRequired, String pluginName, String pluginDescription) {
+    private void generatePluginInterfaceImplementation(String packageName, String pluginClassQualifiedName, boolean commandManagerRequired, String pluginName, String pluginDescription, String type) {
 
         String classSimpleName = getSimpleName(pluginClassQualifiedName);
         String classVariableName = classToClassVariableName(classSimpleName);
@@ -362,6 +363,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "import " + pluginClassQualifiedName + ";\n" +
                 "import " + pluginClassQualifiedName + "Tools;\n" +
                 "import com.social100.todero.common.command.CommandContext;\n" +
+                "import com.social100.todero.common.config.ServerType;\n" +
                 "import com.social100.todero.common.observer.PublisherManager;\n" +
                 "import com.social100.todero.common.channels.ComponentEventListenerSupport;\n" +
                 "import com.social100.todero.common.channels.EventChannel;\n" +
@@ -391,6 +393,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "                .builder()\n" +
                 "                .name(\"" + pluginName + "\")\n" +
                 "                .description(\"" + pluginDescription + "\")\n" +
+                "                .type(ServerType." + type + ")\n" +
                 "                .commands(" + generatedAnnotationRegistryClassName + ".REGISTRY.stream()\n" +
                 "                        .map(entry -> new Command(\n" +
                 "                                entry.get(\"group\"),\n" +

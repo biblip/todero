@@ -2,6 +2,7 @@ package com.social100.todero.console.base;
 
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.command.CommandContext;
+import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
@@ -35,8 +36,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class PluginContext {
     private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ServerType type;
 
-    public PluginContext(Path pluginDir, File pluginJar, EventChannel.EventListener eventListener) throws Exception {
+    public PluginContext(Path pluginDir, File pluginJar, ServerType type, EventChannel.EventListener eventListener) throws Exception {
+        this.type = type;
         initializePlugin(pluginDir, pluginJar, eventListener);
     }
 
@@ -114,15 +117,19 @@ public class PluginContext {
                     ? comp.getDescription() : "";
                 Map<String, Map<String, Command>> commands = (comp != null)
                     ? comp.getCommands() : new HashMap<>();
+                ServerType compType = (comp != null && comp.getType() != null)
+                    ? comp.getType() : null;
 
                 Plugin plugin = Plugin.builder()
                     .file(pluginJar)
                     .classLoader(pluginLoader)
                     .pluginClass(pluginClass)
                     .pluginInstance(instance)
+                    .type(compType)
                     .component(Component.builder()
                         .name(name)
                         .description(desc)
+                        .type(compType)
                         .commands(commands)
                         .build())
                     .build();

@@ -40,9 +40,9 @@ public class CliCommandManager implements CommandManager {
         Workspace userWorkspace = workspaceManager.getWorkspace("guest");
 
         if (ServerType.AI.equals(type)) {
-            pluginManager = new PluginManager(new File(userWorkspace.getBeingsDir().getAbsolutePath()), eventListener);
+            pluginManager = new PluginManager(new File(userWorkspace.getBeingsDir().getAbsolutePath()), type, eventListener);
         } else if (ServerType.AIA.equals(type)) {
-            pluginManager = new PluginManager(new File(userWorkspace.getPluginsDir().getAbsolutePath()), eventListener);
+            pluginManager = new PluginManager(new File(userWorkspace.getPluginsDir().getAbsolutePath()), type, eventListener);
         } else {
             throw new IllegalArgumentException("Wrong Server Type");
         }
