@@ -137,12 +137,13 @@ public class InterfaceProcessor extends AbstractProcessor {
                 String pluginName = getAnnotationValueByKey(classTypeElement, AIAController.class, "name");
                 String pluginDescription = getAnnotationValueByKey(classTypeElement, AIAController.class, "description");
                 String type = getAnnotationValueByKey(classTypeElement, AIAController.class, "type");
+                String visible = getAnnotationValueByKey(classTypeElement, AIAController.class, "visible");
 
                 //String constructorParameters = generateNewObjectString(getClassTypeMirrorsForAIADependencies(classTypeElement));
                 AIADependencies annotation = classElement.getAnnotation(AIADependencies.class);
                 boolean commandManagerRequired = annotation != null;
 
-                generatePluginInterfaceImplementation("com.social100.todero.generated", pluginClassQualifiedName, commandManagerRequired, pluginName, pluginDescription, type);
+                generatePluginInterfaceImplementation("com.social100.todero.generated", pluginClassQualifiedName, commandManagerRequired, pluginName, pluginDescription, type, visible);
             }
         }
 
@@ -349,7 +350,7 @@ public class InterfaceProcessor extends AbstractProcessor {
         }
     }
 
-    private void generatePluginInterfaceImplementation(String packageName, String pluginClassQualifiedName, boolean commandManagerRequired, String pluginName, String pluginDescription, String type) {
+    private void generatePluginInterfaceImplementation(String packageName, String pluginClassQualifiedName, boolean commandManagerRequired, String pluginName, String pluginDescription, String type, String visible) {
 
         String classSimpleName = getSimpleName(pluginClassQualifiedName);
         String classVariableName = classToClassVariableName(classSimpleName);
@@ -394,6 +395,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 "                .name(\"" + pluginName + "\")\n" +
                 "                .description(\"" + pluginDescription + "\")\n" +
                 "                .type(ServerType." + type + ")\n" +
+                "                .visible(" + visible + ")\n" +
                 "                .commands(" + generatedAnnotationRegistryClassName + ".REGISTRY.stream()\n" +
                 "                        .map(entry -> new Command(\n" +
                 "                                entry.get(\"group\"),\n" +

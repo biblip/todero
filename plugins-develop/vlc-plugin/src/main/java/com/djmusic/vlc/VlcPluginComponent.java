@@ -9,9 +9,10 @@ import com.social100.todero.scheduler.TaskScheduler;
 import io.github.cdimascio.dotenv.Dotenv;
 
 @AIAController(name = "vlc",
-        type = ServerType.AIA,
-        description = "description",
-        events = VlcService.VlcPluginEvents.class)
+    type = ServerType.AIA,
+    visible = true,
+    description = "description",
+    events = VlcService.VlcPluginEvents.class)
 //@AIADependencies(components = {DjyPluginComponent.class, SimplePluginComponent.class})
 public class VlcPluginComponent {
     private final String vlcMediaDirectory;

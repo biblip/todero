@@ -8,5 +8,5 @@ import java.util.List;
 public interface PluginManagerInterface {
   List<String> generateAutocompleteStrings();
   String getHelp(String pluginName, String commandName, OutputType outputType);
-  void execute(String pluginName, String command, CommandContext context);
+  void execute(String pluginName, String command, CommandContext context, boolean usePluginsAll);
 }

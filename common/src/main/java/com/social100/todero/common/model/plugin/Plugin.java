@@ -14,6 +14,7 @@ public class Plugin {
     File file;
     String name;
     ServerType type;
+    boolean visible;
     String version;
     URLClassLoader classLoader;
     Class<? extends PluginInterface> pluginClass;

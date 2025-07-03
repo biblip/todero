@@ -9,10 +9,13 @@ import com.social100.todero.common.message.channel.ChannelMessageFactory;
 import com.social100.todero.common.message.channel.ChannelType;
 import com.social100.todero.common.message.channel.impl.EventPayload;
 import com.social100.todero.common.message.channel.impl.PublicDataPayload;
+import com.social100.todero.console.base.OutputType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Builder
 @AllArgsConstructor
@@ -24,6 +27,9 @@ public class CommandContext {
     @Getter
     private DynamicEventChannel instance;
     @Getter
+    List<String>  agents;
+    @Getter
+    List<String>  tools;
     private final PluginManagerInterface pluginManager;
 
     public void respond(String message) {
@@ -48,5 +54,13 @@ public class CommandContext {
                         .build()))
                 .build();
         instance.triggerEvent(eventName, messageContainer);
+    }
+
+    public void execute(String pluginName, String command, CommandContext context) {
+        pluginManager.execute(pluginName, command, context, true);
+    }
+
+    public String getHelp(String pluginName, String commandName, OutputType outputType) {
+        return pluginManager.getHelp(pluginName, commandName, outputType);
     }
 }

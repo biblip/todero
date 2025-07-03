@@ -18,7 +18,8 @@ import java.util.Objects;
 
 public class PluginManager implements PluginManagerInterface {
     final private Map<String, Plugin> plugins = new HashMap<>();
-    final private List<PluginContext> pluginContextList = new ArrayList<>();
+    final private Map<String, Plugin> pluginsAll = new HashMap<>();
+    final List<PluginContext> pluginContextList = new ArrayList<>();
     private final File pluginsDir;
     private HelpWrapper helpWrapper;
     final private EventChannel.EventListener eventListener;
@@ -65,7 +66,9 @@ public class PluginManager implements PluginManagerInterface {
         for (PluginContext context : pluginContextList) {
             context.getPlugins().entrySet().stream()
                 .filter(e -> Objects.equals(e.getValue().getType(), type))
+                .filter(e -> e.getValue().isVisible())
                 .forEach(e -> plugins.put(e.getKey(), e.getValue()));
+            pluginsAll.putAll(context.getPlugins());
         }
 
         this.helpWrapper = new HelpWrapper(plugins);
@@ -74,6 +77,20 @@ public class PluginManager implements PluginManagerInterface {
     @Override
     public String getHelp(String pluginName, String commandName, OutputType outputType) {
         return helpWrapper.getHelp(pluginName, commandName, outputType);
+    }
+
+    public List<String> getAgents() {
+        return pluginsAll.entrySet().stream()
+            .filter(e -> ServerType.AI.equals(e.getValue().getType()))
+            .map(Map.Entry::getKey)
+            .toList();
+    }
+
+    public List<String> getTools() {
+        return pluginsAll.entrySet().stream()
+            .filter(e -> ServerType.AIA.equals(e.getValue().getType()))
+            .map(Map.Entry::getKey)
+            .toList();
     }
 
     /**
@@ -91,9 +108,9 @@ public class PluginManager implements PluginManagerInterface {
     }
 
     @Override
-    public void execute(String pluginName, String command, CommandContext context) {
+    public void execute(String pluginName, String command, CommandContext context, boolean usePluginsAll) {
         // Find the specified plugin
-        Plugin plugin = plugins.get(pluginName);
+        Plugin plugin = (usePluginsAll ? pluginsAll : plugins).get(pluginName);
 
         if (plugin == null) {
             context.respond("Plugin with name '" + pluginName + "' not found.");

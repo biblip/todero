@@ -14,6 +14,7 @@ import java.lang.annotation.Target;
 public @interface AIAController {
     String name();
     ServerType type();
+    boolean visible();
     String description();
     Class<? extends EventDefinition> events() default NoEvents.class;
 }

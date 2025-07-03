@@ -16,5 +16,6 @@ public class Component {
     String name;
     String description;
     ServerType type;
+    boolean visible;
     Map<String, Map<String, Command>> commands;
 }

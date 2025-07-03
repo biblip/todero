@@ -28,9 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @AIAController(name = "aia",
-        type = ServerType.AIA,
-        description = "AIA Protocol Plugin",
-        events = AIARemote.AIAProtocolEvents.class)
+    type = ServerType.AIA,
+    visible = true,
+    description = "AIA Protocol Plugin",
+    events = AIARemote.AIAProtocolEvents.class)
 public class AIARemote {
     Map<String, ApiAIAProtocolService> stringApiAIAProtocolServiceMap = new ConcurrentHashMap<>();
     final CommandContext[] context = {null};

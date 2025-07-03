@@ -2,7 +2,6 @@ package com.social100.todero.agent_demo;
 
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
-import com.social100.todero.common.base.PluginManagerInterface;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.ServerType;
 import com.social100.todero.processor.EventDefinition;
@@ -12,6 +11,7 @@ import java.util.Map;
 
 @AIAController(name = "agent_demo",
     type = ServerType.AI,
+    visible = false,
     description = "Simple Agent Demo",
     events = AgentDemoComponent.SimpleEvent.class)
 public class AgentDemoComponent {
@@ -42,14 +42,14 @@ public class AgentDemoComponent {
       description = "Send a prompt to the agent")
   public Boolean pingCommand(CommandContext context) {
     String[] commandArgs = context.getArgs();
-    PluginManagerInterface pluginManager = context.getPluginManager();
 
     CommandContext internalContext = CommandContext.builder()
+        .sourceId("333")
         .args(context.getArgs())
         .build();
 
     System.out.println("------------------------------------------");
-    pluginManager.execute("com.shellaia.verbatim.plugin.simple_plugin", "ping", internalContext);
+    context.execute("com.shellaia.verbatim.plugin.simple_plugin", "ping", context);
     System.out.println("------------------------------------------");
 
     context.event(SimpleEvent.SIMPLE_EVENT.name(), "No va a salir");

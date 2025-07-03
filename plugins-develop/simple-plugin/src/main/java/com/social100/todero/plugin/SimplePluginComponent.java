@@ -11,9 +11,10 @@ import java.util.Arrays;
 import java.util.Map;
 
 @AIAController(name = "simple",
-        type = ServerType.AIA,
-        description = "Simple Plugin",
-        events = SimplePluginComponent.SimpleEvent.class)
+    type = ServerType.AIA,
+    visible = true,
+    description = "Simple Plugin",
+    events = SimplePluginComponent.SimpleEvent.class)
 public class SimplePluginComponent {
     final static String MAIN_GROUP = "Main";
     private CommandContext globalContext = null;

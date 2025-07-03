@@ -14,6 +14,7 @@ import java.time.Duration;
 
 @AIAController(name = "ssh",
     type = ServerType.AIA,
+    visible = true,
     description = "description",
     events = SshService.SshEvents.class)
 public class SshPluginComponent {

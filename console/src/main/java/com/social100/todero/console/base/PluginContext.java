@@ -119,6 +119,7 @@ public class PluginContext {
                     ? comp.getCommands() : new HashMap<>();
                 ServerType compType = (comp != null && comp.getType() != null)
                     ? comp.getType() : null;
+                boolean visible = comp != null && comp.isVisible();
 
                 Plugin plugin = Plugin.builder()
                     .file(pluginJar)
@@ -126,6 +127,7 @@ public class PluginContext {
                     .pluginClass(pluginClass)
                     .pluginInstance(instance)
                     .type(compType)
+                    .visible(visible)
                     .component(Component.builder()
                         .name(name)
                         .description(desc)

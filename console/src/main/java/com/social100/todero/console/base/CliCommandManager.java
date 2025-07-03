@@ -203,11 +203,13 @@ public class CliCommandManager implements CommandManager {
                 commandArgs = arguments.toArray(new String[0]);
                 // Rebuild Command Context to use commandArgs for commands
                 context = CommandContext.builder()
-                        .sourceId(messageContainer.getResponderId())
-                        .args(commandArgs)
-                        .pluginManager(pluginManager)
-                        .build();
-                pluginManager.execute(pluginOrCommandName, subCommand, context);
+                    .sourceId(messageContainer.getResponderId())
+                    .args(commandArgs)
+                    .agents(pluginManager.getAgents())
+                    .tools(pluginManager.getTools())
+                    .pluginManager(pluginManager)
+                    .build();
+                pluginManager.execute(pluginOrCommandName, subCommand, context, false);
                 //this.eventListener.onEvent("command",formatOutput(output));
                 return true;
         }
