@@ -40,7 +40,7 @@ public class CliCommandManager implements CommandManager {
         Workspace userWorkspace = workspaceManager.getWorkspace("guest");
 
         if (ServerType.AI.equals(type)) {
-            pluginManager = new PluginManager(new File(userWorkspace.getBeingsDir().getAbsolutePath()), type, eventListener);
+            pluginManager = new PluginManager(new File(userWorkspace.getPluginsDir().getAbsolutePath()), type, eventListener);
         } else if (ServerType.AIA.equals(type)) {
             pluginManager = new PluginManager(new File(userWorkspace.getPluginsDir().getAbsolutePath()), type, eventListener);
         } else {

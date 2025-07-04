@@ -11,8 +11,6 @@ public class Workspace {
     private File workspaceDir;
     @Getter
     private File pluginsDir;
-    @Getter
-    private File beingsDir;
     private Map<String, PluginWorkspace> plugins = new ConcurrentHashMap<>();
 
     /**
@@ -26,7 +24,6 @@ public class Workspace {
         this.username = username;
         this.workspaceDir = workspaceDir;
         this.pluginsDir = new File(workspaceDir, "plugins");
-        this.beingsDir = new File(workspaceDir, "beings");
 
         // Ensure the directories exist.
         if (!workspaceDir.exists()) {
@@ -34,9 +31,6 @@ public class Workspace {
         }
         if (!pluginsDir.exists()) {
             pluginsDir.mkdirs();
-        }
-        if (!beingsDir.exists()) {
-            beingsDir.mkdirs();
         }
     }
 

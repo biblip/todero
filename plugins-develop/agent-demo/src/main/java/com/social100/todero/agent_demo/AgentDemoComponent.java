@@ -11,7 +11,7 @@ import java.util.Map;
 
 @AIAController(name = "agent_demo",
     type = ServerType.AI,
-    visible = false,
+    visible = true,
     description = "Simple Agent Demo",
     events = AgentDemoComponent.SimpleEvent.class)
 public class AgentDemoComponent {
