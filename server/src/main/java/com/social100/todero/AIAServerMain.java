@@ -3,12 +3,14 @@ package com.social100.todero;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.social100.processor.beans.BeanFactory;
 import com.social100.todero.aiaserver.AIAServer;
 import com.social100.todero.common.config.AppConfig;
 import com.social100.todero.common.config.Config;
 import com.social100.todero.common.config.ServerConfig;
 import com.social100.todero.common.config.ServerType;
 import com.social100.todero.common.log.LogRedirector;
+import com.social100.todero.console.senses.SensesClient;
 import com.social100.todero.server.RawServer;
 
 import java.io.File;
@@ -24,6 +26,11 @@ public class AIAServerMain {
         } catch (IOException e) {
             e.printStackTrace(); // fallback to console
         }
+
+        BeanFactory.registerBeanClass(SensesClient.class);
+        SensesClient sensesClient = BeanFactory.getBean(SensesClient.class);
+        sensesClient.start();
+
         appConfig_ai = loadAppConfig(args);
         appConfig_ai.getApp().setType(ServerType.AI);
         appConfig_ai.getApp().getServer().setPort(ServerType.AI.getPort());

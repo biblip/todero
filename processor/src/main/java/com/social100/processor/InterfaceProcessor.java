@@ -51,6 +51,7 @@ public class InterfaceProcessor extends AbstractProcessor {
                 String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
 
                 String pluginName = getAnnotationValueByKey(classTypeElement, AIAController.class, "name");
+                //pluginName = pluginName != null ? pluginName.replace('.','_') : null;
                 String pluginDescription = getAnnotationValueByKey(classTypeElement, AIAController.class, "description");
                 String pluginType = getAnnotationValueByKey(classTypeElement, AIAController.class, "type");
 
@@ -102,6 +103,7 @@ public class InterfaceProcessor extends AbstractProcessor {
 
                 String pluginClassQualifiedName = classTypeElement.getQualifiedName().toString();
                 String pluginName = getAnnotationValueByKey(classTypeElement, AIAController.class, "name");
+                //pluginName = pluginName != null ? pluginName.replace('.','_') : null;
                 String pluginDescription = getAnnotationValueByKey(classTypeElement, AIAController.class, "description");
 
                 Map<String, MethodDetails> methodDetails = new HashMap<>();
@@ -215,7 +217,8 @@ public class InterfaceProcessor extends AbstractProcessor {
 
         String classSimpleName = getSimpleName(pluginClassQualifiedName);
         String classVariableName = classToClassVariableName(classSimpleName);
-        String generatedClassName = classSimpleName + pluginName + "AR";
+        String flatPluginName = pluginName != null ? pluginName.replace('.','_') : null;
+        String generatedClassName = classSimpleName + flatPluginName + "AR";
 
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "import java.util.List;\n" +
@@ -252,7 +255,8 @@ public class InterfaceProcessor extends AbstractProcessor {
 
         String classSimpleName = getSimpleName(pluginClassQualifiedName);
         String classVariableName = classToClassVariableName(classSimpleName);
-        String generatedClassName = classSimpleName + pluginName + "MR";
+        String flatPluginName = pluginName != null ? pluginName.replace('.','_') : null;
+        String generatedClassName = classSimpleName + flatPluginName + "MR";
 
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "import com.social100.todero.common.channels.DynamicEventChannel;\n" +
@@ -356,8 +360,10 @@ public class InterfaceProcessor extends AbstractProcessor {
         String classVariableName = classToClassVariableName(classSimpleName);
         String generatedClassName = classSimpleName + "Impl";
 
-        String generatedAnnotationRegistryClassName = classSimpleName + pluginName + "AR";
-        String generatedMethodRegistryClassName = classSimpleName + pluginName + "MR";
+        String flatPluginName = pluginName != null ? pluginName.replace('.','_') : null;
+
+        String generatedAnnotationRegistryClassName = classSimpleName + flatPluginName + "AR";
+        String generatedMethodRegistryClassName = classSimpleName + flatPluginName + "MR";
 
         StringBuilder classContent = new StringBuilder("package " + packageName + ";\n\n" +
                 "\n" +

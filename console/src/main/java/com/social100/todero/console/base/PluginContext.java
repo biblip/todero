@@ -1,5 +1,6 @@
 package com.social100.todero.console.base;
 
+import com.social100.processor.beans.BeanFactory;
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.ServerType;
@@ -7,10 +8,12 @@ import com.social100.todero.common.model.plugin.Command;
 import com.social100.todero.common.model.plugin.Component;
 import com.social100.todero.common.model.plugin.Plugin;
 import com.social100.todero.common.model.plugin.PluginInterface;
+import com.social100.todero.console.senses.SensesClient;
 import lombok.Getter;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +26,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,17 +47,17 @@ public class PluginContext {
 
     public void initializePlugin(Path pluginDir, File pluginJar, EventChannel.EventListener eventListener) throws Exception {
         // 1) metadata
-        Properties meta = loadPluginMetadata(pluginJar);
-        String name = meta.getProperty("name");
-        if (name == null || name.isEmpty()) {
-            throw new IllegalStateException("Plugin descriptor must define a non-empty 'name'");
-        }
+//        Properties meta = loadPluginMetadata(pluginJar);
+//        String name = meta.getProperty("name");
+//        if (name == null || name.isEmpty()) {
+//            throw new IllegalStateException("Plugin descriptor must define a non-empty 'name'");
+//        }
 
         lock.writeLock().lock();
         try {
-            if (plugins.containsKey(name)) {
-                throw new IllegalStateException("Plugin with name '" + name + "' is already loaded");
-            }
+//            if (plugins.containsKey(name)) {
+//                throw new IllegalStateException("Plugin with name '" + name + "' is already loaded");
+//            }
 
             // 2) build plugin loader, but force certain packages to parent-first
             URL jarUrl = pluginJar.toURI().toURL();
@@ -93,6 +95,8 @@ public class PluginContext {
                 .addUrls(jarUrl)
                 .addClassLoaders(pluginLoader)
                 .addScanners(Scanners.TypesAnnotated, Scanners.SubTypes)
+                .filterInputsBy(new FilterBuilder()
+                    .includePackage("com.social100.todero"))
                 .setExpandSuperTypes(false)
             );
 
@@ -113,13 +117,55 @@ public class PluginContext {
 
                 // 8) register it
                 Component comp = instance.getComponent();
-                String desc = (comp != null && comp.getDescription() != null)
-                    ? comp.getDescription() : "";
-                Map<String, Map<String, Command>> commands = (comp != null)
-                    ? comp.getCommands() : new HashMap<>();
-                ServerType compType = (comp != null && comp.getType() != null)
-                    ? comp.getType() : null;
-                boolean visible = comp != null && comp.isVisible();
+
+                if (comp == null) {
+                    //throw new IllegalStateException("Plugin with name '" + comp.getName() + "' is already loaded");
+                    System.err.println("Component is Null on Plugin  '" + jarUrl + "'");
+                    continue;
+                }
+
+                if (plugins.containsKey(comp.getName())) {
+                    //throw new IllegalStateException("Plugin with name '" + comp.getName() + "' is already loaded");
+                    System.err.println("Plugin with name '" + comp.getName() + "' is already loaded");
+                    continue;
+                }
+
+                String desc = (comp.getDescription() != null) ? comp.getDescription() : "";
+                Map<String, Map<String, Command>> commands = comp.getCommands();
+                ServerType compType = (comp.getType() != null) ? comp.getType() : null;
+                boolean visible = comp.isVisible();
+
+                if (ServerType.AI.equals(this.type) && ServerType.AI.equals(comp.getType())) {
+                    SensesClient sensesClient = BeanFactory.getBean(SensesClient.class);
+                    commands.values().stream()
+                        .flatMap(inner -> inner.values().stream())
+                        .map(Command::getCommand)
+                        .forEach( command -> {
+                            String agent_id = pluginJar.getName() + "-" + comp.getName() + "-" + command;
+                            //String encoded_agent_id = Arrays.toString(Base64Coder.encode(agent_id.getBytes()));
+                            //System.out.println(agent_id);
+                            //System.out.println(encoded_agent_id);
+                            sensesClient.register(agent_id, line -> {
+                                System.out.println("-----------------------------------");
+                                System.out.println("jar: " + pluginJar.getName());
+                                System.out.println("component: " + comp.getName());
+                                System.out.println("command: " + command);
+                                System.out.println("line: " + line);
+                                System.out.println("-----------------------------------");
+                            });
+                        });
+                    // TODO: Obtiene el id que se registra en el agente en el codigo a travez de un numero de registro
+                    // y lo setea
+
+//                    WebSocketClient client = new WebSocketClient("ws://localhost:5353/ws");
+//
+//                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//                        System.out.println("\n[!] Interrupted by user");
+//                        client.shutdown();
+//                    }));
+//
+//                    client.start();
+                }
 
                 Plugin plugin = Plugin.builder()
                     .file(pluginJar)
@@ -129,14 +175,14 @@ public class PluginContext {
                     .type(compType)
                     .visible(visible)
                     .component(Component.builder()
-                        .name(name)
+                        .name(comp.getName())
                         .description(desc)
                         .type(compType)
                         .commands(commands)
                         .build())
                     .build();
 
-                plugins.put(name, plugin);
+                plugins.put(comp.getName(), plugin);
             }
         } finally {
             lock.writeLock().unlock();

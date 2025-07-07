@@ -10,7 +10,7 @@ import com.social100.todero.processor.EventDefinition;
 import java.util.Arrays;
 import java.util.Map;
 
-@AIAController(name = "simple",
+@AIAController(name = "com.shellaia.verbatim.plugin.simple",
     type = ServerType.AIA,
     visible = true,
     description = "Simple Plugin",

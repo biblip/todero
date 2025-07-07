@@ -15,12 +15,12 @@ import com.social100.todero.console.workspace.Workspace;
 import com.social100.todero.console.workspace.WorkspaceManager;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static com.social100.todero.console.base.ArgumentParser.parseArguments;
 
 public class CliCommandManager implements CommandManager {
     final static private ObjectMapper objectMapper = new ObjectMapper();
@@ -67,22 +67,7 @@ public class CliCommandManager implements CommandManager {
             return true; // Early exit if input is null or empty
         }
 
-        // Regex pattern to extract arguments:
-        // - Quoted strings: "some phrase"
-        // - Placeholders: ${some placeholder}
-        // - Unquoted words: play, loud, etc.
-        Pattern pattern = Pattern.compile("(\\$\\{[^}]+}|\"[^\"]+\"|\\S+)");
-        Matcher matcher = pattern.matcher(line);
-
-        ArrayList<String> arguments = new ArrayList<>();
-        while (matcher.find()) {
-            String arg = matcher.group(1);
-            // Remove quotes (but keep placeholders as-is)
-            if (arg.startsWith("\"") && arg.endsWith("\"")) {
-                arg = arg.substring(1, arg.length() - 1);
-            }
-            arguments.add(arg);
-        }
+        List<String> arguments = parseArguments(line);
 
         if (arguments.isEmpty()) {
             return true; // No arguments found, nothing to execute

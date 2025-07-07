@@ -13,9 +13,12 @@ import com.social100.todero.console.base.OutputType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 @Builder
 @AllArgsConstructor
@@ -32,16 +35,28 @@ public class CommandContext {
     List<String>  tools;
     private final PluginManagerInterface pluginManager;
 
+    Consumer<String> consumer;
+
+    public void setListener(@NonNull Consumer<String> consumer) {
+        this.consumer = consumer;
+    }
+
     public void respond(String message) {
-        EventChannel.ReservedEvent reservedEvent = EventChannel.ReservedEvent.RESPONSE;
-        MessageContainer messageContainer = MessageContainer.builder()
+        getConsumer().ifPresentOrElse(c -> c.accept(message), () -> {
+            EventChannel.ReservedEvent reservedEvent = EventChannel.ReservedEvent.RESPONSE;
+            MessageContainer messageContainer = MessageContainer.builder()
                 .version(MessageContainer.VERSION)
                 .responderId(sourceId)
                 .addChannelMessage(ChannelMessageFactory.createChannelMessage(ChannelType.PUBLIC_DATA, PublicDataPayload.builder()
-                        .message(message)
-                        .build()))
+                    .message(message)
+                    .build()))
                 .build();
-        ReservedEventRegistry.trigger(reservedEvent, messageContainer);
+            ReservedEventRegistry.trigger(reservedEvent, messageContainer);
+        });
+    }
+
+    private Optional<Consumer<String>> getConsumer() {
+        return Optional.ofNullable(consumer);
     }
 
     public void event(String eventName, String message) {

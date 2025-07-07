@@ -8,7 +8,7 @@ import com.social100.todero.common.config.ServerType;
 import com.social100.todero.scheduler.TaskScheduler;
 import io.github.cdimascio.dotenv.Dotenv;
 
-@AIAController(name = "vlc",
+@AIAController(name = "com.shellaia.verbatim.plugin.vlc",
     type = ServerType.AIA,
     visible = true,
     description = "description",

@@ -1,8 +1,6 @@
 package com.social100.todero.tcpserver.config;
 
 import com.social100.todero.common.config.AppConfig;
-import lombok.Data;
-import lombok.Getter;
 
 import java.util.Map;
 

@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-@AIAController(name = "aia",
+@AIAController(name = "com.shellaia.verbatim.plugin.aia",
     type = ServerType.AIA,
     visible = true,
     description = "AIA Protocol Plugin",

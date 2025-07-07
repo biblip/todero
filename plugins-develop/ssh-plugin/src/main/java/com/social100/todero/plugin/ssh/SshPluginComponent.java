@@ -12,7 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 
-@AIAController(name = "ssh",
+@AIAController(name = "com.shellaia.verbatim.plugin.ssh",
     type = ServerType.AIA,
     visible = true,
     description = "description",

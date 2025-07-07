@@ -15,6 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PluginManager implements PluginManagerInterface {
     final private Map<String, Plugin> plugins = new HashMap<>();
@@ -42,36 +46,62 @@ public class PluginManager implements PluginManagerInterface {
         File[] pluginDirs = pluginsDir.listFiles(File::isDirectory);
         if (pluginDirs == null) return;
 
+        int threadCount = Math.max(2, Runtime.getRuntime().availableProcessors());
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+        List<CompletableFuture<Optional<PluginContext>>> futures = new ArrayList<>();
+
         for (File pluginDir : pluginDirs) {
             File[] jarFiles = pluginDir.listFiles((dir, name) -> name.endsWith(".jar"));
             if (jarFiles == null || jarFiles.length == 0) {
                 System.err.printf("Skipping %s: no .jar file found.%n", pluginDir.getName());
                 continue;
             }
-
             if (jarFiles.length > 1) {
                 System.err.printf("Skipping %s: multiple .jar files found.%n", pluginDir.getName());
                 continue;
             }
 
             File pluginJar = jarFiles[0];
-            try {
-                pluginContextList.add(new PluginContext(pluginDir.toPath(), pluginJar, this.type, eventListener));
-            } catch (Exception e) {
-                System.err.printf("Error processing plugin in %s (%s):%n", pluginDir.getName(), pluginJar.getName());
-                e.printStackTrace();
-            }
+
+            // Launch async task
+            CompletableFuture<Optional<PluginContext>> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    PluginContext context = new PluginContext(pluginDir.toPath(), pluginJar, this.type, eventListener);
+                    return Optional.of(context);
+                } catch (Exception e) {
+                    System.err.printf("Error processing plugin in %s (%s):%n", pluginDir.getName(), pluginJar.getName());
+                    e.printStackTrace();
+                    return Optional.empty();
+                }
+            }, executor);
+
+            futures.add(future);
         }
 
-        for (PluginContext context : pluginContextList) {
-            context.getPlugins().entrySet().stream()
-                .filter(e -> Objects.equals(e.getValue().getType(), type))
-                .filter(e -> e.getValue().isVisible())
-                .forEach(e -> plugins.put(e.getKey(), e.getValue()));
-            pluginsAll.putAll(context.getPlugins());
-        }
+        // Wait for all to complete, then process
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenRun(() -> {
+                for (CompletableFuture<Optional<PluginContext>> future : futures) {
+                    future.join().ifPresent(context -> {
+                        pluginContextList.add(context);
+                        context.getPlugins().entrySet().stream()
+                            .filter(e -> Objects.equals(e.getValue().getType(), type))
+                            .filter(e -> e.getValue().isVisible())
+                            .forEach(e -> plugins.put(e.getKey(), e.getValue()));
+                        pluginsAll.putAll(context.getPlugins());
+                    });
+                }
 
-        this.helpWrapper = new HelpWrapper(plugins);
+                this.helpWrapper = new HelpWrapper(plugins);
+                executor.shutdown();
+            })
+            .exceptionally(ex -> {
+                System.err.println("Unexpected error during plugin initialization: " + ex.getMessage());
+                ex.printStackTrace();
+                executor.shutdown();
+                return null;
+            });
     }
 
     @Override
