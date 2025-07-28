@@ -1,5 +1,9 @@
 package com.social100.todero.console.senses;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
@@ -10,14 +14,14 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class WebSocketClient implements WebSocket.Listener {
 
   private static final int MAX_RECONNECT_DELAY_SECONDS = 30;
   private static final int BASE_DELAY_SECONDS = 2;
   private static final Random RANDOM = new Random();
-  private static final Map<String, Consumer<String>> targetList = new ConcurrentHashMap<>();
+  private static final Map<String, BiConsumer<String, String>> targetList = new ConcurrentHashMap<>();
 
   private final URI uri;
   private final HttpClient httpClient;
@@ -81,13 +85,38 @@ public class WebSocketClient implements WebSocket.Listener {
 
   @Override
   public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-    log("Received message: " + data);
-    // TODO: dispatch based on message type
-    Consumer<String> consumer = targetList.get("valorlargoyidentificabledeformaunica");
-    if (consumer != null) {
-      consumer.accept(data.toString());
+    String dd = "{" +
+        "\"jar\": \"agent-demo.jar\"," +
+        "\"agent\": \"com.shellaia.verbatim.agent.dj\"," +
+        "\"command\": \"process\"," +
+        "\"prompt\": \"" + data + "\"" +
+        "}";
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+
+      log("Received message: " + data);
+
+      JsonNode json = mapper.readTree(dd);
+      String targetIndex = json.get("jar").asText() + ";" + json.get("agent").asText() + ";" + json.get("command").asText();
+      BiConsumer<String, String> consumer = targetList.get(targetIndex);
+      if (consumer != null) {
+        consumer.accept(targetIndex, data.toString());
+      }
+      return WebSocket.Listener.super.onText(webSocket, data, last);
+
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
     }
-    return WebSocket.Listener.super.onText(webSocket, data, last);
+    // TODO: dispatch based on message type
+
+    /*
+    targetList.forEach((key, consumer) -> {
+      System.out.println("Key: " + key);
+      System.out.println("Consumer: " + consumer.getClass().getName());
+      System.out.println("------------");
+    });*/
+
+
   }
 
   @Override
@@ -106,7 +135,7 @@ public class WebSocketClient implements WebSocket.Listener {
     System.out.println("[WebSocketClient] " + msg);
   }
 
-  public void register(String id, Consumer<String> consumer) {
+  public void register(String id, BiConsumer<String, String> consumer) {
     targetList.put(id, consumer);
   }
 }

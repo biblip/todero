@@ -12,6 +12,7 @@ import com.social100.todero.common.ai.llm.OpenAiLLM;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.ServerType;
 import com.social100.todero.processor.EventDefinition;
+import io.github.cdimascio.dotenv.Dotenv;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public class AgentDJComponent {
   final static String MAIN_GROUP = "Main";
   private CommandContext globalContext = null;
   final AgentDefinition agentDefinition;
+  final String openApiKey;
 
   public AgentDJComponent() {
     agentDefinition = AgentDefinition.builder()
@@ -38,6 +40,9 @@ public class AgentDJComponent {
         .build();
 
     agentDefinition.setMetadata("region", "US");
+
+    Dotenv dotenv = Dotenv.configure().filename(".env").load();
+    this.openApiKey = dotenv.get("OPENAI_API_KEY","openai_api_key_value");
   }
 
   public enum SimpleEvent implements EventDefinition {
@@ -68,7 +73,7 @@ public class AgentDJComponent {
     //context.set("lastCommand", "restart nginx");
 
     // Agent 1: Planner (e.g. decomposes task)
-    LLMClient llm = new OpenAiLLM(System.getenv("OPENAI_API_KEY"), agentDefinition.getModel());
+    LLMClient llm = new OpenAiLLM(this.openApiKey, agentDefinition.getModel());
 
     Agent planner = new Agent(agentDefinition);
 

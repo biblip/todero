@@ -28,6 +28,8 @@ public class AgentDemoComponent {
   final static String MAIN_GROUP = "Main";
   private CommandContext globalContext = null;
   final AgentDefinition agentDefinition;
+  LLMClient llm;
+  Agent planner;
 
   public AgentDemoComponent() {
     agentDefinition = AgentDefinition.builder()
@@ -61,6 +63,10 @@ public class AgentDemoComponent {
       command = "process",
       description = "Send a prompt to the agent")
   public Boolean agentProcess(CommandContext context) {
+    if (llm == null) {
+      llm = new OpenAiLLM(System.getenv("OPENAI_API_KEY"), agentDefinition.getModel());
+      planner = new Agent(agentDefinition);
+    }
     String prompt = context.getHelp("", "", OutputType.JSON); //String.join(" ", context.getArgs());
 
     //  ******************************************************************
@@ -73,9 +79,7 @@ public class AgentDemoComponent {
     //context.set("lastCommand", "restart nginx");
 
     // Agent 1: Planner (e.g. decomposes task)
-    LLMClient llm = new OpenAiLLM(System.getenv("OPENAI_API_KEY"), agentDefinition.getModel());
 
-    Agent planner = new Agent(agentDefinition);
 
     AgentPrompt agentPrompt = new AgentPrompt(prompt);
 

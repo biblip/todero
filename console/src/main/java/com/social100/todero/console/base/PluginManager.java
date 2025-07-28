@@ -67,7 +67,33 @@ public class PluginManager implements PluginManagerInterface {
             // Launch async task
             CompletableFuture<Optional<PluginContext>> future = CompletableFuture.supplyAsync(() -> {
                 try {
-                    PluginContext context = new PluginContext(pluginDir.toPath(), pluginJar, this.type, eventListener);
+                    PluginContext context = new PluginContext(pluginDir.toPath(), pluginJar, this.type, eventListener,
+                        (id, line) -> {
+                        String[] mm = id.split(";");
+                        String pluginName = mm[1];
+                        String command = mm[2];
+
+                        System.out.println("-----------------------------------");
+                        System.out.println("jar: " + id);
+                        System.out.println("component: " + pluginName);
+                        System.out.println("command: " + command);
+                        System.out.println("line: " + line);
+                        System.out.println("-----------------------------------");
+
+                        String[] commandArgs = List.of(line).toArray(new String[]{});
+
+                        CommandContext commandContext = CommandContext.builder()
+                            .sourceId("333")
+                            .args(commandArgs)
+                            .agents(getAgents())
+                            .tools(getTools())
+                            .pluginManager(this)
+                            .build();
+
+                        //commandContext.setListener(context::respond);
+
+                        execute(pluginName, command, commandContext, true);
+                    });
                     return Optional.of(context);
                 } catch (Exception e) {
                     System.err.printf("Error processing plugin in %s (%s):%n", pluginDir.getName(), pluginJar.getName());

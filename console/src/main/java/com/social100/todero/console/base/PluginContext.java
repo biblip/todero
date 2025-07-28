@@ -33,15 +33,22 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.BiConsumer;
 
 @Getter
 public class PluginContext {
     private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final ServerType type;
+    private BiConsumer<String, String> agentSenses;
 
-    public PluginContext(Path pluginDir, File pluginJar, ServerType type, EventChannel.EventListener eventListener) throws Exception {
+    public PluginContext(Path pluginDir,
+                         File pluginJar,
+                         ServerType type,
+                         EventChannel.EventListener eventListener,
+                         BiConsumer<String, String> consumer) throws Exception {
         this.type = type;
+        this.agentSenses = consumer;
         initializePlugin(pluginDir, pluginJar, eventListener);
     }
 
@@ -141,18 +148,8 @@ public class PluginContext {
                         .flatMap(inner -> inner.values().stream())
                         .map(Command::getCommand)
                         .forEach( command -> {
-                            String agent_id = pluginJar.getName() + "-" + comp.getName() + "-" + command;
-                            //String encoded_agent_id = Arrays.toString(Base64Coder.encode(agent_id.getBytes()));
-                            //System.out.println(agent_id);
-                            //System.out.println(encoded_agent_id);
-                            sensesClient.register(agent_id, line -> {
-                                System.out.println("-----------------------------------");
-                                System.out.println("jar: " + pluginJar.getName());
-                                System.out.println("component: " + comp.getName());
-                                System.out.println("command: " + command);
-                                System.out.println("line: " + line);
-                                System.out.println("-----------------------------------");
-                            });
+                            String agent_id = pluginJar.getName() + ";" + comp.getName() + ";" + command;
+                            sensesClient.register(agent_id, agentSenses);
                         });
                     // TODO: Obtiene el id que se registra en el agente en el codigo a travez de un numero de registro
                     // y lo setea
