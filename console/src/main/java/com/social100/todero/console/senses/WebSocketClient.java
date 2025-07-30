@@ -26,7 +26,7 @@ public class WebSocketClient implements WebSocket.Listener {
   private final URI uri;
   private final HttpClient httpClient;
   private final AtomicBoolean shutdown = new AtomicBoolean(false);
-  private WebSocket webSocket;
+  private volatile WebSocket webSocket;
 
   public WebSocketClient(String uri) {
     this.uri = URI.create(uri);
@@ -45,41 +45,48 @@ public class WebSocketClient implements WebSocket.Listener {
   }
 
   private void connectWithRetry() {
+    int retryAttempts = 0;
+
     while (!shutdown.get()) {
       try {
-        log("Connecting to " + uri);
+        log("Attempting connection to " + uri);
         CompletableFuture<WebSocket> future = httpClient.newWebSocketBuilder()
             .buildAsync(uri, this);
         webSocket = future.join();
 
-        // Wait until closed
-        while (!shutdown.get()) {
-          Thread.sleep(1000);
-        }
-        break;
+        retryAttempts = 0; // Reset on successful connection
+        log("Connected to WebSocket.");
+        break; // exit retry loop
 
       } catch (Exception e) {
         log("Connection failed: " + e.getMessage());
+        retryAttempts++;
       }
 
-      int expDelay = BASE_DELAY_SECONDS * (1 << RANDOM.nextInt(5));
-      double jitter = RANDOM.nextDouble();
-      int delay = Math.min(MAX_RECONNECT_DELAY_SECONDS, expDelay + (int) jitter);
+      int expDelay = BASE_DELAY_SECONDS * (1 << Math.min(retryAttempts, 5));
+      int jitter = RANDOM.nextInt(BASE_DELAY_SECONDS);
+      int delay = Math.min(MAX_RECONNECT_DELAY_SECONDS, expDelay + jitter);
       log("Reconnecting in " + delay + " seconds...");
       sleepSeconds(delay);
+    }
+  }
+
+  private void reconnectAsync() {
+    if (!shutdown.get()) {
+      log("Scheduling reconnection...");
+      new Thread(this::connectWithRetry).start();
     }
   }
 
   private void sleepSeconds(int seconds) {
     try {
       TimeUnit.SECONDS.sleep(seconds);
-    } catch (InterruptedException ignored) {
-    }
+    } catch (InterruptedException ignored) {}
   }
 
   @Override
   public void onOpen(WebSocket webSocket) {
-    log("WebSocket connected.");
+    log("WebSocket connection established.");
     WebSocket.Listener.super.onOpen(webSocket);
   }
 
@@ -91,51 +98,48 @@ public class WebSocketClient implements WebSocket.Listener {
         "\"command\": \"process\"," +
         "\"prompt\": \"" + data + "\"" +
         "}";
+
     ObjectMapper mapper = new ObjectMapper();
     try {
-
       log("Received message: " + data);
-
       JsonNode json = mapper.readTree(dd);
-      String targetIndex = json.get("jar").asText() + ";" + json.get("agent").asText() + ";" + json.get("command").asText();
+      String targetIndex = json.get("jar").asText() + ";" +
+          json.get("agent").asText() + ";" +
+          json.get("command").asText();
       BiConsumer<String, String> consumer = targetList.get(targetIndex);
       if (consumer != null) {
         consumer.accept(targetIndex, data.toString());
       }
-      return WebSocket.Listener.super.onText(webSocket, data, last);
-
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      log("Error parsing JSON: " + e.getMessage());
     }
-    // TODO: dispatch based on message type
 
-    /*
-    targetList.forEach((key, consumer) -> {
-      System.out.println("Key: " + key);
-      System.out.println("Consumer: " + consumer.getClass().getName());
-      System.out.println("------------");
-    });*/
-
-
+    return WebSocket.Listener.super.onText(webSocket, data, last);
   }
 
   @Override
   public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-    log("Connection closed: " + statusCode + " - " + reason);
+    log("WebSocket closed: " + statusCode + " - " + reason);
+    if (!shutdown.get()) {
+      reconnectAsync();
+    }
     return WebSocket.Listener.super.onClose(webSocket, statusCode, reason);
   }
 
   @Override
   public void onError(WebSocket webSocket, Throwable error) {
     log("WebSocket error: " + error.getMessage());
+    if (!shutdown.get()) {
+      reconnectAsync();
+    }
     WebSocket.Listener.super.onError(webSocket, error);
-  }
-
-  private void log(String msg) {
-    System.out.println("[WebSocketClient] " + msg);
   }
 
   public void register(String id, BiConsumer<String, String> consumer) {
     targetList.put(id, consumer);
+  }
+
+  private void log(String msg) {
+    System.out.println("[WebSocketClient] " + msg);
   }
 }
