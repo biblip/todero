@@ -20,6 +20,7 @@
         <module>plugins-develop/aia-protocol-plugin</module>
         <module>plugins-develop/ssh-plugin</module>
         <module>plugins-develop/agent-demo</module>
+        <module>plugins-develop/agent-dashboard-plugin</module>
         <module>transport-protocol</module>
         <module>annotations</module>
         <module>processor</module>
