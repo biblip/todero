@@ -13,7 +13,6 @@ import com.social100.todero.common.ai.llm.OpenAiLLM;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.ServerType;
 import com.social100.todero.console.base.OutputType;
-import com.social100.todero.processor.EventDefinition;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;
@@ -35,12 +34,11 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.social100.todero.console.base.ArgumentParser.parseArguments;
 
-@AIAController(name = "com.shellaia.verbatim.agent.dashboard",
-    type = ServerType.AI,
+@AIAController(name = "com.shellaia.verbatim.dashboard.planner",
+    type = ServerType.AIA,
     visible = true,
-    description = "Agent Dashboard",
-    events = AgentDashboardComponent.SimpleEvent.class)
-public class AgentDashboardComponent {
+    description = "Dashboard Planner")
+public class DashboardPlannerComponent {
   final static String MAIN_GROUP = "Main";
   private CommandContext globalContext = null;
   final AgentDefinition agentDefinition;
@@ -49,7 +47,7 @@ public class AgentDashboardComponent {
   final Undertow server;
   private static final ConcurrentMap<String, WebSocketChannel> BY_ID = new ConcurrentHashMap<>();
 
-  public AgentDashboardComponent() {
+  public DashboardPlannerComponent() {
     agentDefinition = AgentDefinition.builder()
         .name("DJ Agent")
         .role("Assistant")
@@ -64,7 +62,7 @@ public class AgentDashboardComponent {
 
     // Static files from src/main/resources/web (index.html, app.js, etc.)
     ResourceHandler staticHandler = Handlers.resource(
-            new ClassPathResourceManager(AgentDashboardComponent.class.getClassLoader(), "web"))
+            new ClassPathResourceManager(DashboardPlannerComponent.class.getClassLoader(), "web"))
         .setDirectoryListingEnabled(false)
         .addWelcomeFiles("index.html");
 
@@ -121,22 +119,6 @@ public class AgentDashboardComponent {
 
   }
 
-  public enum SimpleEvent implements EventDefinition {
-    SIMPLE_EVENT("A event to demo"),
-    OTHER_EVENT("Other event to demo");
-
-    private final String description;
-
-    SimpleEvent(String description) {
-      this.description = description;
-    }
-
-    @Override
-    public String getDescription() {
-      return description;
-    }
-  }
-
   @Action(group = MAIN_GROUP,
       command = "start",
       description = "Send data to show in the dashboard")
@@ -168,9 +150,9 @@ public class AgentDashboardComponent {
 
 
   @Action(group = MAIN_GROUP,
-      command = "show",
+      command = "process",
       description = "Send data to show in the dashboard")
-  public Boolean show(CommandContext context) {
+  public Boolean process(CommandContext context) {
     if (llm == null) {
       llm = new OpenAiLLM(System.getenv("OPENAI_API_KEY"), agentDefinition.getModel());
       planner = new Agent(agentDefinition);
@@ -206,7 +188,8 @@ public class AgentDashboardComponent {
 
         internalContext.setListener(context::respond);
 
-        context.execute("com.shellaia.verbatim.plugin.vlc_plugin", command, internalContext);
+        //context.execute("com.shellaia.verbatim.plugin.vlc_plugin", command, internalContext);
+        context.execute("com.shellaia.verbatim.agent.dashboard", command, internalContext);
       });
 
     } catch (Exception e) {

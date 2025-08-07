@@ -10,7 +10,7 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>agent-dashboard-plugin</artifactId>
+  <artifactId>dashboard-planner-plugin</artifactId>
 
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
@@ -91,7 +91,7 @@
             <configuration>
               <target>
                 <!-- Copy the shaded JAR to the project root -->
-                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../playground/workspaces/guest/plugins/agent-dashboard/agent-dashboard.jar" />
+                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/../../playground/workspaces/guest/plugins/dashboard-planner/dashboard-planner.jar" />
               </target>
             </configuration>
           </execution>
@@ -107,8 +107,8 @@
             <fileset>
               <directory>${project.basedir}/../../playground/workspaces/guest/plugins</directory>
               <includes>
-                <include>agent-dashboard/**</include>
-                <include>agent-dashboard/</include>
+                <include>dashboard-planner/**</include>
+                <include>dashboard-planner/</include>
               </includes>
               <followSymlinks>false</followSymlinks>
             </fileset>
