@@ -25,7 +25,10 @@ public class Agent implements AgentInterface {
 
     String raw = llm.chat(systemPrompt, prompt.getMessage(), contextJson);
 
-    JsonNode root = JsonUtils.parse(raw);
+    System.out.println("LLM Response");
+    System.out.println(raw);
+
+    JsonNode root = JsonUtils.extractFirstJsonBlock(raw);
 
     Optional<String> action = JsonUtils.getValue(root, "plan.action");
 

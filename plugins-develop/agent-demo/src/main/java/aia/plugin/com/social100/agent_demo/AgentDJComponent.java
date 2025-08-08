@@ -8,7 +8,7 @@ import com.social100.todero.common.ai.agent.AgentContext;
 import com.social100.todero.common.ai.agent.AgentDefinition;
 import com.social100.todero.common.ai.agent.AgentPrompt;
 import com.social100.todero.common.ai.llm.LLMClient;
-import com.social100.todero.common.ai.llm.OpenAiLLM;
+import com.social100.todero.common.ai.llm.OllamaLLM;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.ServerType;
 import com.social100.todero.processor.EventDefinition;
@@ -35,7 +35,9 @@ public class AgentDJComponent {
         .name("DJ Agent")
         .role("Assistant")
         .description("handle a music playback system")
-        .model("gpt-4.1-nano")
+        //.model("gpt-4.1-nano")
+        //.model("qwen3:4b")
+        .model("gemma3:4b")
         .systemPrompt(AgentDefinition.loadSystemPromptFromResource("prompts/default-system-prompt.txt"))
         .build();
 
@@ -73,7 +75,8 @@ public class AgentDJComponent {
     //context.set("lastCommand", "restart nginx");
 
     // Agent 1: Planner (e.g. decomposes task)
-    LLMClient llm = new OpenAiLLM(this.openApiKey, agentDefinition.getModel());
+    LLMClient llm = new OllamaLLM("http://11.11.11.1:11434", agentDefinition.getModel());
+    //LLMClient llm = new OllamaAiLLM(this.openApiKey, agentDefinition.getModel());
 
     Agent planner = new Agent(agentDefinition);
 

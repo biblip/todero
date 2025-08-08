@@ -54,6 +54,7 @@ For each user request:F
 
 === Rules ===
 
+- Respond only with a valid JSON object. Do not include explanations, tags, or text outside the JSON.
 - Action syntax: [command] [param1] [param2] ...
 - If you don't know the full path of the media file you will have to search using the following:
   - Use ${SEARCH_VALUE} in the action with your search value on it regardless of the command.
