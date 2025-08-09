@@ -70,11 +70,11 @@ public class PluginManager implements PluginManagerInterface {
                     PluginContext context = new PluginContext(pluginDir.toPath(), pluginJar, this.type, eventListener,
                         (id, line) -> {
                         String[] mm = id.split(";");
-                        String pluginName = mm[1];
-                        String command = mm[2];
+                        String pluginName = mm[0];
+                        String command = mm[1];
 
                         System.out.println("-----------------------------------");
-                        System.out.println("jar: " + id);
+                        System.out.println("id: " + id);
                         System.out.println("component: " + pluginName);
                         System.out.println("command: " + command);
                         System.out.println("line: " + line);

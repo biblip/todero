@@ -20,7 +20,8 @@ public class OllamaLLM implements LLMClient {
   private final String model;
 
   public OllamaLLM(String baseUrl, String model) {
-    this(baseUrl, model, 60, 60, 60);
+    // Todo: timeout should be no timeout at all, but the user should maintain the ability to stop the wait process any time.
+    this(baseUrl, model, 360, 360, 360);
   }
 
   public OllamaLLM(String baseUrl, String model, int connectTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {

@@ -2,9 +2,7 @@ version: 1.0
 nuevo: value
 app:
   version: 1.0
-  server:
+  ai_server:
     port: 41
-    host: localhost
-  tcpserver:
-    port: 8070
-    thread_pool_size: 10
+  aia_server:
+    port: 414

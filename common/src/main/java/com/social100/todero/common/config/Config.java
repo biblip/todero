@@ -13,8 +13,8 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 public class Config extends ConfigParameters {
     private String version;
-    private ServerType type;
-    private ServerConfig server;
+    private ServerConfig ai_server;
+    private ServerConfig aia_server;
     private PluginsConfig plugins;
     private BeingsConfig beings;
     private WorkspacesConfig workspaces;

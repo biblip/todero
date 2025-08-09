@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class ServerConfig extends ConfigParameters {
     private Integer port;
-    private String host;
+    private String host = "127.0.0.1";
 }

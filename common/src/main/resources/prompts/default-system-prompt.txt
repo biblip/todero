@@ -48,7 +48,8 @@ For each user request:F
   "request": "Your interpretation of the user’s request.",
   "plan": {
     "action": "[command] [param1] ... [paramN]",
-    "user": "Message to the user for input, feedback, or confirmation, if any."
+    "user": "A very short message to the user regarding his request - what to expect after the action.",
+    "html": "Message to the user via html format to give feedback, confirmation, or to respond the user."
   }
 }
 

@@ -4,8 +4,7 @@ import com.social100.todero.common.Constants;
 import com.social100.todero.common.channels.EventChannel;
 import com.social100.todero.common.channels.process.ChannelHandler;
 import com.social100.todero.common.channels.process.ChannelProcessor;
-import com.social100.todero.common.config.AppConfig;
-import com.social100.todero.common.config.ServerType;
+import com.social100.todero.common.config.ServerConfig;
 import com.social100.todero.common.message.MessageContainer;
 import com.social100.todero.common.message.channel.ChannelMessage;
 import com.social100.todero.common.message.channel.ChannelType;
@@ -35,8 +34,8 @@ public class ConsoleCommandLineInterface implements CommandLineInterface {
         }
     };
 
-    public ConsoleCommandLineInterface(AppConfig appConfig, ServerType type) {
-        this.commandProcessor = CommandProcessorFactory.createRemoteProcessor(appConfig, type, eventListener);
+    public ConsoleCommandLineInterface(ServerConfig serverConfig) {
+        this.commandProcessor = CommandProcessorFactory.createRemoteProcessor(serverConfig, eventListener);
         this.commandProcessor.open();
     }
 

@@ -148,7 +148,7 @@ public class PluginContext {
                         .flatMap(inner -> inner.values().stream())
                         .map(Command::getCommand)
                         .forEach( command -> {
-                            String agent_id = pluginJar.getName() + ";" + comp.getName() + ";" + command;
+                            String agent_id = comp.getName() + ";" + command;
                             sensesClient.register(agent_id, agentSenses);
                         });
                     // TODO: Obtiene el id que se registra en el agente en el codigo a travez de un numero de registro

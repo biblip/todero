@@ -9,8 +9,13 @@ import java.util.function.BiConsumer;
 public class SensesClient {
   final private WebSocketClient client;
 
-  public SensesClient() {
-    client = new WebSocketClient("ws://127.0.0.1:5353/ws");
+  public SensesClient() throws Exception {
+    //String interactionServerHost = "io.shellaia.com";
+    String interactionServerHost = "127.0.0.1";
+    int interactionServerPort = 4242;
+    String interactionServerUrl =  "ws://" + interactionServerHost + ":" + interactionServerPort + "/ws";
+
+    client = new WebSocketClient(interactionServerUrl);
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       System.out.println("[!] Interrupted by user");

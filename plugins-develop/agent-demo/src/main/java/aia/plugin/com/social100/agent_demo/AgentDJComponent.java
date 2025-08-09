@@ -38,6 +38,7 @@ public class AgentDJComponent {
         //.model("gpt-4.1-nano")
         //.model("qwen3:4b")
         .model("gemma3:4b")
+        //.model("gemma3:12b")
         .systemPrompt(AgentDefinition.loadSystemPromptFromResource("prompts/default-system-prompt.txt"))
         .build();
 

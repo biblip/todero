@@ -22,7 +22,7 @@ public class SshServer implements RawServer {
     private Integer port;
 
     public SshServer(AppConfig appConfig, ServerType type) {
-        port = appConfig.getApp().getServer().getPort();
+        port = 9876; // appConfig.getApp().getServer().getPort();
         commandManager = new CliCommandManager(appConfig, type, (eventName, message) -> {
             // TODO: the goal of this is to return casual events to the intended target.
             /*
