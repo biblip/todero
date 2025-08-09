@@ -15,10 +15,12 @@ public class TerminalInputHandler {
     private final LineReader lineReader;
 
     public TerminalInputHandler(String[] autocompleteStrings) throws IOException {
+        boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
+
         this.terminal = TerminalBuilder.builder()
-                .jna(false)
-                .jansi(true)
                 .system(true)
+                .jna(!isWindows)       // enable JNA only on Unix-like
+                .jansi(isWindows)      // enable JANSI only on Windows
                 .build();
 
         LineReaderBuilder builder = LineReaderBuilder.builder().terminal(this.terminal);
