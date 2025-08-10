@@ -99,7 +99,7 @@ public class AgentDJComponent {
 
         internalContext.setListener(context::respond);
 
-        context.execute("com.shellaia.verbatim.plugin.vlc", command, internalContext);
+        context.execute("com.shellaia.verbatim.plugin.spotify", command, internalContext);
         //context.execute("vlc", command, internalContext);
       });
 

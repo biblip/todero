@@ -10,19 +10,30 @@ import com.social100.todero.common.model.plugin.Plugin;
 import com.social100.todero.common.model.plugin.PluginInterface;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class PluginManager implements PluginManagerInterface {
-    final private Map<String, Plugin> plugins = new HashMap<>();
-    final private Map<String, Plugin> pluginsAll = new HashMap<>();
+    // Dedicated pools so plugin work can’t block your main threads
+    private static final ExecutorService PLUGIN_EXECUTOR = new ThreadPoolExecutor(
+            2, Math.max(4, Runtime.getRuntime().availableProcessors()),
+            60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(1024),                   // backpressure instead of OOM
+            new PluginManager.NamedThreadFactory("plugin-exec"),
+            new ThreadPoolExecutor.CallerRunsPolicy());        // throttles under load
+
+    private static final ScheduledExecutorService TIMEOUT_SCHEDULER =
+            Executors.newScheduledThreadPool(1, new PluginManager.NamedThreadFactory("plugin-timeout"));
+
+    final private Map<String, Plugin> plugins = new ConcurrentHashMap<>();
+    final private Map<String, Plugin> pluginsAll = new ConcurrentHashMap<>();
     final List<PluginContext> pluginContextList = new ArrayList<>();
     private final File pluginsDir;
     private HelpWrapper helpWrapper;
@@ -130,6 +141,17 @@ public class PluginManager implements PluginManagerInterface {
             });
     }
 
+    private static final class NamedThreadFactory implements ThreadFactory {
+        private final String base; private final AtomicInteger c = new AtomicInteger();
+        NamedThreadFactory(String base) { this.base = base; }
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, base + "-" + c.incrementAndGet());
+            t.setDaemon(true);
+            t.setUncaughtExceptionHandler((thr, ex) -> { /* log */ });
+            return t;
+        }
+    }
+
     @Override
     public String getHelp(String pluginName, String commandName, OutputType outputType) {
         return helpWrapper.getHelp(pluginName, commandName, outputType);
@@ -163,52 +185,100 @@ public class PluginManager implements PluginManagerInterface {
                 .get().getComponent();
     }
 
-    @Override
-    public void execute(String pluginName, String command, CommandContext context, boolean usePluginsAll) {
-        // Find the specified plugin
-        Plugin plugin = (usePluginsAll ? pluginsAll : plugins).get(pluginName);
+    public CompletableFuture<Void> executeAsync(
+            String pluginName, String command, CommandContext context,
+            boolean usePluginsAll, Duration timeout) {
 
+        // --- fast, non-blocking validation on the caller thread
+        Plugin plugin = (usePluginsAll ? pluginsAll : plugins).get(pluginName);
         if (plugin == null) {
             context.respond("Plugin with name '" + pluginName + "' not found.");
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
-        // Get the associated Component and validate the command
         Component component = plugin.getComponent();
         if (component == null || component.getCommands() == null || component.getCommands().isEmpty()) {
             context.respond("Plugin '" + pluginName + "' has no commands defined.");
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
-        // Search for the command in the nested structure
         Command foundCommand = null;
-        for (Map.Entry<String, Map<String, Command>> groupEntry : component.getCommands().entrySet()) {
-            Map<String, Command> groupCommands = groupEntry.getValue();
-            if (groupCommands.containsKey(command)) {
-                foundCommand = groupCommands.get(command);
+        for (Map.Entry<String, Map<String, Command>> e : component.getCommands().entrySet()) {
+            Map<String, Command> group = e.getValue();
+            if (group.containsKey(command)) {
+                foundCommand = group.get(command);
                 break;
             }
         }
-
         if (foundCommand == null) {
             context.respond("Command '" + command + "' does not exist in plugin '" + pluginName + "'.");
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
-        // Get the associated PluginContext
         PluginInterface pluginInstance = plugin.getPluginInstance();
-
         if (pluginInstance == null) {
             context.respond("Plugin '" + pluginName + "' has no associated Instance.");
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
-        // Call the execute method on the PluginInstance
-        try {
-            pluginInstance.execute(pluginName, command, context);
-        } catch (Exception e) {
-            context.respond("Failed to execute command '" + command + "' on plugin '" + pluginName + "': " + e.getMessage());
-        }
+        // --- run the plugin call off-thread, with a cancellable Future
+        Future<?> f = PLUGIN_EXECUTOR.submit(() -> {
+            try {
+                pluginInstance.execute(pluginName, command, context);
+            } catch (Throwable t) {
+                // bubble up to the wrapper so CompletableFuture completes exceptionally
+                throw t;
+            }
+        });
+
+        // Bridge Future -> CompletableFuture
+        CompletableFuture<Void> promise = new CompletableFuture<>();
+        PLUGIN_EXECUTOR.execute(() -> {
+            try {
+                f.get();                              // waits on the worker thread, not caller
+                promise.complete(null);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                promise.completeExceptionally(ie);
+            } catch (ExecutionException ee) {
+                promise.completeExceptionally(ee.getCause() != null ? ee.getCause() : ee);
+            } catch (CancellationException ce) {
+                promise.completeExceptionally(ce);
+            }
+        });
+
+        // --- enforce timeout; interrupt the plugin thread if over time
+        long millis = Math.max(1, timeout.toMillis());
+        ScheduledFuture<?> timeoutTask = TIMEOUT_SCHEDULER.schedule(() -> {
+            if (!f.isDone()) {
+                f.cancel(true); // mayInterruptIfRunning = true  → relies on plugin code to honor interrupts
+                promise.completeExceptionally(new TimeoutException(
+                        "Timed out after " + millis + " ms executing '" + command + "' for plugin '" + pluginName + "'."));
+            }
+        }, millis, TimeUnit.MILLISECONDS);
+
+        // Clean up the timer if the task finishes first
+        promise.whenComplete((ok, err) -> timeoutTask.cancel(false));
+
+        // Optionally notify the context on completion/failure here:
+        promise.whenComplete((ok, err) -> {
+            if (err != null) {
+                String msg = (err instanceof TimeoutException)
+                        ? err.getMessage()
+                        : "Failed to execute command '" + command + "' on plugin '" + pluginName + "': " + err.getMessage();
+                context.respond(msg);
+            }
+        });
+
+        return promise;
+    }
+
+    @Override
+    public void execute(String pluginName, String command, CommandContext context, boolean usePluginsAll) {
+        // choose a sensible default timeout; make it configurable if you prefer
+        Duration defaultTimeout = Duration.ofSeconds(15);
+        executeAsync(pluginName, command, context, usePluginsAll, defaultTimeout);
+        // returns immediately; work continues off-thread
     }
 
     public void clear() {

@@ -103,8 +103,7 @@ public class WebSocketClient implements WebSocket.Listener {
     try {
       log("Received message: " + data);
       JsonNode json = mapper.readTree(dd);
-      String targetIndex = json.get("jar").asText() + ";" +
-          json.get("agent").asText() + ";" +
+      String targetIndex = json.get("agent").asText() + ";" +
           json.get("command").asText();
       BiConsumer<String, String> consumer = targetList.get(targetIndex);
       if (consumer != null) {

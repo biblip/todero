@@ -1,64 +1,61 @@
-package com.djmusic.vlc;
+package com.social100.spotify;
 
-import com.djmusic.vlc.service.VlcService;
 import com.social100.processor.AIAController;
 import com.social100.processor.Action;
+import com.social100.spotify.core.SpotifyCommandService;
+import com.social100.spotify.core.SpotifyPkceService;
 import com.social100.todero.common.command.CommandContext;
 import com.social100.todero.common.config.ServerType;
-import com.social100.todero.scheduler.TaskScheduler;
-import io.github.cdimascio.dotenv.Dotenv;
+import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.Track;
 
-@AIAController(name = "com.shellaia.verbatim.plugin.vlc",
-    type = ServerType.AIA,
-    visible = true,
-    description = "description",
-    events = VlcService.VlcPluginEvents.class)
-//@AIADependencies(components = {DjyPluginComponent.class, SimplePluginComponent.class})
-public class VlcPluginComponent {
-    private String vlcMediaDirectory;
-    private VlcService vlcService;
-    private final TaskScheduler scheduler = new TaskScheduler();
-    CommandContext globalContext = null;
+import java.util.List;
 
-    public VlcPluginComponent() {
-        Dotenv dotenv = Dotenv.configure().filename(".env-vlc").load();
-        vlcMediaDirectory = dotenv.get("MEDIA");
-        this.vlcService = new VlcService(vlcMediaDirectory);
+@AIAController(name = "com.shellaia.verbatim.plugin.spotify",
+        type = ServerType.AIA,
+        visible = true,
+        description = "description")
+public class SpotifyPluginComponent {
+    SpotifyPkceService spotifyPkceService;
+    SpotifyCommandService spotifyCommandService;
 
-        // Create an instance of the TaskScheduler
-
-
-        scheduler.scheduleTask(() -> {
-            if (globalContext != null) {
-                globalContext.event(VlcService.VlcPluginEvents.VOLUME_CHANGE.name(), "The Volume has changed");
-            }
-        }, 10000);
-
-        // Add a shutdown hook to gracefully stop the scheduler
-        Runtime.getRuntime().addShutdownHook(new Thread(scheduler::stop));
+    public SpotifyPluginComponent() {
+        this.spotifyPkceService = null;
+        this.spotifyCommandService = null;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
-            command = "events",
-            description = "Start / Stop Sending events. Usage: events ON|OFF")
-    public Boolean eventsCommand(CommandContext context) {
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
+            command = "login",
+            description = "Authorize current device to playback music into user´s devices - no parameters needed")
+    public Boolean login(CommandContext context) {
         String[] args = context.getArgs();
-        if (args.length == 0) {
-            context.respond(context.getInstance().getAvailableEvents().toString());
-        } else {
-            boolean eventsOn = "on".equalsIgnoreCase(args[0]);
-            if (eventsOn) {
-                this.globalContext = context;
-                context.respond("events are now ON");
-            } else {
-                context.respond("events are now OFF");
-                this.globalContext = null;
-            }
+        SpotifyPkceService service = new SpotifyPkceService();
+
+        this.spotifyCommandService = new SpotifyCommandService(service.getSpotifyApi(), null);
+        /*
+        String query = (args.length > 0) ? String.join(" ", args) : "daft punk get lucky";
+        Paging<Track> results = service.searchTracks(query, 5);
+
+        System.out.println("Top results for: " + query);
+        Track[] tracks = results.getItems();
+        for (int i = 0; i < tracks.length; i++) {
+            Track t = tracks[i];
+            String artist = t.getArtists().length > 0 ? t.getArtists()[0].getName() : "Unknown";
+            System.out.printf("%d) %s — %s [uri=%s]%n", i + 1, t.getName(), artist, t.getUri());
         }
+
+        if (tracks.length > 0) {
+            Track first = tracks[0];
+            String artist = first.getArtists().length > 0 ? first.getArtists()[0].getName() : "Unknown";
+            System.out.println("\nPlaying first result: " + first.getName() + " — " + artist);
+            service.playTrackUri(first.getUri());
+        } else {
+            System.out.println("No results.");
+        }*/
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "move",
             description = "Moves the playback to the specified time. Usage: move <HH:MM:SS|MM:SS|SS>")
     public Boolean moveCommand(CommandContext context) {
@@ -68,27 +65,27 @@ public class VlcPluginComponent {
             return true;
         }
         String moveTo = args[0];
-        context.respond(this.vlcService.moveCommand(moveTo));
+        context.respond(this.spotifyCommandService.move(moveTo));
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "mute",
             description = "Toggles the mute state of the playback if valid media is loaded.")
     public Boolean muteCommand(CommandContext context) {
-        context.respond(this.vlcService.muteCommand());
+        context.respond(this.spotifyCommandService.muteToggle());
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "pause",
             description = "Pauses the playback if it is currently playing.")
     public Boolean pauseCommand(CommandContext context) {
-        context.respond(this.vlcService.pauseCommand());
+        context.respond(this.spotifyCommandService.pause());
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "play",
             description = "Plays the specified media file. If no file is specified, resumes the current one. Usage: play [media]")
     public Boolean playCommand(CommandContext context) {
@@ -97,11 +94,11 @@ public class VlcPluginComponent {
         if (args.length > 0) {
             mediaPathToPlay = args[0];
         }
-        context.respond(this.vlcService.playCommand(mediaPathToPlay));
+        context.respond(this.spotifyCommandService.play(mediaPathToPlay));
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "skip",
             description = "Skips the playback forward or backward by the specified number of seconds. Usage: skip <+/-seconds>")
     public Boolean skipCommand(CommandContext context) {
@@ -110,30 +107,30 @@ public class VlcPluginComponent {
             context.respond("Error: Please specify the number of seconds to skip. Usage: skip <+/-seconds>");
             return true;
         }
-        long skipTime = Long.parseLong(args[0]);
-        context.respond(this.vlcService.skipCommand(skipTime));
+        int skipTime = Integer.parseInt(args[0]);
+        context.respond(this.spotifyCommandService.skipSeconds(skipTime));
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "status",
             description = "Displays the current status of VLC. Use 'status all' for all media info available.")
     public Boolean statusCommand(CommandContext context) {
         String[] args = context.getArgs();
         boolean all = (args.length > 0 && "all".equalsIgnoreCase(args[0]));
-        context.respond(this.vlcService.statusCommand(all));
+        context.respond(this.spotifyCommandService.status(all));
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "stop",
             description = "Stops the playback if it is currently active.")
     public Boolean stopCommand(CommandContext context) {
-        context.respond(this.vlcService.stopCommand());
+        context.respond(this.spotifyCommandService.stop());
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "volume",
             description = "Sets the volume to a specified level between 0 and 150. Usage: volume <level>")
     public Boolean volumeCommand(CommandContext context) {
@@ -143,27 +140,28 @@ public class VlcPluginComponent {
             return true;
         }
         int volume = Integer.parseInt(args[0]);
-        context.respond(this.vlcService.volumeCommand(volume));
+        context.respond(this.spotifyCommandService.volume(volume));
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "volume-down",
             description = "Decreases the volume by 5 units.")
     public Boolean volumeDownCommand(CommandContext context) {
-        context.respond(this.vlcService.volumeDownCommand());
+        context.respond(this.spotifyCommandService.volumeDown());
         return true;
     }
 
-    @Action(group = VlcService.MAIN_GROUP,
+    @Action(group = SpotifyCommandService.MAIN_GROUP,
             command = "volume-up",
             description = "Increases the volume by 5 units.")
     public Boolean volumeUpCommand(CommandContext context) {
-        context.respond(this.vlcService.volumeUpCommand());
+        context.respond(this.spotifyCommandService.volumeUp());
         return true;
     }
 
-    @Action(group = VlcService.PLAYLIST_GROUP,
+    /*
+    @Action(group = SpotifyCommandService.PLAYLIST_GROUP,
             command = "playlist-add",
             description = "Adds the specified media file to the playlist. Usage: add-playlist [media]")
     public Boolean playlistAdd(CommandContext context) {
@@ -172,31 +170,31 @@ public class VlcPluginComponent {
         if (args.length > 0) {
             mediaPathToAdd = args[0];
         }
-        context.respond(this.vlcService.playlistAdd(mediaPathToAdd));
+        context.respond(this.spotifyCommandService.playlistAdd(mediaPathToAdd));
         return true;
-    }
+    }*/
 
-    @Action(group = VlcService.PLAYLIST_GROUP,
+    @Action(group = SpotifyCommandService.PLAYLIST_GROUP,
             command = "playlist-remove",
             description = "Remove current paying media from the playlist Usage: playlist-remove, if there is no current media playing then does nothing")
     public Boolean playlistRemove(CommandContext context) {
-        context.respond(this.vlcService.playlistRemove());
+        context.respond(this.spotifyCommandService.playlistRemoveCurrentIfFromPlaylist());
         return true;
     }
 
-    @Action(group = VlcService.PLAYLIST_GROUP,
+    @Action(group = SpotifyCommandService.PLAYLIST_GROUP,
             command = "playlist-next",
             description = "Play the next media in the playlist. Usage: playlist-next")
     public Boolean playlistNext(CommandContext context) {
-        context.respond(this.vlcService.playlistNext());
+        context.respond(this.spotifyCommandService.playlistNext());
         return true;
     }
-
-    @Action(group = VlcService.PLAYLIST_GROUP,
+/*
+    @Action(group = SpotifyCommandService.PLAYLIST_GROUP,
             command = "playlist-list",
             description = "Inform the user of the playlist items and which is the current item. Usage: playlist-list")
     public Boolean playlistList(CommandContext context) {
-        context.respond(this.vlcService.playlistList());
+        context.respond(this.spotifyCommandService.playlistList());
         return true;
-    }
+    }*/
 }

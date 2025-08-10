@@ -21,6 +21,7 @@
         <module>plugins-develop/ssh-plugin</module>
         <module>plugins-develop/agent-demo</module>
         <module>plugins-develop/dashboard-planner-plugin</module>
+        <module>plugins-develop/spotify-plugin</module>
         <module>transport-protocol</module>
         <module>annotations</module>
         <module>processor</module>

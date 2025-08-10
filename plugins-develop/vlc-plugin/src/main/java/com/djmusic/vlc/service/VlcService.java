@@ -6,6 +6,7 @@ import com.djmusic.vlc.util.PlaylistFormatter;
 import com.social100.todero.processor.EventDefinition;
 import com.social100.todero.util.PlaceholderUtils;
 import uk.co.caprica.vlcj.binding.support.runtime.RuntimeUtil;
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.State;
@@ -70,32 +71,34 @@ public class VlcService {
     }
 
     private static boolean loadVLC() {
-        try {
-            String libvlcCorePath = "/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib";
-            String libvlcPath = "/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib";
+        return new NativeDiscovery().discover();
 
-            // Print the paths to confirm
-            System.out.println("Checking for libvlc at: " + libvlcPath);
-            System.out.println("Checking for libvlccore at: " + libvlcCorePath);
-
-            // Check if the files exist
-            if (!new java.io.File(libvlcCorePath).exists()) {
-                System.out.println("libvlccore.dylib not found!");
-                return false;
-            }
-            if (!new java.io.File(libvlcPath).exists()) {
-                System.out.println("libvlc.dylib not found!");
-                return false;
-            }
-
-            System.load(libvlcCorePath);
-            System.load(libvlcPath);
-            System.out.println("VLC libraries loaded successfully.");
-            return true;
-        } catch (UnsatisfiedLinkError e) {
-            System.out.println("Failed to load VLC libraries: " + e.getMessage());
-            return false;
-        }
+//        try {
+//            String libvlcCorePath = "/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib";
+//            String libvlcPath = "/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib";
+//
+//            // Print the paths to confirm
+//            System.out.println("Checking for libvlc at: " + libvlcPath);
+//            System.out.println("Checking for libvlccore at: " + libvlcCorePath);
+//
+//            // Check if the files exist
+//            if (!new java.io.File(libvlcCorePath).exists()) {
+//                System.out.println("libvlccore.dylib not found!");
+//                return false;
+//            }
+//            if (!new java.io.File(libvlcPath).exists()) {
+//                System.out.println("libvlc.dylib not found!");
+//                return false;
+//            }
+//
+//            System.load(libvlcCorePath);
+//            System.load(libvlcPath);
+//            System.out.println("VLC libraries loaded successfully.");
+//            return true;
+//        } catch (UnsatisfiedLinkError e) {
+//            System.out.println("Failed to load VLC libraries: " + e.getMessage());
+//            return false;
+//        }
     }
 
     public enum VlcPluginEvents implements EventDefinition {
