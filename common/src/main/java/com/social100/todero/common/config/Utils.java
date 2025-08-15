@@ -3,6 +3,8 @@ package com.social100.todero.common.config;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.github.cdimascio.dotenv.Dotenv;
+import org.apache.commons.text.StringSubstitutor;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -14,6 +16,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Utils {
 
@@ -62,11 +66,29 @@ public class Utils {
 
     // Load YAML
     try {
+      // Load .env file (automatically reads from the current working directory)
+      Dotenv dotenv = Dotenv.load();
+
+      // Merge .env and system environment variables
+      Map<String, String> variables = new HashMap<>(dotenv.entries().stream()
+          .collect(HashMap::new,
+              (m, e) -> m.put(e.getKey(), e.getValue()),
+              HashMap::putAll));
+      variables.putAll(System.getenv()); // system vars take precedence
+
+      // Read YAML as text
+      String yamlContent = Files.readString(configFile.toPath());
+
+      // Replace ${VAR} placeholders
+      StringSubstitutor substitutor = new StringSubstitutor(variables);
+      String resolvedYaml = substitutor.replace(yamlContent);
+
+      // Parse YAML into object
       ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
       yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
       yamlMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
 
-      return yamlMapper.readValue(configFile, AppConfig.class);
+      return yamlMapper.readValue(resolvedYaml, AppConfig.class);
     } catch (IOException e) {
       System.err.println("Error reading configuration file: " + e.getMessage());
     }
@@ -80,13 +102,13 @@ public class Utils {
     if (viaSunCmd != null) return viaSunCmd;
 
     // 2) Try the TCCL base (works for classes dirs and many fat-jar setups)
-    Path viaTccl = tryFromTcclBase();
-    if (viaTccl != null) return viaTccl;
+    //Path viaTccl = tryFromTcclBase();
+    //if (viaTccl != null) return viaTccl;
 
     // 3) Walk the classpath, but skip our own utility’s location
-    Path self = locationOf(Utils.class);
-    Path viaClasspath = tryFromClasspathExcluding(self);
-    if (viaClasspath != null) return viaClasspath;
+    //Path self = locationOf(Utils.class);
+    //Path viaClasspath = tryFromClasspathExcluding(self);
+    //if (viaClasspath != null) return viaClasspath;
 
     // 4) Last resort: working directory
     return Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();

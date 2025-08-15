@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class AppConfig {
+    private Profile profile;
     private Config app;
     private String version;
 }

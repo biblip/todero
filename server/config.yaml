@@ -1,5 +1,8 @@
 version: 1.0
 nuevo: value
+profile:
+  device_id: ${PROFILE_DEVICE_ID}
+  api_token: ${PROFILE_API_TOKEN}
 app:
   version: 1.0
   ai_server:
