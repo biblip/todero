@@ -54,7 +54,6 @@ public class SpotifyPkceService {
                 .build();
 
         this.tokenStore = new TokenStore(Path.of(".spotify_tokens.json"));
-        ensureAuthorized();
     }
 
     private static String required(String v, String key) {
@@ -237,7 +236,8 @@ public class SpotifyPkceService {
     /* ===================== API ===================== */
 
     public SpotifyApi getSpotifyApi() {
-        return this.spotifyApi;
+      ensureAuthorized();
+      return this.spotifyApi;
     }
 
     public Paging<Track> searchTracks(String q, int limit) {

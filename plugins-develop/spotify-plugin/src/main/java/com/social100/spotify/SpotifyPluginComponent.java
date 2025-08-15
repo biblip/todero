@@ -16,43 +16,10 @@ import java.util.List;
         visible = true,
         description = "description")
 public class SpotifyPluginComponent {
-    SpotifyPkceService spotifyPkceService;
-    SpotifyCommandService spotifyCommandService;
+    SpotifyPkceService spotifyPkceService = new SpotifyPkceService();
+    SpotifyCommandService spotifyCommandService = new SpotifyCommandService(spotifyPkceService, null);
 
     public SpotifyPluginComponent() {
-        this.spotifyPkceService = null;
-        this.spotifyCommandService = null;
-    }
-
-    @Action(group = SpotifyCommandService.MAIN_GROUP,
-            command = "login",
-            description = "Authorize current device to playback music into user´s devices - no parameters needed")
-    public Boolean login(CommandContext context) {
-        String[] args = context.getArgs();
-        SpotifyPkceService service = new SpotifyPkceService();
-
-        this.spotifyCommandService = new SpotifyCommandService(service.getSpotifyApi(), null);
-        /*
-        String query = (args.length > 0) ? String.join(" ", args) : "daft punk get lucky";
-        Paging<Track> results = service.searchTracks(query, 5);
-
-        System.out.println("Top results for: " + query);
-        Track[] tracks = results.getItems();
-        for (int i = 0; i < tracks.length; i++) {
-            Track t = tracks[i];
-            String artist = t.getArtists().length > 0 ? t.getArtists()[0].getName() : "Unknown";
-            System.out.printf("%d) %s — %s [uri=%s]%n", i + 1, t.getName(), artist, t.getUri());
-        }
-
-        if (tracks.length > 0) {
-            Track first = tracks[0];
-            String artist = first.getArtists().length > 0 ? first.getArtists()[0].getName() : "Unknown";
-            System.out.println("\nPlaying first result: " + first.getName() + " — " + artist);
-            service.playTrackUri(first.getUri());
-        } else {
-            System.out.println("No results.");
-        }*/
-        return true;
     }
 
     @Action(group = SpotifyCommandService.MAIN_GROUP,

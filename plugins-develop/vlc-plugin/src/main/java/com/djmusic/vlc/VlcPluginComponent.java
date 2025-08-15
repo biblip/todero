@@ -21,21 +21,20 @@ public class VlcPluginComponent {
     CommandContext globalContext = null;
 
     public VlcPluginComponent() {
-        Dotenv dotenv = Dotenv.configure().filename(".env-vlc").load();
-        vlcMediaDirectory = dotenv.get("MEDIA");
-        this.vlcService = new VlcService(vlcMediaDirectory);
+    }
 
-        // Create an instance of the TaskScheduler
-
-
-        scheduler.scheduleTask(() -> {
-            if (globalContext != null) {
-                globalContext.event(VlcService.VlcPluginEvents.VOLUME_CHANGE.name(), "The Volume has changed");
-            }
-        }, 10000);
-
-        // Add a shutdown hook to gracefully stop the scheduler
-        Runtime.getRuntime().addShutdownHook(new Thread(scheduler::stop));
+    public void init() {
+      Dotenv dotenv = Dotenv.configure().filename(".env-vlc").load();
+      vlcMediaDirectory = dotenv.get("MEDIA");
+      this.vlcService = new VlcService(vlcMediaDirectory);
+      // Create an instance of the TaskScheduler
+      scheduler.scheduleTask(() -> {
+        if (globalContext != null) {
+          globalContext.event(VlcService.VlcPluginEvents.VOLUME_CHANGE.name(), "The Volume has changed");
+        }
+      }, 10000);
+      // Add a shutdown hook to gracefully stop the scheduler
+      Runtime.getRuntime().addShutdownHook(new Thread(scheduler::stop));
     }
 
     @Action(group = VlcService.MAIN_GROUP,

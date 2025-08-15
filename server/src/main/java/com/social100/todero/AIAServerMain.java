@@ -16,24 +16,27 @@ public class AIAServerMain {
     static private AppConfig appConfig;
     //static private AppConfig appConfig_aia;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         try {
             LogRedirector.initialize();
         } catch (IOException e) {
             e.printStackTrace(); // fallback to console
         }
 
-        appConfig = loadAppConfig(args);
-        RawServer aiaServer_ai = new AIAServer(appConfig, ServerType.AI);
-        aiaServer_ai.start();
-
-        RawServer aiaServer_aia = new AIAServer(appConfig, ServerType.AIA);
-        aiaServer_aia.start();
-
         BeanFactory.registerBeanClass(SensesClient.class);
         SensesClient sensesClient = BeanFactory.getBean(SensesClient.class);
-        sensesClient.start();
+        sensesClient.start( () -> {
+          appConfig = loadAppConfig(args);
+          try {
+            RawServer aiaServer_ai = new AIAServer(appConfig, ServerType.AI);
+            aiaServer_ai.start();
 
+            RawServer aiaServer_aia = new AIAServer(appConfig, ServerType.AIA);
+            aiaServer_aia.start();
+          } catch (IOException e) {
+            e.printStackTrace(); // fallback to console
+          }
+        });
         //RawServer sshServer = new SshServer(appConfig);
         //sshServer.start();
     }

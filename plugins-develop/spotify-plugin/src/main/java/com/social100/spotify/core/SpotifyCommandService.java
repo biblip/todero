@@ -29,7 +29,7 @@ public class SpotifyCommandService {
     public final static String MAIN_GROUP = "Main";
     public final static String PLAYLIST_GROUP = "Playlist";
 
-    private final SpotifyApi api;
+    private final SpotifyPkceService spotifyPkceService;
     private final String preferredDeviceId;        // may be null
     private Integer cachedVolumeBeforeMute;        // for mute toggle
     private ScheduledExecutorService eventsExec;
@@ -39,8 +39,8 @@ public class SpotifyCommandService {
         void onPlayback(String statusText);
     }
 
-    public SpotifyCommandService(SpotifyApi api, String preferredDeviceId) {
-        this.api = api;
+    public SpotifyCommandService(SpotifyPkceService spotifyPkceService, String preferredDeviceId) {
+        this.spotifyPkceService = spotifyPkceService;
         this.preferredDeviceId = preferredDeviceId;
     }
 
@@ -49,7 +49,7 @@ public class SpotifyCommandService {
     // playlist-list
     public String playlistList(String playlistId, int limit) {
         try {
-            GetPlaylistsItemsRequest req = api.getPlaylistsItems(playlistId)
+            GetPlaylistsItemsRequest req = spotifyPkceService.getSpotifyApi().getPlaylistsItems(playlistId)
                     .limit(Math.max(1, Math.min(limit, 100)))
                     .build();
             Paging<PlaylistTrack> page = req.execute();
@@ -84,7 +84,7 @@ public class SpotifyCommandService {
         try {
             JsonArray uris = new JsonArray();
             for (String u : trackUris) uris.add(new JsonPrimitive(u));
-            AddItemsToPlaylistRequest req = api.addItemsToPlaylist(playlistId, uris).build();
+            AddItemsToPlaylistRequest req = spotifyPkceService.getSpotifyApi().addItemsToPlaylist(playlistId, uris).build();
             req.execute();
             return "Added " + trackUris.size() + " item(s) to playlist " + playlistId + ".";
         } catch (Exception e) {
@@ -97,7 +97,7 @@ public class SpotifyCommandService {
         try {
             String ensure = ensureActiveDeviceString();
             if (ensure != null) return ensure;
-            api.skipUsersPlaybackToNextTrack().build().execute();
+            spotifyPkceService.getSpotifyApi().skipUsersPlaybackToNextTrack().build().execute();
             return "Skipped to next.";
         } catch (Exception e) {
             return "playlist-next failed: " + e.getMessage();
@@ -125,7 +125,7 @@ public class SpotifyCommandService {
             obj.addProperty("uri", t.getUri());
             items.add(obj);
 
-            RemoveItemsFromPlaylistRequest req = api.removeItemsFromPlaylist(playlistId, items).build();
+            RemoveItemsFromPlaylistRequest req = spotifyPkceService.getSpotifyApi().removeItemsFromPlaylist(playlistId, items).build();
             req.execute();
             return "Removed current track from playlist " + playlistId + ".";
         } catch (Exception e) {
@@ -146,7 +146,7 @@ public class SpotifyCommandService {
             String ensure = ensureActiveDeviceString();
             if (ensure != null) return ensure;
 
-            StartResumeUsersPlaybackRequest.Builder b = api.startResumeUsersPlayback();
+            StartResumeUsersPlaybackRequest.Builder b = spotifyPkceService.getSpotifyApi().startResumeUsersPlayback();
 
             // 1) Resume if empty
             if (mediaOrSearch == null || mediaOrSearch.isBlank()) {
@@ -166,7 +166,7 @@ public class SpotifyCommandService {
             else {
                 String q = extractPlaceholderOrRaw(mediaOrSearch);
                 // Search a *short list* of candidates
-                Paging<Track> page = api.searchTracks(q).limit(5).build().execute();
+                Paging<Track> page = spotifyPkceService.getSpotifyApi().searchTracks(q).limit(5).build().execute();
                 Track[] items = page.getItems();
                 if (items == null || items.length == 0) {
                     return "No results found for \"" + q + "\".";
@@ -267,7 +267,7 @@ public class SpotifyCommandService {
         try {
             String ensure = ensureActiveDeviceString();
             if (ensure != null) return ensure;
-            api.pauseUsersPlayback().build().execute();
+            spotifyPkceService.getSpotifyApi().pauseUsersPlayback().build().execute();
             return "Playback paused.";
         } catch (Exception e) {
             return "pause failed: " + e.getMessage();
@@ -286,7 +286,7 @@ public class SpotifyCommandService {
             if (ensure != null) return ensure;
 
             int pct = Math.max(0, Math.min(100, (int)Math.round(level0to150 * (100.0/150.0))));
-            SetVolumeForUsersPlaybackRequest.Builder b = api.setVolumeForUsersPlayback(pct);
+            SetVolumeForUsersPlaybackRequest.Builder b = spotifyPkceService.getSpotifyApi().setVolumeForUsersPlayback(pct);
             if (preferredDeviceId != null && !preferredDeviceId.isBlank()) b = b.device_id(preferredDeviceId);
             b.build().execute();
 
@@ -312,7 +312,7 @@ public class SpotifyCommandService {
             int current = (ctx != null && ctx.getDevice() != null && ctx.getDevice().getVolume_percent() != null)
                     ? ctx.getDevice().getVolume_percent() : 50;
             int next = Math.max(0, Math.min(100, current + delta));
-            api.setVolumeForUsersPlayback(next).build().execute();
+            spotifyPkceService.getSpotifyApi().setVolumeForUsersPlayback(next).build().execute();
             return "Volume " + (delta > 0 ? "increased" : "decreased") + " to " + next + "%.";
         } catch (Exception e) {
             return "volume step failed: " + e.getMessage();
@@ -329,11 +329,11 @@ public class SpotifyCommandService {
                     ? ctx.getDevice().getVolume_percent() : 50;
             if (current == 0) {
                 int restore = (cachedVolumeBeforeMute == null) ? 50 : Math.max(1, Math.min(100, cachedVolumeBeforeMute));
-                api.setVolumeForUsersPlayback(restore).build().execute();
+                spotifyPkceService.getSpotifyApi().setVolumeForUsersPlayback(restore).build().execute();
                 return "Playback unmuted. Volume " + restore + "%.";
             } else {
                 cachedVolumeBeforeMute = current;
-                api.setVolumeForUsersPlayback(0).build().execute();
+                spotifyPkceService.getSpotifyApi().setVolumeForUsersPlayback(0).build().execute();
                 return "Playback muted.";
             }
         } catch (Exception e) {
@@ -347,7 +347,7 @@ public class SpotifyCommandService {
             if (ensure != null) return ensure;
 
             int posMs = (int) parseTimestampToMillis(timestamp);
-            api.seekToPositionInCurrentlyPlayingTrack(posMs).build().execute();
+            spotifyPkceService.getSpotifyApi().seekToPositionInCurrentlyPlayingTrack(posMs).build().execute();
             return "Moved to " + timestamp + ".";
         } catch (IllegalArgumentException e) {
             return e.getMessage();
@@ -366,7 +366,7 @@ public class SpotifyCommandService {
             int cur = (ctx.getProgress_ms() != null) ? ctx.getProgress_ms() : 0;
             int dur = (t.getDurationMs() != null) ? t.getDurationMs() : 0;
             int next = Math.max(0, Math.min(dur == 0 ? Integer.MAX_VALUE : dur - 1, cur + seconds * 1000));
-            api.seekToPositionInCurrentlyPlayingTrack(next).build().execute();
+            spotifyPkceService.getSpotifyApi().seekToPositionInCurrentlyPlayingTrack(next).build().execute();
             return "Skipped to " + (next / 1000) + "s.";
         } catch (Exception e) {
             return "skip failed: " + e.getMessage();
@@ -439,7 +439,7 @@ public class SpotifyCommandService {
             String ensure = ensureActiveDeviceString();
             if (ensure != null) return ensure;
 
-            ToggleShuffleForUsersPlaybackRequest.Builder b = api.toggleShuffleForUsersPlayback(enabled);
+            ToggleShuffleForUsersPlaybackRequest.Builder b = spotifyPkceService.getSpotifyApi().toggleShuffleForUsersPlayback(enabled);
             if (preferredDeviceId != null && !preferredDeviceId.isBlank()) b = b.device_id(preferredDeviceId);
             b.build().execute();
             return "Shuffle " + (enabled ? "enabled." : "disabled.");
@@ -453,7 +453,7 @@ public class SpotifyCommandService {
             String ensure = ensureActiveDeviceString();
             if (ensure != null) return ensure;
 
-            SetRepeatModeOnUsersPlaybackRequest.Builder b = api.setRepeatModeOnUsersPlayback(mode);
+            SetRepeatModeOnUsersPlaybackRequest.Builder b = spotifyPkceService.getSpotifyApi().setRepeatModeOnUsersPlayback(mode);
             if (preferredDeviceId != null && !preferredDeviceId.isBlank()) b = b.device_id(preferredDeviceId);
             b.build().execute();
             return "Repeat set to: " + mode + ".";
@@ -467,7 +467,7 @@ public class SpotifyCommandService {
             String ensure = ensureActiveDeviceString();
             if (ensure != null) return ensure;
 
-            AddItemToUsersPlaybackQueueRequest.Builder b = api.addItemToUsersPlaybackQueue(trackOrEpisodeUri);
+            AddItemToUsersPlaybackQueueRequest.Builder b = spotifyPkceService.getSpotifyApi().addItemToUsersPlaybackQueue(trackOrEpisodeUri);
             if (preferredDeviceId != null && !preferredDeviceId.isBlank()) b = b.device_id(preferredDeviceId);
             b.build().execute();
             return "Queued: " + trackOrEpisodeUri + ".";
@@ -478,7 +478,7 @@ public class SpotifyCommandService {
 
     public String devices() {
         try {
-            Device[] ds = api.getUsersAvailableDevices().build().execute();
+            Device[] ds = spotifyPkceService.getSpotifyApi().getUsersAvailableDevices().build().execute();
             if (ds == null || ds.length == 0) return "No devices online.";
             StringJoiner sj = new StringJoiner("\n");
             sj.add("Devices:");
@@ -497,7 +497,7 @@ public class SpotifyCommandService {
         try {
             JsonArray ids = new JsonArray();
             ids.add(new JsonPrimitive(deviceId));
-            TransferUsersPlaybackRequest req = api.transferUsersPlayback(ids).build();
+            TransferUsersPlaybackRequest req = spotifyPkceService.getSpotifyApi().transferUsersPlayback(ids).build();
             req.execute();
             return "Transferred playback to device " + deviceId + ".";
         } catch (Exception e) {
@@ -509,7 +509,7 @@ public class SpotifyCommandService {
         try {
             CurrentlyPlayingContext c = safeGetPlayback();
             if (c == null || !(c.getItem() instanceof Track t)) return "Nothing playing.";
-            SaveTracksForUserRequest req = api.saveTracksForUser(new String[]{ t.getId() }).build();
+            SaveTracksForUserRequest req = spotifyPkceService.getSpotifyApi().saveTracksForUser(new String[]{ t.getId() }).build();
             req.execute();
             return "Saved to your library: " + t.getName() + ".";
         } catch (Exception e) {
@@ -522,7 +522,7 @@ public class SpotifyCommandService {
             String ensure = ensureActiveDeviceString();
             if (ensure != null) return ensure;
 
-            StartResumeUsersPlaybackRequest.Builder b = api.startResumeUsersPlayback().context_uri(contextUri);
+            StartResumeUsersPlaybackRequest.Builder b = spotifyPkceService.getSpotifyApi().startResumeUsersPlayback().context_uri(contextUri);
             JsonObject offset = new JsonObject();
             offset.addProperty("position", Math.max(0, index));
             b.offset(offset);
@@ -545,7 +545,7 @@ public class SpotifyCommandService {
     }
 
     private void ensureActiveDevice() throws IOException, SpotifyWebApiException, org.apache.hc.core5.http.ParseException {
-        Device[] ds = api.getUsersAvailableDevices().build().execute();
+        Device[] ds = spotifyPkceService.getSpotifyApi().getUsersAvailableDevices().build().execute();
         if (ds == null || ds.length == 0) {
             throw new IllegalStateException("No devices online. Open a Spotify app and try again.");
         }
@@ -563,7 +563,7 @@ public class SpotifyCommandService {
             if (!active) {
                 JsonArray ids = new JsonArray();
                 ids.add(new JsonPrimitive(preferredDeviceId));
-                TransferUsersPlaybackRequest req = api.transferUsersPlayback(ids).build();
+                TransferUsersPlaybackRequest req = spotifyPkceService.getSpotifyApi().transferUsersPlayback(ids).build();
                 req.execute();
             }
             return;
@@ -572,13 +572,13 @@ public class SpotifyCommandService {
         for (Device d : ds) if (Boolean.TRUE.equals(d.getIs_active())) return;
         JsonArray ids = new JsonArray();
         ids.add(new JsonPrimitive(ds[0].getId()));
-        TransferUsersPlaybackRequest req = api.transferUsersPlayback(ids).build();
+        TransferUsersPlaybackRequest req = spotifyPkceService.getSpotifyApi().transferUsersPlayback(ids).build();
         req.execute();
     }
 
     private CurrentlyPlayingContext safeGetPlayback() {
         try {
-            return api.getInformationAboutUsersCurrentPlayback().build().execute();
+            return spotifyPkceService.getSpotifyApi().getInformationAboutUsersCurrentPlayback().build().execute();
         } catch (Exception e) {
             return null;
         }

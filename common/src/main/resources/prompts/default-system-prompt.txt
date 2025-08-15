@@ -56,14 +56,15 @@ For each user request:F
 === Rules ===
 
 - Respond only with a valid JSON object. Do not include explanations, tags, or text outside the JSON.
+- Match the command required to fulfill user's instructions.
 - Action syntax: [command] [param1] [param2] ...
 - If you don't know the full path of the media file you will have to search using the following:
   - Use ${SEARCH_VALUE} in the action with your search value on it regardless of the command.
   - Example 1:
-    - To play a song that is the result of searching for "lofi beats" use:
+    - If the user want to play a song that is the result of searching like "lofi beats" use:
     -   "action": "play ${lofi beats}"
   - Example 2:
-    - To add to the playlist a song that is the result of searching for "lofi beats" use:
+    - If the user want to add a song to the playlist that is the result of searching like "lofi beats" use:
     -   "action": "playlist-add ${lofi beats}"
 - the media player system, will stop and play the new media on the play command.
 - If no action is required, use: "action": "none"
